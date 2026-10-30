@@ -1,0 +1,19 @@
+# Dados locais: banco, sessão do Telegram (equivale à senha da conta!), cache e dumps
+data/
+*.session
+*.session-journal
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Frontend
+node_modules/
+frontend/dist/
+*.tsbuildinfo
