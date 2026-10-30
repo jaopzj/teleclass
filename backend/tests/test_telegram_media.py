@@ -36,7 +36,7 @@ class FakeClient:
         assert offset % request_size == 0
         self.download_offsets.append(offset)
         sent = 0
-        for start in range(offset, SIZE, request_size):
+        for start in range(offset, SIZE, request_size)[: limit]:
             if self.expire_after is not None and sent == self.expire_after:
                 self.expire_after = None
                 raise errors.FileReferenceExpiredError(request=None)
@@ -58,12 +58,37 @@ def test_streams_exact_bytes_from_telegram():
 
 
 def test_resumes_after_file_reference_expired():
-    client = FakeClient(expire_after=2)
+    client = FakeClient(expire_after=0)
     media = TelegramMedia(client)
     assert read(media, 0, SIZE - 1) == DATA
-    # Recarregou a mensagem e continuou do ponto em que parou, sem repetir bytes.
-    assert client.fetches == 2
-    assert client.download_offsets == [0, 2 * CHUNK_SIZE]
+    assert client.fetches == 2  # recarregou a mensagem uma vez
+
+
+def test_downloads_ahead_in_parallel_and_caches():
+    client = FakeClient()
+    media = TelegramMedia(client, parallel=3)
+    assert read(media, CHUNK_SIZE + 5, CHUNK_SIZE + 10) == DATA[CHUNK_SIZE + 5 : CHUNK_SIZE + 11]
+    # Pediu o bloco 1 e já buscou os seguintes ao mesmo tempo.
+    assert sorted(client.download_offsets) == [CHUNK_SIZE, 2 * CHUNK_SIZE, 3 * CHUNK_SIZE]
+
+    client.download_offsets.clear()
+    assert read(media, CHUNK_SIZE, 3 * CHUNK_SIZE + 99) == DATA[CHUNK_SIZE : 3 * CHUNK_SIZE + 100]
+    # Os blocos 1 a 3 vieram do cache; só a leitura antecipada do bloco 4 foi ao Telegram.
+    assert all(o > 3 * CHUNK_SIZE for o in client.download_offsets)
+
+
+def test_opening_a_video_prefetches_the_last_chunk():
+    client = FakeClient()
+    media = TelegramMedia(client, parallel=1)
+    read(media, 0, 10)
+    assert 4 * CHUNK_SIZE in client.download_offsets
+
+
+def test_cache_is_bounded():
+    client = FakeClient()
+    media = TelegramMedia(client, cache_bytes=CHUNK_SIZE * 2, parallel=1)
+    read(media, 0, SIZE - 1)
+    assert media._chunks.size <= CHUNK_SIZE * 2
 
 
 def test_deleted_message_is_unavailable():

@@ -270,6 +270,17 @@ button { font: inherit; color: inherit; }
 .player-toast { position: absolute; left: 16px; top: 16px; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 14px; border-radius: 10px; background: rgb(20 20 24 / 0.82); color: #fff; font-size: 0.85rem; backdrop-filter: blur(6px); animation: fade-in 0.2s ease; }
 .player-toast button { border: 0; border-radius: 6px; padding: 4px 10px; background: rgb(255 255 255 / 0.16); color: #fff; cursor: pointer; font-size: 0.8rem; font-weight: 600; }
 .player-toast button:hover { background: rgb(255 255 255 / 0.28); }
+.player-skip { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: flex; justify-content: space-between; padding: 0 clamp(16px, 12%, 140px); pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+.player:hover .player-skip, .player:focus-within .player-skip { opacity: 1; }
+.player-skip button { pointer-events: auto; position: relative; display: grid; place-items: center; width: 56px; height: 56px; border: 0; border-radius: 50%; background: rgb(0 0 0 / 0.45); color: #fff; cursor: pointer; backdrop-filter: blur(4px); transition: background 0.15s, transform 0.15s; }
+.player-skip button:hover { background: rgb(0 0 0 / 0.65); transform: scale(1.06); }
+.player-skip button:active { transform: scale(0.96); }
+.player-skip button span { position: absolute; font-size: 0.6rem; font-weight: 700; top: 50%; left: 50%; transform: translate(-50%, -38%); }
+.player-skip-flash { position: absolute; top: 50%; transform: translateY(-50%); padding: 8px 14px; border-radius: 999px; background: rgb(0 0 0 / 0.6); color: #fff; font-weight: 700; font-size: 0.9rem; pointer-events: none; animation: skip-flash 0.7s ease forwards; }
+.player-skip-flash.is-back { left: calc(clamp(16px, 12%, 140px) + 70px); }
+.player-skip-flash.is-forward { right: calc(clamp(16px, 12%, 140px) + 70px); }
+@keyframes skip-flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+@media (hover: none) { .player-skip { opacity: 1; } .player-skip button { width: 44px; height: 44px; } }
 @keyframes fade-in { from { opacity: 0; transform: translateY(-4px); } }
 
 .no-video { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 48px 24px; text-align: center; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); color: var(--muted); aspect-ratio: 16 / 9; justify-content: center; }

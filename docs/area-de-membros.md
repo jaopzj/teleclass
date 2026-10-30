@@ -20,6 +20,13 @@ api/media.py ──▶ streaming/range.py (intervalo; pedidos abertos limitados 
 telegram/media.py ──▶ client.iter_download(offset alinhado) ──▶ Telegram
 ```
 
+- **Velocidade:** 4 blocos são baixados ao mesmo tempo à frente da posição
+  pedida (cada pedido ao Telegram tem latência, e em sequência ela se soma).
+  Os blocos ficam num cache em memória (`TELEAULA_STREAM_CACHE_MB`, padrão
+  256), e um bloco já em download por outro pedido é aproveitado. Ao abrir um
+  vídeo, o último bloco (onde muitos MP4 guardam o índice) já é buscado em
+  segundo plano. Com 200 ms de latência simulada, os primeiros 4 MB caíram de
+  1,75 s para 0,52 s, e voltar a um trecho já visto ficou instantâneo.
 - Só mensagens que pertencem ao curso podem ser pedidas (`Course.has_media`).
 - A mensagem fica em cache por 10 min. Se a referência do arquivo expirar no
   meio do download, ela é recarregada e o download continua do mesmo offset.
@@ -80,7 +87,7 @@ Tudo é chaveado por `(usuário, curso, chave da aula)`. Hoje o usuário é semp
 ## Frontend
 
 `router.tsx` (History API, sem dependência nova), `pages/` (biblioteca, curso,
-aula), `components/` (`VideoPlayer`, `NotesPanel`, capa, progresso, miniatura),
+aula), `components/` (`VideoPlayer` com botões e atalhos ← → / J L de 10 s, `NotesPanel`, capa, progresso, miniatura),
 `hooks/useProgressSync` e `hooks/useNoteAutosave`. A tela de indexação continua
 em `/indexacao`. O backend devolve o `index.html` para rotas do app, então
 recarregar em `/cursos/...` funciona.
@@ -92,11 +99,11 @@ recarregar em `/cursos/...` funciona.
 - Marcações de tempo nas anotações: nova coluna `at_seconds`/tabela de itens em
   `learning/notes.py`, sem mexer no player.
 - Outros formatos: `LessonKind` e `_primary_video` decidem o que o player recebe.
-- Cache de blocos em disco (PLANO.md, fase 3): outra implementação de
-  `ChunkSource` em volta de `TelegramMedia.chunks`.
+- Cache de blocos em disco (PLANO.md, fase 3): trocar o `ChunkCache` em
+  memória por um que grave em `data/cache/`.
 
 ## Limitações
 
 - Vídeos fora de MP4/WebM (MKV, AVI, HEVC) mostram "formato não suportado".
-- Sem cache de blocos: cada salto no vídeo baixa do Telegram de novo.
+- O cache é só em memória: reiniciar o servidor esvazia.
 - Uma aula com vários vídeos reproduz só o primeiro.

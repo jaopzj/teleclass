@@ -17,6 +17,12 @@ type State = { kind: "loading" } | { kind: "ready" } | { kind: "error"; message:
 
 // Não vale retomar nos últimos segundos: a pessoa provavelmente quer rever.
 const RESUME_TAIL_SECONDS = 10;
+const SKIP_SECONDS = 10;
+
+function isTyping(target: EventTarget | null) {
+  const el = target as HTMLElement | null;
+  return !!el && (el.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName));
+}
 
 /**
  * Player nativo do navegador (`<video>`): play/pausa, volume, tela cheia,
@@ -29,6 +35,35 @@ export default function VideoPlayer({ src, poster, mimeType, width, height, init
   const [resumedAt, setResumedAt] = useState<number | null>(null);
   const [attempt, setAttempt] = useState(0);
   const lastPosition = useRef(initialPosition);
+  const [skipped, setSkipped] = useState<{ delta: number; id: number } | null>(null);
+
+  function skip(delta: number) {
+    const element = video.current;
+    if (!element || state.kind !== "ready") return;
+    const end = Number.isFinite(element.duration) ? element.duration : Infinity;
+    element.currentTime = Math.min(Math.max(element.currentTime + delta, 0), end);
+    setSkipped({ delta, id: Date.now() });
+  }
+
+  // Atalhos: ← / → (ou J / L) voltam e avançam 10 s, fora dos campos de texto.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey || event.altKey || isTyping(event.target)) return;
+      const key = event.key.toLowerCase();
+      if (key === "arrowleft" || key === "j") skip(-SKIP_SECONDS);
+      else if (key === "arrowright" || key === "l") skip(SKIP_SECONDS);
+      else return;
+      event.preventDefault(); // evita o salto de 5 s do player nativo somado ao nosso
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  useEffect(() => {
+    if (!skipped) return;
+    const t = window.setTimeout(() => setSkipped(null), 700);
+    return () => window.clearTimeout(t);
+  }, [skipped]);
 
   useProgressSync(video, state.kind === "ready", initialPosition, (position, duration, keepalive) => {
     lastPosition.current = position;
@@ -105,6 +140,24 @@ export default function VideoPlayer({ src, poster, mimeType, width, height, init
         onLoadedMetadata={onLoadedMetadata}
         onError={onError}
       />
+      {state.kind === "ready" && (
+        <div className="player-skip">
+          <button onClick={() => skip(-SKIP_SECONDS)} aria-label="Voltar 10 segundos" title="Voltar 10 s (←)">
+            <Icon name="replay" size={22} />
+            <span>10</span>
+          </button>
+          <button onClick={() => skip(SKIP_SECONDS)} aria-label="Avançar 10 segundos" title="Avançar 10 s (→)">
+            <Icon name="forward" size={22} />
+            <span>10</span>
+          </button>
+        </div>
+      )}
+      {skipped && (
+        <div key={skipped.id} className={`player-skip-flash ${skipped.delta < 0 ? "is-back" : "is-forward"}`}>
+          {skipped.delta < 0 ? "−" : "+"}
+          {Math.abs(skipped.delta)} s
+        </div>
+      )}
       {state.kind === "loading" && (
         <div className="player-overlay">
           <span className="spinner" aria-label="Carregando vídeo" />

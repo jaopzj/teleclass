@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
         try:
             await client.connect()
             state.telegram = client
-            state.media = TelegramMedia(client)
+            state.media = TelegramMedia(client, cache_bytes=settings.stream_cache_mb * 1024 * 1024)
         except OSError as exc:
             log.warning("Não foi possível conectar ao Telegram: %s", exc)
     app.state.teleaula = state

@@ -19,6 +19,11 @@ def _load_dotenv(path: Path) -> None:
         os.environ.setdefault(key.strip(), value.strip().strip("'\""))
 
 
+def _int(value: str | None, default: int) -> int:
+    value = (value or "").strip()
+    return int(value) if value.isdigit() else default
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     api_id: int | None
@@ -27,6 +32,8 @@ class Settings:
     # Aplicativo pessoal: há um único usuário local. O id existe para que progresso
     # e anotações já fiquem associados a um usuário quando houver login (PLANO.md, 9).
     user_id: str = "local"
+    # Memória usada para guardar trechos de vídeo já baixados (MB).
+    stream_cache_mb: int = 256
 
     @property
     def session_path(self) -> Path:
@@ -58,4 +65,5 @@ def get_settings() -> Settings:
         api_hash=os.environ.get("TG_API_HASH") or None,
         data_dir=Path(os.environ.get("TELEAULA_DATA_DIR", "./data")).resolve(),
         user_id=os.environ.get("TELEAULA_USER", "").strip() or "local",
+        stream_cache_mb=_int(os.environ.get("TELEAULA_STREAM_CACHE_MB"), 256),
     )
