@@ -1,0 +1,224 @@
+{
+  "format": "teleaula.channel-snapshot/v1",
+  "channel_id": 1234567890,
+  "title": "Curso de Java (exemplo)",
+  "username": "curso_exemplo",
+  "messages": [
+    {
+      "id": 1,
+      "date": "2025-03-01T12:01:00+00:00",
+      "text": "Bem-vindos ao curso de Java! Em breve o conteúdo.",
+      "markdown": null,
+      "grouped_id": null,
+      "media": null
+    },
+    {
+      "id": 2,
+      "date": "2025-03-01T12:02:00+00:00",
+      "text": "Siga o conteúdo do menu:\n\n= 01. Introdução\n#A001\n= 02. Conceitos de programação\n== 02.1. Variáveis\n#A002 #A003\n== 02.2. Funções",
+      "markdown": null,
+      "grouped_id": null,
+      "media": null
+    },
+    {
+      "id": 3,
+      "date": "2025-03-01T12:03:00+00:00",
+      "text": "#A004\n= 03. Materiais extras\n#F001 - Apostila completa\n#D001\n#A002\n#A099",
+      "markdown": null,
+      "grouped_id": null,
+      "media": null
+    },
+    {
+      "id": 4,
+      "date": "2025-03-01T12:04:00+00:00",
+      "text": "Clique aqui para ver o sumário!",
+      "markdown": null,
+      "grouped_id": null,
+      "media": null
+    },
+    {
+      "id": 10,
+      "date": "2025-03-01T12:10:00+00:00",
+      "text": "#A001\nAula 01 - Boas-vindas\nConheça o curso e veja o site oficial.",
+      "markdown": "#A001\n**Aula 01 - Boas-vindas**\nConheça o curso e veja o [site oficial](https://example.com).",
+      "grouped_id": null,
+      "media": {
+        "kind": "video",
+        "file_name": "aula01.mp4",
+        "mime_type": "video/mp4",
+        "size": 50000000,
+        "duration": 600,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "id": 11,
+      "date": "2025-03-01T12:11:00+00:00",
+      "text": "#A002",
+      "markdown": "#A002",
+      "grouped_id": null,
+      "media": {
+        "kind": "video",
+        "file_name": "02 - Variaveis e tipos.mp4",
+        "mime_type": "video/mp4",
+        "size": 50000000,
+        "duration": 600,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "id": 12,
+      "date": "2025-03-01T12:12:00+00:00",
+      "text": "#A003 Exemplos de código",
+      "markdown": "#A003 Exemplos de código",
+      "grouped_id": 777,
+      "media": {
+        "kind": "photo",
+        "file_name": null,
+        "mime_type": "image/jpeg",
+        "size": 90000,
+        "duration": null,
+        "width": 1280,
+        "height": 960
+      }
+    },
+    {
+      "id": 13,
+      "date": "2025-03-01T12:13:00+00:00",
+      "text": "",
+      "markdown": null,
+      "grouped_id": 777,
+      "media": {
+        "kind": "photo",
+        "file_name": null,
+        "mime_type": "image/jpeg",
+        "size": 90000,
+        "duration": null,
+        "width": 1280,
+        "height": 960
+      }
+    },
+    {
+      "id": 14,
+      "date": "2025-03-01T12:14:00+00:00",
+      "text": "",
+      "markdown": null,
+      "grouped_id": 777,
+      "media": {
+        "kind": "photo",
+        "file_name": null,
+        "mime_type": "image/jpeg",
+        "size": 90000,
+        "duration": null,
+        "width": 1280,
+        "height": 960
+      }
+    },
+    {
+      "id": 15,
+      "date": "2025-03-01T12:15:00+00:00",
+      "text": "#A004\nFunções na prática",
+      "markdown": "#A004\nFunções na prática",
+      "grouped_id": null,
+      "media": {
+        "kind": "video",
+        "file_name": "funcoes.mp4",
+        "mime_type": "video/mp4",
+        "size": 50000000,
+        "duration": 600,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "id": 16,
+      "date": "2025-03-01T12:16:00+00:00",
+      "text": "#A004 slides da aula",
+      "markdown": "#A004 slides da aula",
+      "grouped_id": null,
+      "media": {
+        "kind": "document",
+        "file_name": "funcoes-slides.pdf",
+        "mime_type": "application/pdf",
+        "size": 200000,
+        "duration": null,
+        "width": null,
+        "height": null
+      }
+    },
+    {
+      "id": 17,
+      "date": "2025-03-01T12:17:00+00:00",
+      "text": "#F001",
+      "markdown": "#F001",
+      "grouped_id": null,
+      "media": {
+        "kind": "document",
+        "file_name": "apostila-java.pdf",
+        "mime_type": "application/pdf",
+        "size": 3500000,
+        "duration": null,
+        "width": null,
+        "height": null
+      }
+    },
+    {
+      "id": 18,
+      "date": "2025-03-01T12:18:00+00:00",
+      "text": "#D001\nExercícios resolvidos",
+      "markdown": "#D001\nExercícios resolvidos",
+      "grouped_id": null,
+      "media": {
+        "kind": "document",
+        "file_name": "exercicios.zip",
+        "mime_type": "application/zip",
+        "size": 200000,
+        "duration": null,
+        "width": null,
+        "height": null
+      }
+    },
+    {
+      "id": 19,
+      "date": "2025-03-01T12:19:00+00:00",
+      "text": "#A050\nAula bônus",
+      "markdown": "#A050\nAula bônus",
+      "grouped_id": null,
+      "media": {
+        "kind": "video",
+        "file_name": "bonus.mp4",
+        "mime_type": "video/mp4",
+        "size": 50000000,
+        "duration": 600,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "id": 20,
+      "date": "2025-03-01T12:20:00+00:00",
+      "text": "",
+      "markdown": null,
+      "grouped_id": null,
+      "media": {
+        "kind": "video",
+        "file_name": "sem-legenda.mp4",
+        "mime_type": "video/mp4",
+        "size": 50000000,
+        "duration": 600,
+        "width": 1280,
+        "height": 720
+      }
+    },
+    {
+      "id": 21,
+      "date": "2025-03-01T12:21:00+00:00",
+      "text": "Obrigado por acompanhar! #java",
+      "markdown": null,
+      "grouped_id": null,
+      "media": null
+    }
+  ]
+}
