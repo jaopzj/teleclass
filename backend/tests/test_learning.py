@@ -75,14 +75,14 @@ def test_position_and_completion_are_independent(db):
 def test_summary_counts_once_and_resumes(course, db):
     store = ProgressStore(db)
     empty = summarize(course, {})
-    assert (empty.completed, empty.total, empty.resume.key, empty.last_watched) == (0, 5, "A001", None)
+    assert (empty.completed, empty.total, empty.resume.key, empty.last_watched) == (0, 4, "A001", None)  # uma aula é indisponível
 
     store.set_completed("u", "curso", "A001", True)
     store.set_completed("u", "curso", "A001", True)  # sem contagem dupla
     store.set_completed("u", "curso", "removida", True)  # aula que não existe mais no curso
     store.save_position("u", "curso", "A003", 10, None)
     result = summarize(course, store.for_course("u", "curso"))
-    assert (result.completed, result.percent) == (1, 20)
+    assert (result.completed, result.percent) == (1, 25)
     assert result.last_watched.key == "A003" and result.resume.key == "A003"
 
     store.set_completed("u", "curso", "A003", True)

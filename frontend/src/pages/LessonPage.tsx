@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Icon from "../components/Icon";
 import NotesPanel from "../components/NotesPanel";
 import RichText from "../components/RichText";
@@ -8,6 +8,7 @@ import { useResource } from "../hooks/useResource";
 import { learningApi, LessonDetail, LessonProgress, mediaUrl, thumbUrl } from "../learning/api";
 import { Link, paths } from "../router";
 import { api } from "../api";
+import { useAuth } from "../auth/AuthProvider";
 
 // Consultado uma vez por sessão: sem o cryptg, o download do Telegram fica muito lento.
 let slowCryptoCheck: Promise<boolean> | null = null;
@@ -66,6 +67,12 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
   const completed = !!progress?.completed;
   const video = lesson.video;
   const slowCrypto = useSlowCrypto();
+  const { state: auth } = useAuth();
+  const userId = auth.status === "authenticated" ? auth.user.id : null;
+  const study = useMemo(
+    () => (userId ? { userId, courseId: course.id, lessonKey: lesson.key } : undefined),
+    [userId, course.id, lesson.key],
+  );
 
   const savePosition = useCallback(
     (position: number, duration: number | null, keepalive: boolean) => {
@@ -147,6 +154,7 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
               height={video.height}
               initialPosition={lesson.progress?.position_seconds ?? 0}
               onSavePosition={savePosition}
+              study={study}
             />
           ) : (
             <NoVideo detail={detail} />

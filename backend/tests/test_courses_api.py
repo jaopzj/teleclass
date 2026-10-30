@@ -86,7 +86,8 @@ def test_library_and_course_page(client):
     data = client.get(COURSE).json()
     assert [s["title"] for s in data["sections"]][:2] == ["01. Introdução", "02. Conceitos de programação"]
     assert data["sections"][1]["children"][0]["title"] == "02.1. Variáveis"
-    assert data["stats"]["lessons"] == sum(s["total"] for s in data["sections"])
+    # Aulas indisponíveis (sem mensagem no canal) não entram no progresso.
+    assert data["progress"]["total"] == sum(s["total"] for s in data["sections"]) == data["stats"]["lessons"] - 1
 
 
 def test_lesson_navigation_crosses_sections(client):

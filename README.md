@@ -5,9 +5,11 @@ experiência de área de membros. O plano completo está em [PLANO.md](PLANO.md)
 
 **Estado atual:** indexação + área de membros. O app lê um canal, monta
 módulos, subtópicos e aulas, e permite assistir às aulas com streaming direto do
-Telegram, retomada de onde parou, progresso por curso e anotações por aula.
-Arquitetura: [docs/indexacao.md](docs/indexacao.md) e
-[docs/area-de-membros.md](docs/area-de-membros.md).
+Telegram, retomada de onde parou, progresso por curso, anotações por aula e
+métricas de estudo (tempo real de reprodução, sequência, média diária).
+Arquitetura: [docs/indexacao.md](docs/indexacao.md),
+[docs/area-de-membros.md](docs/area-de-membros.md) e
+[docs/metricas-de-estudo.md](docs/metricas-de-estudo.md).
 
 ## Requisitos
 
@@ -57,7 +59,9 @@ cd frontend && npm install && npm run dev     # http://127.0.0.1:5173
 Com `npm run build`, o backend passa a servir o frontend em
 http://127.0.0.1:8000.
 
-- **Meus cursos** (`/`): um card por snapshot coletado, com progresso.
+- **Meus cursos** (`/`): painel "Seu estudo" (tempo hoje e na semana,
+  sequência, média diária, aulas concluídas, progresso geral) e um card por
+  snapshot coletado, com progresso.
 - **Curso** (`/cursos/<snapshot>`): módulos, subtópicos e aulas, percentual,
   última aula assistida e "Continuar de onde parei".
 - **Aula**: player, anotações com salvamento automático, marcar como concluída,
@@ -67,7 +71,9 @@ http://127.0.0.1:8000.
 Cada usuário tem a própria biblioteca, progresso e anotações; ninguém vê os
 cursos de outra pessoa. Os vídeos tocam pela conta do Telegram de cada usuário. Depois de atualizar o projeto, rode `pip install -e .` de novo:
 o pacote `cryptg` é o que deixa o streaming rápido. Trechos já assistidos ficam
-em `data/cache/` (até 4 GB, configurável no `.env`). Progresso e anotações ficam em `data/teleaula.db`.
+em `data/cache/` (até 4 GB, configurável no `.env`). Progresso, anotações e
+tempo de estudo ficam em `data/teleaula.db` (o pacote `tzdata` traz os fusos
+horários no Windows).
 
 Sem credenciais, dá para testar com o canal de exemplo:
 `python -m app.cli index backend/tests/fixtures/curso_exemplo.json`.
@@ -75,7 +81,8 @@ Sem credenciais, dá para testar com o canal de exemplo:
 ## Testes
 
 ```bash
-pytest
+pytest                          # backend
+cd frontend && npm test         # captura do player e fila de envio (vitest)
 ```
 
 ## Segurança

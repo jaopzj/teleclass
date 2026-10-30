@@ -7,6 +7,8 @@ import CoursePage from "./pages/CoursePage";
 import LessonPage from "./pages/LessonPage";
 import LibraryPage from "./pages/LibraryPage";
 import { Link, matchPath, navigate, paths, usePathname, useScrollReset } from "./router";
+import { resetStudyMetrics } from "./study/metricsStore";
+import { startStudySync } from "./study/queue";
 
 // A tela de indexação é uma ferramenta de inspeção; carrega só quando usada.
 const IndexingPage = lazy(() => import("./indexing/IndexingPage"));
@@ -68,7 +70,7 @@ function Gate() {
   if (state.status === "anonymous") return <AuthScreen mode={path === AUTH_PATHS.signup ? "signup" : "login"} />;
   if (!state.telegram.linked) return <AuthScreen mode="signup" />;
   if (path === AUTH_PATHS.login || path === AUTH_PATHS.signup) return <Redirect to="/" />;
-  return <Shell path={path} />;
+  return <Shell path={path} userId={state.user.id} />;
 }
 
 function Redirect({ to }: { to: string }) {
@@ -76,8 +78,13 @@ function Redirect({ to }: { to: string }) {
   return null;
 }
 
-function Shell({ path }: { path: string }) {
+function Shell({ path, userId }: { path: string; userId: string }) {
   const inIndexing = path.startsWith("/indexacao");
+  // Envia trechos de estudo pendentes (de visitas anteriores) e troca o cache ao trocar de conta.
+  useEffect(() => {
+    resetStudyMetrics();
+    return startStudySync(userId);
+  }, [userId]);
   return (
     <>
       <header className="topbar">

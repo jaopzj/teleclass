@@ -5,6 +5,7 @@ import { formatDuration, formatPercent, formatRelative, plural } from "../format
 import { useResource } from "../hooks/useResource";
 import { CourseCard, learningApi } from "../learning/api";
 import { Link, paths } from "../router";
+import StudyOverview from "../study/StudyOverview";
 
 export default function LibraryPage() {
   const { data: courses, error, loading } = useResource("courses", learningApi.courses);
@@ -21,6 +22,8 @@ export default function LibraryPage() {
       </header>
 
       {error && <div className="alert alert-error">Não foi possível carregar os cursos: {error.message}</div>}
+
+      {courses && courses.length > 0 && <StudyOverview />}
 
       {loading && !courses && (
         <div className="library-grid">
@@ -42,11 +45,14 @@ export default function LibraryPage() {
       )}
 
       {courses && courses.length > 0 && (
-        <div className="library-grid">
-          {courses.map((course) => (
-            <CourseCardView key={course.id} course={course} />
-          ))}
-        </div>
+        <>
+          <h2 className="library-section-title">Cursos</h2>
+          <div className="library-grid">
+            {courses.map((course) => (
+              <CourseCardView key={course.id} course={course} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

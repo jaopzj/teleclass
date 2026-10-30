@@ -65,6 +65,59 @@ MIGRATIONS: list[str] = [
         linked_at         TEXT NOT NULL
     );
     """,
+    # 3: rastreamento de estudo (docs/metricas-de-estudo.md)
+    """
+    CREATE TABLE user_preferences (
+        user_id     TEXT PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+        timezone    TEXT NOT NULL,
+        updated_at  TEXT NOT NULL
+    );
+    CREATE TABLE study_sessions (
+        id                TEXT PRIMARY KEY,
+        user_id           TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        source            TEXT NOT NULL,
+        course_id         TEXT,
+        lesson_key        TEXT,
+        opened_at         REAL NOT NULL,
+        last_activity_at  REAL,
+        credited_seconds  REAL NOT NULL DEFAULT 0
+    );
+    CREATE INDEX study_sessions_user ON study_sessions (user_id, opened_at);
+    CREATE TABLE study_segments (
+        session_id        TEXT NOT NULL REFERENCES study_sessions (id) ON DELETE CASCADE,
+        seq               INTEGER NOT NULL,
+        start_ms          INTEGER NOT NULL,
+        end_ms            INTEGER NOT NULL,
+        media_from        REAL,
+        media_to          REAL,
+        rate              REAL,
+        claimed_seconds   REAL NOT NULL,
+        credited_seconds  REAL NOT NULL,
+        status            TEXT NOT NULL,
+        reason            TEXT,
+        received_at       REAL NOT NULL,
+        PRIMARY KEY (session_id, seq)
+    );
+    CREATE TABLE study_intervals (
+        id          INTEGER PRIMARY KEY,
+        user_id     TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        session_id  TEXT NOT NULL REFERENCES study_sessions (id) ON DELETE CASCADE,
+        seq         INTEGER NOT NULL,
+        source      TEXT NOT NULL,
+        start_at    REAL NOT NULL,
+        end_at      REAL NOT NULL,
+        local_day   TEXT NOT NULL,
+        timezone    TEXT NOT NULL
+    );
+    CREATE INDEX study_intervals_user_time ON study_intervals (user_id, start_at);
+    CREATE TABLE study_daily (
+        user_id  TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        day      TEXT NOT NULL,
+        source   TEXT NOT NULL,
+        seconds  REAL NOT NULL,
+        PRIMARY KEY (user_id, day, source)
+    );
+    """,
 ]
 
 
@@ -93,5 +146,28 @@ class Database:
             conn.execute("PRAGMA foreign_keys = ON")
             with conn:  # commit no fim, rollback em erro
                 yield conn
+        finally:
+            conn.close()
+
+    @contextmanager
+    def transaction(self) -> Iterator[sqlite3.Connection]:
+        """Transação com trava de escrita desde o início (`BEGIN IMMEDIATE`).
+
+        Para operações que leem e depois gravam com base no que leram: dois
+        pedidos simultâneos são serializados e o segundo enxerga o que o
+        primeiro gravou.
+        """
+        conn = sqlite3.connect(self.path, timeout=10, isolation_level=None)
+        conn.row_factory = sqlite3.Row
+        try:
+            conn.execute("PRAGMA journal_mode = WAL")
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.execute("BEGIN IMMEDIATE")
+            try:
+                yield conn
+            except BaseException:
+                conn.execute("ROLLBACK")
+                raise
+            conn.execute("COMMIT")
         finally:
             conn.close()

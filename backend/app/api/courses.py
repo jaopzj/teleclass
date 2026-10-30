@@ -14,6 +14,7 @@ from ..courses import Course, CourseLesson, CourseNotFound
 from ..courses.catalog import CourseNode
 from ..learning import CourseProgress, LessonProgress, NoteConflict, summarize
 from ..learning.notes import MAX_NOTE_LENGTH
+from ..learning.summary import is_valid_lesson
 from .deps import AppState, get_state, get_user_id
 
 router = APIRouter(prefix="/api/courses", tags=["cursos"])
@@ -55,7 +56,7 @@ def _lesson_summary(lesson: CourseLesson, progress: LessonProgress | None) -> di
 
 
 def _node(node: CourseNode, progress: dict[str, LessonProgress]) -> dict:
-    keys = [lesson.key for lesson in node.walk_lessons()]
+    keys = [lesson.key for lesson in node.walk_lessons() if is_valid_lesson(lesson)]
     return {
         "id": node.id,
         "title": node.title,

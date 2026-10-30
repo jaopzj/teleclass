@@ -9,6 +9,7 @@ dependencies = [
     "cryptg>=0.4",  # criptografia do Telegram em C; sem ela o streaming fica ~100x mais lento
     "fastapi>=0.115",
     "uvicorn>=0.30",
+    "tzdata>=2024.1",  # fusos horários no Windows (que não traz a base IANA)
 ]
 
 [project.optional-dependencies]

@@ -19,12 +19,13 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 
 from .accounts import RateLimiter, SessionStore, UserStore
-from .api import auth, courses, media, snapshots, telegram
+from .api import auth, courses, media, snapshots, study, telegram
 from .api.deps import AppState
 from .config import Settings, get_settings
 from .errors import AppError
 from .learning import Database, NotesStore, ProgressStore
 from .libraries import Libraries
+from .study import PreferencesStore, StudyLedger, StudyMetrics
 from .streaming.cache import ChunkCache, DiskChunkCache
 from .telegram.accounts import TelegramAccountStore, load_secret
 from .telegram.clients import TelegramClients
@@ -45,10 +46,14 @@ def build_state(settings: Settings) -> AppState:
         memory_cache=ChunkCache(settings.stream_cache_mb * 1024 * 1024),
         disk_cache=DiskChunkCache(settings.cache_dir, settings.disk_cache_mb * 1024 * 1024),
     )
+    libraries = Libraries(settings.snapshots_dir)
+    progress = ProgressStore(database)
+    ledger = StudyLedger(database)
+    preferences = PreferencesStore(database)
     return AppState(
         settings=settings,
-        libraries=Libraries(settings.snapshots_dir),
-        progress=ProgressStore(database),
+        libraries=libraries,
+        progress=progress,
         notes=NotesStore(database),
         users=UserStore(database),
         sessions=SessionStore(database),
@@ -56,6 +61,9 @@ def build_state(settings: Settings) -> AppState:
         telegram_accounts=accounts,
         clients=clients,
         linker=TelegramLinker(settings, accounts, clients, limiter),
+        study=ledger,
+        preferences=preferences,
+        metrics=StudyMetrics(ledger, preferences, progress, libraries),
     )
 
 
@@ -133,6 +141,7 @@ def create_app() -> FastAPI:
     app.include_router(snapshots.router)
     app.include_router(courses.router)
     app.include_router(media.router)
+    app.include_router(study.router)
     if FRONTEND_DIST.is_dir():
         # SPA: qualquer rota que não seja da API devolve o index.html (ex.: /cursos/x).
         @app.get("/{path:path}", include_in_schema=False)

@@ -11,6 +11,7 @@ from ..config import Settings
 from ..errors import AppError
 from ..learning import NotesStore, ProgressStore
 from ..libraries import Libraries
+from ..study import PreferencesStore, StudyLedger, StudyMetrics
 from ..telegram.accounts import TelegramAccountStore
 from ..telegram.clients import TelegramClients
 from ..telegram.linking import TelegramLinker
@@ -30,6 +31,9 @@ class AppState:
     telegram_accounts: TelegramAccountStore
     clients: TelegramClients
     linker: TelegramLinker
+    study: StudyLedger
+    preferences: PreferencesStore
+    metrics: StudyMetrics
     # A coleta é sequencial para respeitar os limites do Telegram (PLANO.md, 9).
     collect_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Poucas miniaturas por vez, para não disparar muitas requisições ao Telegram.

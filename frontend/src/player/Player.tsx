@@ -2,6 +2,8 @@ import type { CSSProperties } from "react";
 import { MouseEvent, PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatClock } from "../format";
 import { SavePosition, useProgressSync } from "../hooks/useProgressSync";
+import type { LessonContext } from "../study/recorder";
+import { useStudyTracking } from "../study/useStudyTracking";
 import ControlButton from "./ControlButton";
 import { diagnose, PlaybackError } from "./errors";
 import { FullscreenIcon, PauseIcon, PlayIcon, SkipIcon } from "./icons";
@@ -31,6 +33,8 @@ export interface PlayerProps {
   initialPosition: number;
   onSavePosition: SavePosition;
   next?: NextLesson;
+  /** Aula a que o tempo de reprodução é creditado (métricas de estudo). */
+  study?: LessonContext;
 }
 
 /**
@@ -40,10 +44,11 @@ export interface PlayerProps {
  * - useIdle: mostra/oculta os controles;
  * - useShortcuts: teclado, com regras de foco;
  * - useFeedback + Overlays: animações e estados sobre o vídeo;
- * - useProgressSync (já existente): grava a posição para retomar depois.
+ * - useProgressSync (já existente): grava a posição para retomar depois;
+ * - useStudyTracking: mede o tempo de reprodução efetiva (métricas de estudo).
  */
 export default function Player(props: PlayerProps) {
-  const { src, poster, title, mimeType, width, height, initialPosition, onSavePosition, next } = props;
+  const { src, poster, title, mimeType, width, height, initialPosition, onSavePosition, next, study } = props;
   const root = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const { state, store } = useMedia(video);
@@ -84,6 +89,8 @@ export default function Player(props: PlayerProps) {
     const t = window.setTimeout(() => setResumedAt(null), 6000);
     return () => window.clearTimeout(t);
   }, [resumedAt]);
+
+  useStudyTracking(video, study ?? null);
 
   // --- preferências (volume, mudo, velocidade) --------------------------------
   useEffect(() => {

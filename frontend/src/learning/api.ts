@@ -1,5 +1,6 @@
 // Tipos e chamadas da área de membros. Espelham app/api/courses.py.
 import { request } from "../api";
+import { invalidateStudyMetrics } from "../study/metricsStore";
 
 export type LessonKind = "video" | "file" | "text" | "unavailable";
 
@@ -122,7 +123,10 @@ export const learningApi = {
     request<{ progress: LessonProgress; course: { completed: number; total: number; percent: number } }>(
       `${lessonBase(id, key)}/completion`,
       { method: "PUT", body: JSON.stringify({ completed }) },
-    ),
+    ).then((result) => {
+      invalidateStudyMetrics(); // aulas concluídas e progresso geral mudaram
+      return result;
+    }),
 
   saveNote: (id: string, key: string, body: string, baseRevision: number, keepalive = false) =>
     request<Note>(`${lessonBase(id, key)}/notes`, {
