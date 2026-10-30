@@ -5,9 +5,11 @@ from pydantic import BaseModel
 
 from ..indexing.pipeline import index_snapshot
 from ..snapshots import SnapshotNotFound
-from .deps import AppState, get_state
+from .deps import AppState, get_state, get_user_id, require_telegram
 
-router = APIRouter(prefix="/api/snapshots", tags=["snapshots"])
+# A biblioteca de cursos (snapshots) é compartilhada; os vídeos de cada curso só
+# tocam para quem tem acesso ao canal pela própria conta do Telegram.
+router = APIRouter(prefix="/api/snapshots", tags=["snapshots"], dependencies=[Depends(get_user_id)])
 
 
 class CollectRequest(BaseModel):
@@ -29,15 +31,14 @@ async def list_snapshots(state: AppState = Depends(get_state)) -> list[dict]:
 
 
 @router.post("")
-async def collect(body: CollectRequest, state: AppState = Depends(get_state)) -> dict:
+async def collect(
+    body: CollectRequest, state: AppState = Depends(get_state), user_id: str = Depends(get_user_id)
+) -> dict:
     from ..telegram.collector import NotAMember, collect_channel
     from ..telegram.links import InvalidLink
 
-    client = state.telegram
-    if client is None or not await client.is_user_authorized():  # type: ignore[attr-defined]
-        raise HTTPException(
-            401, "telegram_not_connected: rode 'python -m app.cli login' e reinicie o servidor"
-        )
+    require_telegram(state, user_id)
+    client = await state.clients.client(user_id)
     if state.collect_lock.locked():
         raise HTTPException(409, "Já existe uma coleta em andamento")
     async with state.collect_lock:

@@ -1,24 +1,31 @@
-import shutil
+from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import create_app
 from app.streaming.streamer import CHUNK_SIZE
 from app.telegram.media import MediaUnavailable
 
-from .conftest import FIXTURES
+from .conftest import register
 
 COURSE = "/api/courses/curso_exemplo"
 SIZE = 50_000_000
 DATA = bytes(i % 241 for i in range(CHUNK_SIZE * 3))
 
 
-class FakeTelegram:
-    async def is_user_authorized(self):
-        return True
+class FakeClients:
+    """Substitui o conjunto de clientes do Telegram por usuário."""
 
-    async def disconnect(self):
+    def __init__(self, media):
+        self._media = media
+
+    async def media(self, user_id):
+        return self._media
+
+    async def revoked(self, user_id):
+        pass
+
+    async def close(self):
         pass
 
 
@@ -52,21 +59,21 @@ class FakeMedia:
 
 
 @pytest.fixture
-def client(tmp_path, monkeypatch):
-    monkeypatch.setenv("TELEAULA_DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("TG_API_ID", "")
-    monkeypatch.setenv("TG_API_HASH", "")
-    (tmp_path / "snapshots").mkdir()
-    shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / "curso_exemplo.json")
-    with TestClient(create_app()) as c:
-        yield c
+def client(make_app):
+    client = make_app()
+    register(client)
+    return client
 
 
 @pytest.fixture
 def media(client):
     state = client.app.state.teleaula
-    state.telegram, state.media = FakeTelegram(), FakeMedia()
-    return state.media
+    user_id = client.get("/api/auth/session").json()["user"]["id"]
+    state.settings = replace(state.settings, api_id=1, api_hash="x")
+    state.telegram_accounts.link(user_id, "+5511999990000", SimpleNamespace(id=1, first_name="J", last_name=None, username=None))
+    fake = FakeMedia()
+    state.clients = FakeClients(fake)
+    return fake
 
 
 def test_library_and_course_page(client):
@@ -112,7 +119,12 @@ def test_notes_autosave_conflict(client):
 
 
 def test_media_requires_telegram(client):
-    assert client.get(f"{COURSE}/media/10").status_code == 503
+    response = client.get(f"{COURSE}/media/10")
+    assert response.status_code == 503 and response.json()["code"] == "telegram_not_configured"
+
+
+def test_courses_require_login(make_app):
+    assert make_app().get(COURSE).status_code == 401
 
 
 def test_media_range(client, media):

@@ -29,17 +29,27 @@ class Settings:
     api_id: int | None
     api_hash: str | None
     data_dir: Path
-    # Aplicativo pessoal: há um único usuário local. O id existe para que progresso
-    # e anotações já fiquem associados a um usuário quando houver login (PLANO.md, 9).
-    user_id: str = "local"
     # Trechos de vídeo já baixados: memória e disco (data/cache), em MB. 0 desliga.
     stream_cache_mb: int = 256
     disk_cache_mb: int = 4096
 
     @property
-    def session_path(self) -> Path:
-        # O Telethon acrescenta ".session". Esse arquivo equivale à senha da conta.
-        return self.data_dir / "teleaula"
+    def sessions_dir(self) -> Path:
+        # Uma sessão do Telethon por usuário. Cada arquivo equivale à senha da conta.
+        return self.data_dir / "sessions"
+
+    def session_path(self, user_id: str) -> Path:
+        # O Telethon acrescenta ".session".
+        return self.sessions_dir / user_id
+
+    @property
+    def legacy_session_path(self) -> Path:
+        # Sessão única criada pelo antigo `python -m app.cli login` (não é mais usada).
+        return self.data_dir / "teleaula.session"
+
+    @property
+    def secret_path(self) -> Path:
+        return self.data_dir / "secret.key"
 
     @property
     def snapshots_dir(self) -> Path:
@@ -69,7 +79,6 @@ def get_settings() -> Settings:
         api_id=int(api_id) if api_id.isdigit() else None,
         api_hash=os.environ.get("TG_API_HASH") or None,
         data_dir=Path(os.environ.get("TELEAULA_DATA_DIR", "./data")).resolve(),
-        user_id=os.environ.get("TELEAULA_USER", "").strip() or "local",
         stream_cache_mb=_int(os.environ.get("TELEAULA_STREAM_CACHE_MB"), 256),
         disk_cache_mb=_int(os.environ.get("TELEAULA_DISK_CACHE_MB"), 4096),
     )

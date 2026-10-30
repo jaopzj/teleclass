@@ -11,12 +11,14 @@ from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response, StreamingResponse
+from telethon import errors
 
 from ..courses import Course, CourseNotFound
 from ..streaming.range import ByteRange, RangeNotSatisfiable, parse_range
 from ..streaming.streamer import stream_range
 from ..telegram.media import ChannelRef, MediaUnavailable, TelegramMedia
-from .deps import AppState, get_media, get_state
+from ..telegram.clients import TelegramReauthRequired
+from .deps import AppState, get_media, get_state, get_user_id
 
 router = APIRouter(prefix="/api/courses", tags=["mídia"])
 
@@ -45,6 +47,7 @@ async def stream_media(
     request: Request,
     download: bool = False,
     state: AppState = Depends(get_state),
+    user_id: str = Depends(get_user_id),
     media: TelegramMedia = Depends(get_media),
 ):
     course = _course(state, course_id, message_id)
@@ -54,6 +57,9 @@ async def stream_media(
         size = info.size if info and info.size else await media.file_size(channel, message_id)
     except MediaUnavailable as exc:
         raise HTTPException(410, str(exc)) from exc
+    except errors.UnauthorizedError as exc:
+        await state.clients.revoked(user_id)
+        raise TelegramReauthRequired() from exc
 
     headers = {
         "Accept-Ranges": "bytes",
@@ -78,10 +84,14 @@ async def stream_media(
     if request.method == "HEAD":
         return Response(status_code=status, media_type=mime, headers=headers)
     try:
-        # Garante que a mensagem existe antes de responder com 200/206.
+        # Garante que a mensagem existe e que a conta do usuário a acessa antes de
+        # responder com 200/206 (inclusive para trechos que já estão no cache).
         await media.message(channel, message_id)
     except MediaUnavailable as exc:
         raise HTTPException(410, str(exc)) from exc
+    except errors.UnauthorizedError as exc:
+        await state.clients.revoked(user_id)
+        raise TelegramReauthRequired() from exc
     body = stream_range(media.chunks(channel, message_id), byte_range)
     return StreamingResponse(body, status_code=status, media_type=mime, headers=headers)
 
@@ -91,6 +101,7 @@ async def thumbnail(
     course_id: str,
     message_id: int,
     state: AppState = Depends(get_state),
+    user_id: str = Depends(get_user_id),
     media: TelegramMedia = Depends(get_media),
 ):
     course = _course(state, course_id, message_id)
@@ -107,6 +118,9 @@ async def thumbnail(
             data = await media.thumbnail(_channel(course), message_id)
         except MediaUnavailable as exc:
             raise HTTPException(410, str(exc)) from exc
+        except errors.UnauthorizedError as exc:
+            await state.clients.revoked(user_id)
+            raise TelegramReauthRequired() from exc
     folder.mkdir(parents=True, exist_ok=True)
     if not data:
         missing.touch()

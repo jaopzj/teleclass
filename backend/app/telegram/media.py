@@ -70,6 +70,7 @@ class TelegramMedia:
         client: TelegramClient,
         *,
         cache_bytes: int = DEFAULT_CACHE_BYTES,
+        memory_cache: ChunkCache | None = None,
         disk_cache: DiskChunkCache | None = None,
         parallel: int = PARALLEL_CHUNKS,
         read_ahead: int = READ_AHEAD_CHUNKS,
@@ -77,7 +78,10 @@ class TelegramMedia:
         self.client = client
         self.parallel = max(1, parallel)
         self.read_ahead = max(0, read_ahead)
-        self._memory = ChunkCache(cache_bytes)
+        # Os caches podem ser compartilhados entre usuários: antes de servir um
+        # trecho, a rota confere com o cliente do próprio usuário se ele acessa a
+        # mensagem (`message()`), então ninguém lê vídeo de canal em que não está.
+        self._memory = memory_cache if memory_cache is not None else ChunkCache(cache_bytes)
         self._disk = disk_cache
         self._inflight: dict[tuple, asyncio.Future] = {}
         self._background: set[asyncio.Task] = set()
@@ -101,6 +105,8 @@ class TelegramMedia:
             for candidate in candidates:
                 try:
                     peer = await self.client.get_input_entity(candidate)
+                except errors.UnauthorizedError:
+                    raise  # sessão revogada: quem chama pede para vincular de novo
                 except (ValueError, errors.RPCError):
                     continue
                 self._peers[channel] = peer

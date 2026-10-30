@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterator
 
@@ -37,11 +37,40 @@ MIGRATIONS: list[str] = [
         PRIMARY KEY (user_id, course_id, lesson_key)
     );
     """,
+    # 2: contas da plataforma, sessões de login e conta do Telegram vinculada
+    """
+    CREATE TABLE users (
+        id             TEXT PRIMARY KEY,
+        username       TEXT NOT NULL UNIQUE,
+        password_hash  TEXT NOT NULL,
+        created_at     TEXT NOT NULL,
+        last_login_at  TEXT
+    );
+    CREATE TABLE auth_sessions (
+        token_hash    TEXT PRIMARY KEY,
+        user_id       TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        created_at    TEXT NOT NULL,
+        last_seen_at  TEXT NOT NULL,
+        expires_at    TEXT NOT NULL
+    );
+    CREATE INDEX auth_sessions_user ON auth_sessions (user_id);
+    CREATE TABLE telegram_accounts (
+        user_id           TEXT PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+        telegram_user_id  INTEGER NOT NULL UNIQUE,
+        phone_hmac        TEXT NOT NULL UNIQUE,
+        phone_masked      TEXT NOT NULL,
+        first_name        TEXT,
+        last_name         TEXT,
+        username          TEXT,
+        linked_at         TEXT NOT NULL
+    );
+    """,
 ]
 
 
-def utcnow() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+def utcnow(delta: timedelta | None = None) -> str:
+    moment = datetime.now(timezone.utc) + (delta or timedelta())
+    return moment.isoformat(timespec="milliseconds")
 
 
 class Database:
@@ -61,6 +90,7 @@ class Database:
         conn.row_factory = sqlite3.Row
         try:
             conn.execute("PRAGMA journal_mode = WAL")
+            conn.execute("PRAGMA foreign_keys = ON")
             with conn:  # commit no fim, rollback em erro
                 yield conn
         finally:
