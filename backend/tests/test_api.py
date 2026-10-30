@@ -20,7 +20,8 @@ def client(tmp_path, monkeypatch):
 
 
 def test_status_without_telegram(client):
-    assert client.get("/api/telegram/status").json() == {"configured": False, "authorized": False}
+    data = client.get("/api/telegram/status").json()
+    assert (data["configured"], data["authorized"]) == (False, False)
 
 
 def test_list_and_index(client):

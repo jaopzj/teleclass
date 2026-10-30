@@ -52,6 +52,18 @@ class SnapshotStore:
             raise SnapshotNotFound(name)
         return load_snapshot(path)
 
+    def names(self) -> list[str]:
+        if not self.directory.is_dir():
+            return []
+        return [p.stem for p in sorted(self.directory.glob("*.json")) if _NAME.match(p.stem)]
+
+    def modified_at(self, name: str) -> float:
+        path = self._path(name)
+        try:
+            return path.stat().st_mtime
+        except FileNotFoundError as exc:
+            raise SnapshotNotFound(name) from exc
+
     def list(self) -> list[SnapshotInfo]:
         if not self.directory.is_dir():
             return []

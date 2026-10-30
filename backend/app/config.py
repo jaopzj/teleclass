@@ -19,11 +19,22 @@ def _load_dotenv(path: Path) -> None:
         os.environ.setdefault(key.strip(), value.strip().strip("'\""))
 
 
+def _int(value: str | None, default: int) -> int:
+    value = (value or "").strip()
+    return int(value) if value.isdigit() else default
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     api_id: int | None
     api_hash: str | None
     data_dir: Path
+    # Aplicativo pessoal: há um único usuário local. O id existe para que progresso
+    # e anotações já fiquem associados a um usuário quando houver login (PLANO.md, 9).
+    user_id: str = "local"
+    # Trechos de vídeo já baixados: memória e disco (data/cache), em MB. 0 desliga.
+    stream_cache_mb: int = 256
+    disk_cache_mb: int = 4096
 
     @property
     def session_path(self) -> Path:
@@ -33,6 +44,18 @@ class Settings:
     @property
     def snapshots_dir(self) -> Path:
         return self.data_dir / "snapshots"
+
+    @property
+    def database_path(self) -> Path:
+        return self.data_dir / "teleaula.db"
+
+    @property
+    def cache_dir(self) -> Path:
+        return self.data_dir / "cache"
+
+    @property
+    def thumbs_dir(self) -> Path:
+        return self.data_dir / "thumbs"
 
     @property
     def telegram_configured(self) -> bool:
@@ -46,4 +69,7 @@ def get_settings() -> Settings:
         api_id=int(api_id) if api_id.isdigit() else None,
         api_hash=os.environ.get("TG_API_HASH") or None,
         data_dir=Path(os.environ.get("TELEAULA_DATA_DIR", "./data")).resolve(),
+        user_id=os.environ.get("TELEAULA_USER", "").strip() or "local",
+        stream_cache_mb=_int(os.environ.get("TELEAULA_STREAM_CACHE_MB"), 256),
+        disk_cache_mb=_int(os.environ.get("TELEAULA_DISK_CACHE_MB"), 4096),
     )

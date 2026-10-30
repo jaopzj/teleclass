@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Report } from "./api";
+import { Report } from "../api";
 
 const STAT_LABELS: Record<string, string> = {
   messages: "Mensagens",

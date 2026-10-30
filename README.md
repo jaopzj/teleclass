@@ -3,10 +3,11 @@
 Plataforma pessoal para assistir cursos publicados em canais do Telegram com
 experiência de área de membros. O plano completo está em [PLANO.md](PLANO.md).
 
-**Estado atual:** piloto da indexação (PLANO.md, seção 6). O app lê um canal,
-encontra o sumário, monta módulos, subtópicos e aulas e mostra um relatório de
-inspeção. Player, progresso e banco de dados ainda não existem.
-Arquitetura e decisões: [docs/indexacao.md](docs/indexacao.md).
+**Estado atual:** indexação + área de membros. O app lê um canal, monta
+módulos, subtópicos e aulas, e permite assistir às aulas com streaming direto do
+Telegram, retomada de onde parou, progresso por curso e anotações por aula.
+Arquitetura: [docs/indexacao.md](docs/indexacao.md) e
+[docs/area-de-membros.md](docs/area-de-membros.md).
 
 ## Requisitos
 
@@ -35,7 +36,7 @@ python -m app.cli index nomedocanal --json data/resultado.json
 Rode os comandos na raiz do projeto (a pasta `data/` é criada ali).
 `teleaula-index` é um atalho para `python -m app.cli`.
 
-### Interface web (mínima, para testes)
+### Interface web
 
 ```bash
 # backend (na raiz do projeto)
@@ -46,9 +47,19 @@ cd frontend && npm install && npm run dev     # http://127.0.0.1:5173
 ```
 
 Com `npm run build`, o backend passa a servir o frontend em
-http://127.0.0.1:8000. A tela lista os snapshots, coleta novos canais (quando a
-conta já está conectada pelo `login`) e mostra a árvore do curso com a origem
-de cada material e o relatório de inspeção.
+http://127.0.0.1:8000.
+
+- **Meus cursos** (`/`): um card por snapshot coletado, com progresso.
+- **Curso** (`/cursos/<snapshot>`): módulos, subtópicos e aulas, percentual,
+  última aula assistida e "Continuar de onde parei".
+- **Aula**: player, anotações com salvamento automático, marcar como concluída,
+  aula anterior e próxima.
+- **Indexação** (`/indexacao`): coleta canais e mostra a árvore e o relatório.
+
+Para os vídeos tocarem, o servidor precisa estar conectado ao Telegram (rode o
+`login` antes). Depois de atualizar o projeto, rode `pip install -e .` de novo:
+o pacote `cryptg` é o que deixa o streaming rápido. Trechos já assistidos ficam
+em `data/cache/` (até 4 GB, configurável no `.env`). Progresso e anotações ficam em `data/teleaula.db`.
 
 Sem credenciais, dá para testar com o canal de exemplo:
 `python -m app.cli index backend/tests/fixtures/curso_exemplo.json`.
