@@ -100,15 +100,18 @@ LinkFlow = { step: "code" | "password", phone /* mascarado */, delivery: {method
 - **Vínculo único**: um telefone e uma conta do Telegram pertencem a no máximo um usuário. Se a conta já for de outro usuário, a autorização recém-criada é encerrada no Telegram.
 - **Arquivos de sessão** com permissão 600 (em sistemas que suportam) em `data/sessions/`, que está no `.gitignore`.
 
-## Biblioteca de cursos e streaming
+## Biblioteca, progresso e histórico: privados por usuário
 
-Os snapshots (`data/snapshots/`) continuam compartilhados: todos os usuários veem a mesma biblioteca. Os vídeos tocam pela conta do Telegram de cada usuário, então só tocam para quem participa do canal. O cache de trechos (memória e `data/cache/`) é compartilhado, mas antes de servir qualquer trecho a rota confere com o cliente do próprio usuário se ele acessa a mensagem.
+- **Biblioteca**: cada usuário tem a própria pasta de snapshots, `data/snapshots/<id do usuário>/`, e o próprio catálogo (`app/libraries.py`). Coletar, listar, indexar, abrir curso ou aula e pedir vídeo ou miniatura só enxergam a biblioteca de quem está logado; o curso de outra pessoa responde 404, como se não existisse.
+- **Progresso, histórico ("continuar de onde parei") e anotações**: gravados no banco com o id do usuário em todas as consultas. Dois usuários que coletam o mesmo canal têm cursos com o mesmo id, mas dados totalmente separados.
+- **Miniaturas**: em `data/thumbs/<id do usuário>/`.
+- **Vídeos**: tocam pela conta do Telegram de cada usuário. O cache interno de trechos de vídeo (memória e `data/cache/`) guarda só bytes já baixados e nunca aparece na interface; antes de servir qualquer trecho, a rota confere com o Telegram do próprio usuário se ele tem acesso à mensagem.
 
 ## Migração do login pelo terminal
 
 - `python -m app.cli login` foi removido. `data/teleaula.session` não é mais usado e pode ser apagado depois de vincular pela interface.
-- A primeira conta criada herda o progresso e as anotações gravados antes do login (usuário `local`).
-- `python -m app.cli collect <link> --user <nome>` usa o Telegram vinculado a esse usuário.
+- A primeira conta criada herda o progresso, as anotações e os cursos (snapshots soltos em `data/snapshots/`) de antes do login. As contas seguintes começam com a biblioteca vazia.
+- `python -m app.cli collect <link> --user <nome>` usa o Telegram desse usuário e salva na biblioteca dele; `index <nome> --user <nome>` lê da biblioteca dele.
 
 ## Evoluções previstas
 

@@ -22,10 +22,9 @@ from .accounts import RateLimiter, SessionStore, UserStore
 from .api import auth, courses, media, snapshots, telegram
 from .api.deps import AppState
 from .config import Settings, get_settings
-from .courses import CourseCatalog
 from .errors import AppError
 from .learning import Database, NotesStore, ProgressStore
-from .snapshots import SnapshotStore
+from .libraries import Libraries
 from .streaming.cache import ChunkCache, DiskChunkCache
 from .telegram.accounts import TelegramAccountStore, load_secret
 from .telegram.clients import TelegramClients
@@ -37,7 +36,6 @@ SWEEP_INTERVAL = 60
 
 
 def build_state(settings: Settings) -> AppState:
-    store = SnapshotStore(settings.snapshots_dir)
     database = Database(settings.database_path)
     database.migrate()
     limiter = RateLimiter()
@@ -49,8 +47,7 @@ def build_state(settings: Settings) -> AppState:
     )
     return AppState(
         settings=settings,
-        store=store,
-        catalog=CourseCatalog(store),
+        libraries=Libraries(settings.snapshots_dir),
         progress=ProgressStore(database),
         notes=NotesStore(database),
         users=UserStore(database),

@@ -22,6 +22,9 @@ class FakeClients:
     async def media(self, user_id):
         return self._media
 
+    def has_session(self, user_id):
+        return True
+
     async def revoked(self, user_id):
         pass
 
@@ -148,5 +151,6 @@ def test_media_must_belong_to_course(client, media):
 
 def test_thumbnail_is_cached(client, media, tmp_path):
     assert client.get(f"{COURSE}/media/10/thumb").content == b"jpeg"
-    assert (tmp_path / "thumbs" / "1234567890" / "10.jpg").is_file()
+    user_id = client.get("/api/auth/session").json()["user"]["id"]
+    assert (tmp_path / "thumbs" / user_id / "1234567890" / "10.jpg").is_file()
     assert client.get(f"{COURSE}/media/15/thumb").status_code == 404

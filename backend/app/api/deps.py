@@ -8,10 +8,9 @@ from fastapi import Depends, Request
 
 from ..accounts import RateLimiter, SessionStore, User, UserStore
 from ..config import Settings
-from ..courses import CourseCatalog
 from ..errors import AppError
 from ..learning import NotesStore, ProgressStore
-from ..snapshots import SnapshotStore
+from ..libraries import Libraries
 from ..telegram.accounts import TelegramAccountStore
 from ..telegram.clients import TelegramClients
 from ..telegram.linking import TelegramLinker
@@ -22,8 +21,7 @@ SESSION_COOKIE = "teleaula_session"
 @dataclass
 class AppState:
     settings: Settings
-    store: SnapshotStore
-    catalog: CourseCatalog
+    libraries: Libraries  # snapshots e catálogo de cada usuário
     progress: ProgressStore
     notes: NotesStore
     users: UserStore

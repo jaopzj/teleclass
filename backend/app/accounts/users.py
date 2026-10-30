@@ -49,6 +49,10 @@ class UserStore:
             row = conn.execute("SELECT id, username, created_at FROM users WHERE id = ?", (user_id,)).fetchone()
         return User(row["id"], row["username"], row["created_at"]) if row else None
 
+    def count(self) -> int:
+        with self.db.connect() as conn:
+            return conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+
     def is_available(self, username: str) -> tuple[bool, str | None]:
         username = normalize_username(username)
         problem = username_problem(username)

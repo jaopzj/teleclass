@@ -99,9 +99,9 @@ def _stats(course: Course) -> dict:
 # --- acesso -------------------------------------------------------------------
 
 
-def _course(state: AppState, course_id: str) -> Course:
+def _course(state: AppState, user: str, course_id: str) -> Course:
     try:
-        return state.catalog.get(course_id)
+        return state.libraries.catalog(user).get(course_id)
     except CourseNotFound as exc:
         raise HTTPException(404, "Curso não encontrado") from exc
 
@@ -119,7 +119,7 @@ def _lesson(course: Course, key: str) -> CourseLesson:
 @router.get("")
 def list_courses(state: AppState = Depends(get_state), user: str = Depends(get_user_id)) -> list[dict]:
     items = []
-    for course in state.catalog.all():
+    for course in state.libraries.catalog(user).all():
         progress = state.progress.for_course(user, course.id)
         summary = summarize(course, progress)
         items.append(
@@ -139,7 +139,7 @@ def list_courses(state: AppState = Depends(get_state), user: str = Depends(get_u
 def get_course(
     course_id: str, state: AppState = Depends(get_state), user: str = Depends(get_user_id)
 ) -> dict:
-    course = _course(state, course_id)
+    course = _course(state, user, course_id)
     progress = state.progress.for_course(user, course.id)
     return {
         "id": course.id,
@@ -155,7 +155,7 @@ def get_course(
 def get_lesson(
     course_id: str, key: str, state: AppState = Depends(get_state), user: str = Depends(get_user_id)
 ) -> dict:
-    course = _course(state, course_id)
+    course = _course(state, user, course_id)
     lesson = _lesson(course, key)
     progress = state.progress.get(user, course.id, lesson.key)
     return {
@@ -195,7 +195,7 @@ def save_position(
     state: AppState = Depends(get_state),
     user: str = Depends(get_user_id),
 ) -> dict:
-    lesson = _lesson(_course(state, course_id), key)
+    lesson = _lesson(_course(state, user, course_id), key)
     position = body.position_seconds
     if body.duration_seconds:
         position = min(position, body.duration_seconds)
@@ -214,7 +214,7 @@ def set_completion(
     state: AppState = Depends(get_state),
     user: str = Depends(get_user_id),
 ) -> dict:
-    course = _course(state, course_id)
+    course = _course(state, user, course_id)
     lesson = _lesson(course, key)
     saved = state.progress.set_completed(user, course.id, lesson.key, body.completed)
     summary = summarize(course, state.progress.for_course(user, course.id))
@@ -228,7 +228,7 @@ def set_completion(
 def get_notes(
     course_id: str, key: str, state: AppState = Depends(get_state), user: str = Depends(get_user_id)
 ) -> dict:
-    lesson = _lesson(_course(state, course_id), key)
+    lesson = _lesson(_course(state, user, course_id), key)
     return state.notes.get(user, course_id, lesson.key).to_dict()
 
 
@@ -245,7 +245,7 @@ def save_notes(
     state: AppState = Depends(get_state),
     user: str = Depends(get_user_id),
 ):
-    lesson = _lesson(_course(state, course_id), key)
+    lesson = _lesson(_course(state, user, course_id), key)
     try:
         note = state.notes.save(user, course_id, lesson.key, body.body, body.base_revision)
     except NoteConflict as conflict:

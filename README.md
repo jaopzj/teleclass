@@ -34,11 +34,11 @@ usa o terminal. Detalhes e contrato da API em
 Opcional, pelo terminal:
 
 ```bash
-# Coletar um canal com o Telegram vinculado a um usuário (gera data/snapshots/<canal>.json)
+# Coletar um canal para a biblioteca de um usuário (gera data/snapshots/<id do usuário>/<canal>.json)
 python -m app.cli collect https://t.me/nomedocanal --user seu_usuario
 
 # Ver a estrutura e o relatório
-python -m app.cli index nomedocanal --json data/resultado.json
+python -m app.cli index nomedocanal --user seu_usuario --json data/resultado.json
 ```
 
 Rode os comandos na raiz do projeto (a pasta `data/` é criada ali).
@@ -64,8 +64,8 @@ http://127.0.0.1:8000.
   aula anterior e próxima.
 - **Indexação** (`/indexacao`): coleta canais e mostra a árvore e o relatório.
 
-Os vídeos tocam pela conta do Telegram vinculada a cada usuário: cada um só
-assiste aos canais de que participa. Depois de atualizar o projeto, rode `pip install -e .` de novo:
+Cada usuário tem a própria biblioteca, progresso e anotações; ninguém vê os
+cursos de outra pessoa. Os vídeos tocam pela conta do Telegram de cada usuário. Depois de atualizar o projeto, rode `pip install -e .` de novo:
 o pacote `cryptg` é o que deixa o streaming rápido. Trechos já assistidos ficam
 em `data/cache/` (até 4 GB, configurável no `.env`). Progresso e anotações ficam em `data/teleaula.db`.
 

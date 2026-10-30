@@ -1,7 +1,7 @@
 """Ferramentas de linha de comando (opcionais: tudo isso também existe na interface).
 
     python -m app.cli collect https://t.me/canal --user joao  # usa o Telegram vinculado a "joao"
-    python -m app.cli index canal                            # mostra estrutura + relatório
+    python -m app.cli index canal --user joao                # mostra estrutura + relatório
     python -m app.cli index caminho.json --json saida.json
 
 Cadastro, login e vínculo do Telegram acontecem só pela interface web.
@@ -19,7 +19,7 @@ from .config import get_settings
 from .indexing.pipeline import index_snapshot
 from .indexing.render import render_text
 from .indexing.storage import load_snapshot
-from .snapshots import SnapshotStore
+from .libraries import Libraries
 
 
 def _user_id(username: str) -> str:
@@ -52,17 +52,18 @@ async def _collect(link: str, name: str | None, username: str) -> None:
         )
     finally:
         await client.disconnect()
-    saved = SnapshotStore(settings.snapshots_dir).save(snapshot, name)
+    saved = Libraries(settings.snapshots_dir).store(user_id).save(snapshot, name)
     print(f"{len(snapshot.messages)} mensagens salvas no snapshot '{saved}'")
 
 
-def _index(target: str, json_out: str | None) -> None:
+def _index(target: str, json_out: str | None, username: str | None) -> None:
     path = Path(target)
-    snapshot = (
-        load_snapshot(path)
-        if path.suffix == ".json"
-        else SnapshotStore(get_settings().snapshots_dir).load(target)
-    )
+    if path.suffix == ".json":
+        snapshot = load_snapshot(path)
+    else:
+        if not username:
+            sys.exit("Informe de quem é a biblioteca: --user seu_usuario")
+        snapshot = Libraries(get_settings().snapshots_dir).store(_user_id(username)).load(target)
     result = index_snapshot(snapshot)
     print(render_text(result))
     if json_out:
@@ -83,6 +84,7 @@ def main(argv: list[str] | None = None) -> None:
     index = sub.add_parser("index", help="indexa um snapshot e mostra o relatório")
     index.add_argument("snapshot", help="nome do snapshot ou caminho de um .json")
     index.add_argument("--json", dest="json_out", help="grava o resultado completo em JSON")
+    index.add_argument("--user", help="dono da biblioteca (obrigatório ao usar o nome do snapshot)")
     args = parser.parse_args(argv)
 
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -96,7 +98,7 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "collect":
         asyncio.run(_collect(args.link, args.name, args.user))
     else:
-        _index(args.snapshot, args.json_out)
+        _index(args.snapshot, args.json_out, args.user)
 
 
 if __name__ == "__main__":

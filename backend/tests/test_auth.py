@@ -1,11 +1,13 @@
 """Cadastro, login, sessão e proteção das rotas."""
 
+import shutil
+
 import pytest
 
 from app.accounts.passwords import hash_password, verify_password
 from app.accounts.ratelimit import RateLimiter
 
-from .conftest import PASSWORD, register
+from .conftest import FIXTURES, PASSWORD, register
 
 
 @pytest.fixture
@@ -96,13 +98,35 @@ def test_login_rate_limited(client):
     assert int(blocked.headers["retry-after"]) > 0
 
 
-def test_users_are_isolated(client, make_app):
-    register(client, "joao")
-    client.put("/api/courses/curso_exemplo/lessons/A001/notes", json={"body": "nota do joão", "base_revision": 0})
+def test_library_is_private(client, make_app):
+    register(client, "joao")  # primeira conta: herda o curso de antes do login
+    assert [c["id"] for c in client.get("/api/courses").json()] == ["curso_exemplo"]
     other = make_app()
     register(other, "maria")
-    note = other.get("/api/courses/curso_exemplo/lessons/A001").json()["note"]
-    assert note["body"] == ""
+    assert other.get("/api/courses").json() == []
+    assert other.get("/api/snapshots").json() == []
+    assert other.get("/api/courses/curso_exemplo").status_code == 404
+    assert other.get("/api/courses/curso_exemplo/lessons/A001").status_code == 404
+    assert other.get("/api/snapshots/curso_exemplo/index").status_code == 404
+    put = other.put("/api/courses/curso_exemplo/lessons/A001/notes", json={"body": "x", "base_revision": 0})
+    assert put.status_code == 404
+
+
+def test_progress_and_notes_are_private(client, make_app, tmp_path):
+    register(client, "joao")
+    other = make_app()
+    maria = register(other, "maria")["user"]["id"]
+    # Maria coleta o mesmo canal: mesmo id de curso, dados separados.
+    (tmp_path / "snapshots" / maria).mkdir(parents=True)
+    shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / maria / "curso_exemplo.json")
+    client.put("/api/courses/curso_exemplo/lessons/A001/notes", json={"body": "nota do joão", "base_revision": 0})
+    client.put("/api/courses/curso_exemplo/lessons/A001/completion", json={"completed": True})
+    client.put("/api/courses/curso_exemplo/lessons/A002/progress", json={"position_seconds": 30, "duration_seconds": 60})
+    lesson = other.get("/api/courses/curso_exemplo/lessons/A001").json()
+    assert lesson["note"]["body"] == ""
+    assert lesson["lesson"]["progress"]["completed"] is False
+    progress = other.get("/api/courses/curso_exemplo").json()["progress"]
+    assert progress["completed"] == 0 and progress["last_watched"] is None
 
 
 def test_first_user_inherits_progress_from_before_login(client):

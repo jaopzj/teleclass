@@ -71,6 +71,9 @@ def register(body: Credentials, request: Request, response: Response, state: App
         "Muitas contas criadas a partir deste dispositivo. Tente de novo mais tarde.",
     )
     user = state.users.create(body.username, body.password)
+    if state.users.count() == 1:
+        # Primeira conta: herda os cursos coletados antes de existir login.
+        state.libraries.adopt_legacy(user.id)
     _set_cookie(response, request, state.sessions.create(user.id))
     return _session_payload(state, user)
 

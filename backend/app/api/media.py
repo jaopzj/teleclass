@@ -26,9 +26,9 @@ router = APIRouter(prefix="/api/courses", tags=["mídia"])
 STREAM_WINDOW = 16 * 1024 * 1024
 
 
-def _course(state: AppState, course_id: str, message_id: int) -> Course:
+def _course(state: AppState, user_id: str, course_id: str, message_id: int) -> Course:
     try:
-        course = state.catalog.get(course_id)
+        course = state.libraries.catalog(user_id).get(course_id)
     except CourseNotFound as exc:
         raise HTTPException(404, "Curso não encontrado") from exc
     if not course.has_media(message_id):
@@ -50,7 +50,7 @@ async def stream_media(
     user_id: str = Depends(get_user_id),
     media: TelegramMedia = Depends(get_media),
 ):
-    course = _course(state, course_id, message_id)
+    course = _course(state, user_id, course_id, message_id)
     info = course.media_info(message_id)
     channel = _channel(course)
     try:
@@ -104,8 +104,9 @@ async def thumbnail(
     user_id: str = Depends(get_user_id),
     media: TelegramMedia = Depends(get_media),
 ):
-    course = _course(state, course_id, message_id)
-    folder = state.settings.thumbs_dir / str(course.channel_id or course.id)
+    course = _course(state, user_id, course_id, message_id)
+    # Miniaturas também ficam separadas por usuário.
+    folder = state.settings.thumbs_dir / user_id / str(course.channel_id or course.id)
     path = folder / f"{message_id}.jpg"
     missing = folder / f"{message_id}.none"
     cache = {"Cache-Control": "private, max-age=86400"}
