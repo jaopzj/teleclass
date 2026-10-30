@@ -1,3 +1,5 @@
+import { AUTH_EVENT } from "../api";
+
 export interface PlaybackError {
   title: string;
   message: string;
@@ -12,10 +14,15 @@ export async function diagnose(src: string, error: MediaError | null, mimeType: 
   const code = error?.code;
   try {
     const response = await fetch(src, { headers: { Range: "bytes=0-0" } });
-    if (response.status === 503) {
+    if (response.status === 401 || response.status === 409 || response.status === 503) {
+      const body = await response.json().catch(() => ({}));
+      if (body.code === "telegram_reauth_required" || body.code === "not_authenticated") {
+        // O app leva para a tela de vínculo (ou de login) automaticamente.
+        window.dispatchEvent(new CustomEvent(AUTH_EVENT, { detail: body.code }));
+      }
       return {
-        title: "Telegram desconectado",
-        message: "Rode “python -m app.cli login” e reinicie o servidor para assistir às aulas.",
+        title: body.code === "telegram_unavailable" ? "Telegram fora do ar" : "Telegram desconectado",
+        message: body.detail ?? "Vincule sua conta do Telegram para assistir às aulas.",
         canRetry: true,
       };
     }

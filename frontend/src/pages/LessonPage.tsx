@@ -16,7 +16,7 @@ function useSlowCrypto() {
   useEffect(() => {
     slowCryptoCheck ??= api
       .status()
-      .then((s) => s.authorized && s.fast_crypto === false)
+      .then((s) => s.linked && s.fast_crypto === false)
       .catch(() => false);
     slowCryptoCheck.then(setSlow);
   }, []);

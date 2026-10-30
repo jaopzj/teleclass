@@ -5,7 +5,7 @@ import ReportPanel from "./ReportPanel";
 import "./indexing.css";
 
 export default function IndexingPage() {
-  const [status, setStatus] = useState<{ configured: boolean; authorized: boolean }>();
+  const [status, setStatus] = useState<{ configured: boolean; linked: boolean }>();
   const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
   const [selected, setSelected] = useState<string>();
   const [result, setResult] = useState<IndexResult>();
@@ -56,7 +56,7 @@ export default function IndexingPage() {
         <p className="muted small">Colete canais e confira a estrutura antes de estudar.</p>
         <p className="muted">
           Telegram:{" "}
-          {!status ? "?" : !status.configured ? "não configurado" : status.authorized ? "conectado" : "não conectado"}
+          {!status ? "?" : !status.configured ? "não configurado" : status.linked ? "conectado" : "não conectado"}
         </p>
 
         <form onSubmit={collect} className="collect">
@@ -64,9 +64,9 @@ export default function IndexingPage() {
             placeholder="https://t.me/canal"
             value={link}
             onChange={(e) => setLink(e.target.value)}
-            disabled={busy || !status?.authorized}
+            disabled={busy || !status?.linked}
           />
-          <button disabled={busy || !link.trim() || !status?.authorized}>
+          <button disabled={busy || !link.trim() || !status?.linked}>
             {busy ? "Coletando..." : "Coletar canal"}
           </button>
         </form>

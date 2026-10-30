@@ -23,13 +23,21 @@ python -m venv .venv
 pip install -e ".[dev]"
 copy .env.example .env            # preencha TG_API_ID e TG_API_HASH
 
-# 1. Entrar na conta do Telegram (uma vez; pede telefone, código e senha 2FA)
-python -m app.cli login
+uvicorn app.main:app --app-dir backend        # http://127.0.0.1:8000
+```
 
-# 2. Coletar um canal (gera data/snapshots/<canal>.json)
-python -m app.cli collect https://t.me/nomedocanal
+Abra o app, clique em **Criar conta** e siga as etapas: usuário e senha,
+telefone do Telegram, código (e senha de duas etapas, se houver). Nada disso
+usa o terminal. Detalhes e contrato da API em
+[docs/autenticacao.md](docs/autenticacao.md).
 
-# 3. Ver a estrutura e o relatório no terminal
+Opcional, pelo terminal:
+
+```bash
+# Coletar um canal com o Telegram vinculado a um usuário (gera data/snapshots/<canal>.json)
+python -m app.cli collect https://t.me/nomedocanal --user seu_usuario
+
+# Ver a estrutura e o relatório
 python -m app.cli index nomedocanal --json data/resultado.json
 ```
 
@@ -56,8 +64,8 @@ http://127.0.0.1:8000.
   aula anterior e próxima.
 - **Indexação** (`/indexacao`): coleta canais e mostra a árvore e o relatório.
 
-Para os vídeos tocarem, o servidor precisa estar conectado ao Telegram (rode o
-`login` antes). Depois de atualizar o projeto, rode `pip install -e .` de novo:
+Os vídeos tocam pela conta do Telegram vinculada a cada usuário: cada um só
+assiste aos canais de que participa. Depois de atualizar o projeto, rode `pip install -e .` de novo:
 o pacote `cryptg` é o que deixa o streaming rápido. Trechos já assistidos ficam
 em `data/cache/` (até 4 GB, configurável no `.env`). Progresso e anotações ficam em `data/teleaula.db`.
 
@@ -72,6 +80,9 @@ pytest
 
 ## Segurança
 
-O arquivo `data/teleaula.session` dá acesso total à sua conta do Telegram.
-Ele fica em `data/`, que está no `.gitignore`. Nunca compartilhe essa pasta.
+Os arquivos em `data/sessions/` dão acesso total às contas do Telegram
+vinculadas, e `data/secret.key` protege os telefones gravados. Tudo fica em
+`data/`, que está no `.gitignore`. Nunca compartilhe essa pasta. O antigo
+`data/teleaula.session` (login pelo terminal) não é mais usado e pode ser
+apagado.
 A API escuta só em `127.0.0.1` e é somente leitura no Telegram.
