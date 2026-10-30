@@ -1,4 +1,6 @@
-// Tipos espelham os `to_dict()` do backend (app/indexing/structure.py e report.py).
+// Cliente HTTP comum e tipos da tela de indexação, que espelham os `to_dict()` do
+// backend (app/indexing/structure.py e report.py). Os tipos da área de membros
+// ficam em learning/api.ts.
 
 export interface Media {
   kind: string;
@@ -68,14 +70,20 @@ export interface SnapshotInfo {
   modified_at: string;
 }
 
-async function request<T>(url: string, init?: RequestInit): Promise<T> {
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number, readonly body: unknown) {
+    super(message);
+  }
+}
+
+export async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.detail ?? `Erro ${response.status}`);
+    throw new ApiError(body.detail ?? `Erro ${response.status}`, response.status, body);
   }
   return response.json() as Promise<T>;
 }

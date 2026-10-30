@@ -1,4 +1,4 @@
-import { Lesson, Material, Section } from "./api";
+import { Lesson, Material, Section } from "../api";
 
 const REASONS: Record<Material["reason"], string> = {
   tag: "identificador na legenda",

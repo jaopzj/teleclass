@@ -6,6 +6,7 @@ recebe o curso e confere se a mensagem faz parte dele.
 
 from __future__ import annotations
 
+import unicodedata
 from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -37,7 +38,7 @@ def _channel(course: Course) -> ChannelRef:
     return ChannelRef(course.channel_id, course.username)
 
 
-@router.get("/{course_id}/media/{message_id}")
+@router.api_route("/{course_id}/media/{message_id}", methods=["GET", "HEAD"])
 async def stream_media(
     course_id: str,
     message_id: int,
@@ -74,6 +75,8 @@ async def stream_media(
         headers["Content-Range"] = f"bytes {byte_range.start}-{byte_range.end}/{size}"
     headers["Content-Length"] = str(byte_range.length)
 
+    if request.method == "HEAD":
+        return Response(status_code=status, media_type=mime, headers=headers)
     try:
         # Garante que a mensagem existe antes de responder com 200/206.
         await media.message(channel, message_id)
@@ -116,5 +119,6 @@ def _disposition(file_name: str | None, download: bool) -> str:
     kind = "attachment" if download else "inline"
     if not file_name:
         return kind
-    ascii_name = file_name.encode("ascii", "ignore").decode().replace('"', "") or "arquivo"
+    plain = unicodedata.normalize("NFKD", file_name)
+    ascii_name = plain.encode("ascii", "ignore").decode().replace('"', "").strip() or "arquivo"
     return f"{kind}; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(file_name)}"
