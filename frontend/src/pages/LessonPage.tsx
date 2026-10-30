@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import Icon from "../components/Icon";
 import NotesPanel from "../components/NotesPanel";
 import RichText from "../components/RichText";
-import VideoPlayer from "../components/VideoPlayer";
+import Player from "../player/Player";
 import { formatSize } from "../format";
 import { useResource } from "../hooks/useResource";
 import { learningApi, LessonDetail, LessonProgress, mediaUrl, thumbUrl } from "../learning/api";
@@ -50,7 +50,7 @@ function LessonSkeleton() {
     <div className="page page-wide">
       <div className="lesson-layout">
         <div className="lesson-main">
-          <div className="player skeleton" style={{ aspectRatio: "16 / 9" }} />
+          <div className="pp skeleton" style={{ aspectRatio: "16 / 9" }} />
         </div>
         <div className="notes skeleton" />
       </div>
@@ -128,7 +128,9 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
             </div>
           )}
           {video ? (
-            <VideoPlayer
+            <Player
+              title={lesson.title}
+              next={next ? { title: next.title, href: paths.lesson(course.id, next.key) } : undefined}
               src={mediaUrl(course.id, video.message_id)}
               poster={thumbUrl(course.id, video.message_id)}
               mimeType={video.mime_type}

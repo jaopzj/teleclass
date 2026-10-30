@@ -94,10 +94,32 @@ Tudo é chaveado por `(usuário, curso, chave da aula)`. Hoje o usuário é semp
 ## Frontend
 
 `router.tsx` (History API, sem dependência nova), `pages/` (biblioteca, curso,
-aula), `components/` (`VideoPlayer` com botões e atalhos ← → / J L de 10 s, `NotesPanel`, capa, progresso, miniatura),
+aula), `components/` (`NotesPanel`, capa, progresso, miniatura), `player/` (player próprio, abaixo),
 `hooks/useProgressSync` e `hooks/useNoteAutosave`. A tela de indexação continua
 em `/indexacao`. O backend devolve o `index.html` para rotas do app, então
 recarregar em `/cursos/...` funciona.
+
+### Player (`frontend/src/player/`)
+
+Sem controles nativos. Cada responsabilidade em um módulo:
+
+- `mediaStore.ts` / `useMedia.ts`: estado derivado só dos eventos do `<video>`
+  (carregando, parado, tocando, carregando trecho, fim, erro), via
+  `useSyncExternalStore`. A posição da barra é escrita por `usePlayhead`
+  (requestAnimationFrame + variável CSS), sem re-render por quadro.
+- `useFullscreen.ts`: tela cheia no contêiner inteiro (controles, atalhos e
+  animações continuam iguais). No iPhone, que não permite isso, usa a tela
+  cheia nativa do vídeo.
+- `useIdle.ts`: controles somem após 2,6 s sem movimento enquanto toca; nunca
+  com menu aberto, arrastando a barra ou com o mouse sobre os controles.
+- `useShortcuts.ts`: Espaço/K, ←/J, →/L (10 s), M, F. Ignora campos editáveis
+  (anotações), teclas com Ctrl/Alt/Meta e sliders que usam as setas.
+- `useFeedback.ts` + `Overlays.tsx`: animações de play/pausa, avanço acumulado
+  (+20 s ao apertar duas vezes), volume, velocidade, carregamento, fim e erro.
+- `ProgressBar.tsx`: reproduzido, carregado e restante; tempo ao passar o
+  mouse; o salto só é pedido ao soltar o arraste.
+- `preferences.ts`: volume, mudo e velocidade ficam salvos no navegador.
+
 
 ## Pontos de extensão
 
