@@ -11,4 +11,11 @@ router = APIRouter(prefix="/api/telegram", tags=["telegram"])
 async def status(state: AppState = Depends(get_state)) -> dict:
     client = state.telegram
     authorized = bool(client) and await client.is_user_authorized()  # type: ignore[union-attr]
-    return {"configured": state.settings.telegram_configured, "authorized": authorized}
+    from ..telegram.media import fast_crypto_available
+
+    return {
+        "configured": state.settings.telegram_configured,
+        "authorized": authorized,
+        # Sem cryptg, a criptografia do Telegram roda em Python puro e o vídeo fica lento.
+        "fast_crypto": fast_crypto_available(),
+    }

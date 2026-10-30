@@ -20,13 +20,20 @@ api/media.py ──▶ streaming/range.py (intervalo; pedidos abertos limitados 
 telegram/media.py ──▶ client.iter_download(offset alinhado) ──▶ Telegram
 ```
 
-- **Velocidade:** 4 blocos são baixados ao mesmo tempo à frente da posição
-  pedida (cada pedido ao Telegram tem latência, e em sequência ela se soma).
-  Os blocos ficam num cache em memória (`TELEAULA_STREAM_CACHE_MB`, padrão
-  256), e um bloco já em download por outro pedido é aproveitado. Ao abrir um
-  vídeo, o último bloco (onde muitos MP4 guardam o índice) já é buscado em
-  segundo plano. Com 200 ms de latência simulada, os primeiros 4 MB caíram de
-  1,75 s para 0,52 s, e voltar a um trecho já visto ficou instantâneo.
+- **Velocidade** (`telegram/media.py`):
+  - `cryptg` é obrigatório. Sem ele o Telethon decifra o MTProto em Python
+    puro: 1,35 s por bloco de 512 KiB (~0,4 MB/s), travando o servidor
+    inteiro enquanto isso. Com ele, 1,5 ms. O status da API informa
+    `fast_crypto` e a página da aula avisa se estiver faltando;
+  - 4 blocos de cada pedido são baixados em paralelo;
+  - leitura antecipada de ~12 MB à frente do que está tocando, com prioridade
+    menor que os pedidos do player; ao pular para outro trecho, a leitura
+    antecipada do trecho antigo é abandonada;
+  - cache em memória (`TELEAULA_STREAM_CACHE_MB`, 256) e em disco
+    (`data/cache/`, `TELEAULA_DISK_CACHE_MB`, 4096, LRU), que sobrevive a
+    reinícios: voltar a um trecho já visto não vai ao Telegram;
+  - um bloco já em download por outro pedido é aproveitado, e o último bloco
+    (índice do MP4) é buscado assim que o vídeo abre.
 - Só mensagens que pertencem ao curso podem ser pedidas (`Course.has_media`).
 - A mensagem fica em cache por 10 min. Se a referência do arquivo expirar no
   meio do download, ela é recarregada e o download continua do mesmo offset.
@@ -99,11 +106,8 @@ recarregar em `/cursos/...` funciona.
 - Marcações de tempo nas anotações: nova coluna `at_seconds`/tabela de itens em
   `learning/notes.py`, sem mexer no player.
 - Outros formatos: `LessonKind` e `_primary_video` decidem o que o player recebe.
-- Cache de blocos em disco (PLANO.md, fase 3): trocar o `ChunkCache` em
-  memória por um que grave em `data/cache/`.
 
 ## Limitações
 
 - Vídeos fora de MP4/WebM (MKV, AVI, HEVC) mostram "formato não suportado".
-- O cache é só em memória: reiniciar o servidor esvazia.
 - Uma aula com vários vídeos reproduz só o primeiro.

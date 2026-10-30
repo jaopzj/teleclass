@@ -143,12 +143,10 @@ export default function VideoPlayer({ src, poster, mimeType, width, height, init
       {state.kind === "ready" && (
         <div className="player-skip">
           <button onClick={() => skip(-SKIP_SECONDS)} aria-label="Voltar 10 segundos" title="Voltar 10 s (←)">
-            <Icon name="replay" size={22} />
-            <span>10</span>
+            <SkipIcon direction="back" />
           </button>
           <button onClick={() => skip(SKIP_SECONDS)} aria-label="Avançar 10 segundos" title="Avançar 10 s (→)">
-            <Icon name="forward" size={22} />
-            <span>10</span>
+            <SkipIcon direction="forward" />
           </button>
         </div>
       )}
@@ -181,5 +179,39 @@ export default function VideoPlayer({ src, poster, mimeType, width, height, init
         </div>
       )}
     </div>
+  );
+}
+
+/** Seta circular com o "10" no centro geométrico do círculo (mesmo viewBox). */
+function SkipIcon({ direction }: { direction: "back" | "forward" }) {
+  const back = direction === "back";
+  return (
+    <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+        {back ? (
+          <>
+            <path d="M5.6 6.6A8.5 8.5 0 1 1 3.5 12" />
+            <path d="M5.9 2.9v3.9h3.9" />
+          </>
+        ) : (
+          <>
+            <path d="M18.4 6.6A8.5 8.5 0 1 0 20.5 12" />
+            <path d="M18.1 2.9v3.9h-3.9" />
+          </>
+        )}
+      </g>
+      <text
+        x="12"
+        y="12"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill="currentColor"
+        fontSize="7.2"
+        fontWeight="700"
+        fontFamily="system-ui, -apple-system, Segoe UI, Roboto, sans-serif"
+      >
+        10
+      </text>
+    </svg>
   );
 }

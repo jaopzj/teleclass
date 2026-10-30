@@ -89,7 +89,8 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  status: () => request<{ configured: boolean; authorized: boolean }>("/api/telegram/status"),
+  status: () =>
+    request<{ configured: boolean; authorized: boolean; fast_crypto?: boolean }>("/api/telegram/status"),
   snapshots: () => request<SnapshotInfo[]>("/api/snapshots"),
   collect: (link: string) =>
     request<{ name: string; messages: number }>("/api/snapshots", {

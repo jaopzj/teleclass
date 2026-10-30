@@ -1,15 +1,24 @@
 """Acesso aos arquivos das mensagens (vídeos, documentos e miniaturas).
 
-Somente leitura. Os vídeos não são gravados em disco: cada pedido do player
-vira downloads parciais direto do Telegram.
+Somente leitura. O vídeo é baixado do Telegram em blocos de 512 KiB, sob
+demanda, e entregue ao player conforme ele pede (Range).
 
-Para o vídeo começar e responder rápido aos saltos:
-- vários blocos são baixados ao mesmo tempo, à frente da posição pedida
+Para começar rápido e responder na hora a saltos e retrocessos:
+- **paralelismo**: os blocos de um pedido são baixados vários ao mesmo tempo
   (cada pedido ao Telegram tem latência; em sequência, ela se soma);
-- blocos recentes ficam num cache em memória, e um bloco que já está sendo
-  baixado por outro pedido é aproveitado em vez de baixado de novo;
-- ao abrir um vídeo, o último bloco (onde muitos MP4 guardam o índice) é
-  buscado em segundo plano, porque o navegador vai pedi-lo logo em seguida.
+- **leitura antecipada**: enquanto o vídeo toca, os próximos ~12 MB são
+  baixados em segundo plano, com prioridade menor que os pedidos do player.
+  Se a pessoa pula para outro trecho, a leitura antecipada do trecho antigo é
+  abandonada;
+- **cache em dois níveis**: memória e disco (`data/cache/`). Voltar a um
+  trecho já visto, mesmo depois de reiniciar o servidor, não vai ao Telegram;
+- **sem download duplicado**: um bloco que já está sendo baixado é aproveitado;
+- **índice do MP4**: ao abrir um vídeo, o último bloco é buscado logo, porque
+  o navegador vai pedi-lo em seguida.
+
+A criptografia do Telegram (MTProto) roda em Python puro se o pacote
+`cryptg` não estiver instalado, o que limita o download a poucas centenas de
+KB/s e trava o servidor enquanto decifra. `cryptg` é dependência do projeto.
 """
 
 from __future__ import annotations
@@ -18,17 +27,31 @@ import asyncio
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import AsyncIterator
 
 from telethon import TelegramClient, errors, types
 
-from ..streaming.cache import ChunkCache
+from ..streaming.cache import ChunkCache, DiskChunkCache
 from ..streaming.streamer import CHUNK_SIZE
 
 MESSAGE_TTL = 10 * 60  # a referência do arquivo expira; recarregamos de tempos em tempos
 MESSAGE_CACHE_SIZE = 512
-PARALLEL_CHUNKS = 4  # blocos baixados ao mesmo tempo por vídeo em reprodução
+PARALLEL_CHUNKS = 4  # blocos baixados ao mesmo tempo para um pedido do player
+READ_AHEAD_CHUNKS = 24  # ~12 MB à frente da posição que está tocando
+FOREGROUND_DOWNLOADS = 8  # limite global de downloads simultâneos pedidos pelo player
+BACKGROUND_DOWNLOADS = 4  # e de downloads antecipados
 DEFAULT_CACHE_BYTES = 256 * 1024 * 1024
+
+
+def fast_crypto_available() -> bool:
+    try:
+        import cryptg  # noqa: F401
+    except ImportError:
+        from telethon.crypto import libssl
+
+        return bool(libssl.decrypt_ige)
+    return True
 
 
 class MediaUnavailable(LookupError):
@@ -47,13 +70,20 @@ class TelegramMedia:
         client: TelegramClient,
         *,
         cache_bytes: int = DEFAULT_CACHE_BYTES,
+        disk_cache: DiskChunkCache | None = None,
         parallel: int = PARALLEL_CHUNKS,
+        read_ahead: int = READ_AHEAD_CHUNKS,
     ) -> None:
         self.client = client
         self.parallel = max(1, parallel)
-        self._chunks = ChunkCache(cache_bytes)
+        self.read_ahead = max(0, read_ahead)
+        self._memory = ChunkCache(cache_bytes)
+        self._disk = disk_cache
         self._inflight: dict[tuple, asyncio.Future] = {}
         self._background: set[asyncio.Task] = set()
+        self._playhead: dict[tuple, int] = {}  # vídeo -> último bloco entregue ao player
+        self._foreground = asyncio.Semaphore(FOREGROUND_DOWNLOADS)
+        self._background_slots = asyncio.Semaphore(BACKGROUND_DOWNLOADS)
         self._peers: dict[ChannelRef, object] = {}
         self._messages: OrderedDict[tuple[ChannelRef, int], tuple[float, object]] = OrderedDict()
         self._dialogs_loaded = False
@@ -121,16 +151,30 @@ class TelegramMedia:
 
 
 class _MessageChunks:
-    """`ChunkSource` de uma mensagem: blocos em paralelo, com cache e retomada
-    automática se a referência do arquivo expirar."""
+    """`ChunkSource` de uma mensagem (ver a docstring do módulo)."""
 
     def __init__(self, media: TelegramMedia, channel: ChannelRef, message_id: int) -> None:
         self.media = media
         self.channel = channel
         self.message_id = message_id
+        self.video = (channel, message_id)
+        channel_part = str(channel.channel_id) if channel.channel_id else f"u_{channel.username}"
+        self._disk_prefix = f"{channel_part}/{message_id}"
 
     def _key(self, index: int) -> tuple:
         return (self.channel, self.message_id, index)
+
+    def _disk_key(self, index: int) -> str:
+        return f"{self._disk_prefix}/{index}"
+
+    def _is_local(self, index: int) -> bool:
+        key = self._key(index)
+        disk = self.media._disk
+        return (
+            key in self.media._memory
+            or key in self.media._inflight
+            or (disk is not None and self._disk_key(index) in disk)
+        )
 
     async def _download(self, index: int) -> bytes:
         refreshed = False
@@ -153,11 +197,27 @@ class _MessageChunks:
                     raise
                 refreshed = True
 
+    async def _load(self, index: int, slots: asyncio.Semaphore) -> bytes:
+        """Disco ou Telegram; guarda o resultado na memória e no disco."""
+        key = self._key(index)
+        try:
+            disk = self.media._disk
+            data = await disk.get(self._disk_key(index)) if disk else None
+            if data is None:
+                async with slots:
+                    data = await self._download(index)
+                if disk and data:
+                    await disk.put(self._disk_key(index), data)
+            self.media._memory.put(key, data)
+            return data
+        finally:
+            self.media._inflight.pop(key, None)
+
     def chunk(self, index: int) -> asyncio.Future:
-        """Bloco `index`: do cache, de um download em andamento ou de um novo."""
+        """Bloco pedido pelo player: memória, download em andamento ou novo (prioridade alta)."""
         key = self._key(index)
         loop = asyncio.get_running_loop()
-        cached = self.media._chunks.get(key)
+        cached = self.media._memory.get(key)
         if cached is not None:
             future = loop.create_future()
             future.set_result(cached)
@@ -165,27 +225,42 @@ class _MessageChunks:
         inflight = self.media._inflight.get(key)
         if inflight is not None:
             return inflight
-
-        async def run() -> bytes:
-            try:
-                data = await self._download(index)
-                self.media._chunks.put(key, data)
-                return data
-            finally:
-                self.media._inflight.pop(key, None)
-
-        task = loop.create_task(run())
-        # Lê o erro mesmo se ninguém aguardar o bloco (quem aguarda recebe o erro normalmente).
-        task.add_done_callback(lambda t: t.cancelled() or t.exception())
+        task = loop.create_task(self._load(index, self.media._foreground))
+        task.add_done_callback(_consume_error)
         self.media._inflight[key] = task
         return task
 
-    def prefetch(self, index: int) -> None:
-        if self._key(index) in self.media._chunks or self._key(index) in self.media._inflight:
+    def prefetch(self, index: int, *, keep: bool = False) -> None:
+        """Baixa em segundo plano, com prioridade baixa. Sem `keep`, desiste se a
+        reprodução já tiver ido para outro trecho quando chegar a vez do bloco."""
+        if self._is_local(index):
             return
-        task = self.chunk(index)
+
+        async def run() -> None:
+            async with self.media._background_slots:
+                if not keep and not self._still_ahead(index):
+                    return
+                if self._is_local(index):
+                    return
+                key = self._key(index)
+                future = asyncio.get_running_loop().create_future()
+                self.media._inflight[key] = future
+                try:
+                    data = await self._load(index, _NO_LIMIT)
+                except BaseException as exc:
+                    future.set_exception(exc) if not isinstance(exc, asyncio.CancelledError) else future.cancel()
+                    _consume_error(future)
+                    raise
+                future.set_result(data)
+
+        task = asyncio.get_running_loop().create_task(run())
         self.media._background.add(task)  # mantém a referência até terminar
         task.add_done_callback(self.media._background.discard)
+        task.add_done_callback(_consume_error)
+
+    def _still_ahead(self, index: int) -> bool:
+        head = self.media._playhead.get(self.video)
+        return head is not None and head < index <= head + self.media.read_ahead + self.media.parallel
 
     async def iter_chunks(self, offset: int) -> AsyncIterator[bytes]:
         message = await self.media.message(self.channel, self.message_id)
@@ -193,7 +268,7 @@ class _MessageChunks:
         last = (size - 1) // CHUNK_SIZE if size else None
         index = offset // CHUNK_SIZE
         if index == 0 and last:
-            self.prefetch(last)
+            self.prefetch(last, keep=True)
 
         pending: list[asyncio.Future] = []
         next_index = index
@@ -203,12 +278,42 @@ class _MessageChunks:
                 next_index += 1
             if not pending:
                 return
+            current = next_index - len(pending)
             # shield: se o navegador desistir deste pedido (ex.: pulou para outro
-            # trecho), os blocos em andamento terminam e ficam no cache. São no
-            # máximo `parallel` blocos, e outro pedido pode estar esperando por eles.
+            # trecho), os blocos em andamento terminam e ficam no cache.
             data = await asyncio.shield(pending.pop(0))
             if not data:
                 return
+            self._advance(current, last)
             yield data
             if len(data) < CHUNK_SIZE:
                 return  # último bloco
+
+    def _advance(self, index: int, last: int | None) -> None:
+        head = self.media._playhead.get(self.video)
+        window = self.media.read_ahead + self.media.parallel
+        if last is not None and index >= last - 1 and head is not None and index - head > window:
+            return  # leitura do índice no fim do arquivo: não é onde a pessoa está assistindo
+        self.media._playhead[self.video] = index
+        end = index + self.media.read_ahead
+        if last is not None:
+            end = min(end, last)
+        for ahead in range(index + 1, end + 1):
+            self.prefetch(ahead)
+
+
+class _NoLimit:
+    async def __aenter__(self) -> None:
+        return None
+
+    async def __aexit__(self, *exc) -> None:
+        return None
+
+
+_NO_LIMIT = _NoLimit()  # o download antecipado já ocupa uma vaga de segundo plano
+
+
+def _consume_error(future: asyncio.Future) -> None:
+    """Marca o erro como lido (quem aguarda o bloco recebe o erro normalmente)."""
+    if not future.cancelled():
+        future.exception()

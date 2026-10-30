@@ -41,13 +41,23 @@ async def lifespan(app: FastAPI):
     )
     if settings.telegram_configured:
         from .telegram.client import create_client
-        from .telegram.media import TelegramMedia
+        from .streaming.cache import DiskChunkCache
+        from .telegram.media import TelegramMedia, fast_crypto_available
 
         client = create_client(settings)
         try:
             await client.connect()
             state.telegram = client
-            state.media = TelegramMedia(client, cache_bytes=settings.stream_cache_mb * 1024 * 1024)
+            state.media = TelegramMedia(
+                client,
+                cache_bytes=settings.stream_cache_mb * 1024 * 1024,
+                disk_cache=DiskChunkCache(settings.cache_dir, settings.disk_cache_mb * 1024 * 1024),
+            )
+            if not fast_crypto_available():
+                log.warning(
+                    "Pacote 'cryptg' não instalado: o streaming fica muito lento. "
+                    "Rode 'pip install -e .' (ou 'pip install cryptg')."
+                )
         except OSError as exc:
             log.warning("Não foi possível conectar ao Telegram: %s", exc)
     app.state.teleaula = state

@@ -32,8 +32,9 @@ class Settings:
     # Aplicativo pessoal: há um único usuário local. O id existe para que progresso
     # e anotações já fiquem associados a um usuário quando houver login (PLANO.md, 9).
     user_id: str = "local"
-    # Memória usada para guardar trechos de vídeo já baixados (MB).
+    # Trechos de vídeo já baixados: memória e disco (data/cache), em MB. 0 desliga.
     stream_cache_mb: int = 256
+    disk_cache_mb: int = 4096
 
     @property
     def session_path(self) -> Path:
@@ -47,6 +48,10 @@ class Settings:
     @property
     def database_path(self) -> Path:
         return self.data_dir / "teleaula.db"
+
+    @property
+    def cache_dir(self) -> Path:
+        return self.data_dir / "cache"
 
     @property
     def thumbs_dir(self) -> Path:
@@ -66,4 +71,5 @@ def get_settings() -> Settings:
         data_dir=Path(os.environ.get("TELEAULA_DATA_DIR", "./data")).resolve(),
         user_id=os.environ.get("TELEAULA_USER", "").strip() or "local",
         stream_cache_mb=_int(os.environ.get("TELEAULA_STREAM_CACHE_MB"), 256),
+        disk_cache_mb=_int(os.environ.get("TELEAULA_DISK_CACHE_MB"), 4096),
     )

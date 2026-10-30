@@ -14,8 +14,6 @@ const PATHS = {
   download: "M12 4v11m-5-5l5 5 5-5M5 20h14",
   layers: "M12 3l9 5-9 5-9-5zM3 13l9 5 9-5",
   rotate: "M4 4v6h6M4.5 15a8 8 0 1 0 1.9-8.3L4 10",
-  replay: "M3 12a9 9 0 1 0 2.6-6.4L3 8.2M3 3.5v4.7h4.7",
-  forward: "M21 12a9 9 0 1 1-2.6-6.4L21 8.2M21 3.5v4.7h-4.7",
   library: "M4 5h4v14H4zM10 5h4v14h-4zM16.5 5.5l3.6.9-3.3 13.6-3.6-.9z",
 } as const;
 

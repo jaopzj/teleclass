@@ -7,6 +7,21 @@ import { formatSize } from "../format";
 import { useResource } from "../hooks/useResource";
 import { learningApi, LessonDetail, LessonProgress, mediaUrl, thumbUrl } from "../learning/api";
 import { Link, paths } from "../router";
+import { api } from "../api";
+
+// Consultado uma vez por sessão: sem o cryptg, o download do Telegram fica muito lento.
+let slowCryptoCheck: Promise<boolean> | null = null;
+function useSlowCrypto() {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    slowCryptoCheck ??= api
+      .status()
+      .then((s) => s.authorized && s.fast_crypto === false)
+      .catch(() => false);
+    slowCryptoCheck.then(setSlow);
+  }, []);
+  return slow;
+}
 
 export default function LessonPage({ courseId, lessonKey }: { courseId: string; lessonKey: string }) {
   const { data, error, loading } = useResource(`lesson:${courseId}:${lessonKey}`, () =>
@@ -50,6 +65,7 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
   const [notice, setNotice] = useState<string>();
   const completed = !!progress?.completed;
   const video = lesson.video;
+  const slowCrypto = useSlowCrypto();
 
   const savePosition = useCallback(
     (position: number, duration: number | null, keepalive: boolean) => {
@@ -105,6 +121,12 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
 
       <div className="lesson-layout">
         <div className="lesson-main">
+          {video && slowCrypto && (
+            <div className="alert alert-warning">
+              O vídeo vai carregar devagar: falta o pacote <code>cryptg</code>, que acelera a criptografia do
+              Telegram. Rode <code>pip install -e .</code> na pasta do projeto e reinicie o servidor.
+            </div>
+          )}
           {video ? (
             <VideoPlayer
               src={mediaUrl(course.id, video.message_id)}

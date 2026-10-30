@@ -57,7 +57,9 @@ http://127.0.0.1:8000.
 - **Indexação** (`/indexacao`): coleta canais e mostra a árvore e o relatório.
 
 Para os vídeos tocarem, o servidor precisa estar conectado ao Telegram (rode o
-`login` antes). Progresso e anotações ficam em `data/teleaula.db`.
+`login` antes). Depois de atualizar o projeto, rode `pip install -e .` de novo:
+o pacote `cryptg` é o que deixa o streaming rápido. Trechos já assistidos ficam
+em `data/cache/` (até 4 GB, configurável no `.env`). Progresso e anotações ficam em `data/teleaula.db`.
 
 Sem credenciais, dá para testar com o canal de exemplo:
 `python -m app.cli index backend/tests/fixtures/curso_exemplo.json`.
