@@ -1,6 +1,7 @@
 // Camadas sobre o vídeo: carregamento, feedback de ações, início, fim e erro.
+import { MouseEvent, useState } from "react";
 import { formatClock } from "../format";
-import { Link } from "../router";
+import { Link, navigate } from "../router";
 import { Feedback } from "./useFeedback";
 import { AlertIcon, NextIcon, PauseIcon, PlayIcon, ReplayIcon, VolumeIcon } from "./icons";
 import { formatRate } from "./SpeedMenu";
@@ -85,7 +86,29 @@ export function StartOverlay({ resumeAt, duration, onStart }: { resumeAt: number
   );
 }
 
-export function EndOverlay({ next, onReplay }: { next?: { title: string; href: string }; onReplay(): void }) {
+export interface NextLesson {
+  title: string;
+  href: string;
+  /** Roda antes de ir para a próxima aula (ex.: marcar esta como concluída). */
+  beforeNavigate?: () => Promise<unknown>;
+}
+
+export function EndOverlay({ next, onReplay }: { next?: NextLesson; onReplay(): void }) {
+  const [leaving, setLeaving] = useState(false);
+
+  async function goNext(event: MouseEvent<HTMLAnchorElement>) {
+    if (!next?.beforeNavigate || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    if (leaving) return;
+    setLeaving(true);
+    try {
+      await next.beforeNavigate();
+    } catch {
+      /* a navegação segue mesmo se a gravação falhar */
+    }
+    navigate(next.href);
+  }
+
   return (
     <div className="pp-panel pp-end">
       <p className="pp-panel-eyebrow">Aula finalizada</p>
@@ -94,10 +117,10 @@ export function EndOverlay({ next, onReplay }: { next?: { title: string; href: s
           <ReplayIcon size={18} /> Assistir de novo
         </button>
         {next && (
-          <Link to={next.href} className="pp-action pp-action-primary">
+          <Link to={next.href} className="pp-action pp-action-primary" onClick={goNext} aria-busy={leaving || undefined}>
             <NextIcon size={18} />
             <span>
-              <small>Próxima aula</small>
+              <small>{next.beforeNavigate ? "Concluir e ir para a próxima" : "Próxima aula"}</small>
               <span className="pp-action-title">{next.title}</span>
             </span>
           </Link>
