@@ -24,6 +24,9 @@ class Settings:
     api_id: int | None
     api_hash: str | None
     data_dir: Path
+    # Aplicativo pessoal: há um único usuário local. O id existe para que progresso
+    # e anotações já fiquem associados a um usuário quando houver login (PLANO.md, 9).
+    user_id: str = "local"
 
     @property
     def session_path(self) -> Path:
@@ -33,6 +36,14 @@ class Settings:
     @property
     def snapshots_dir(self) -> Path:
         return self.data_dir / "snapshots"
+
+    @property
+    def database_path(self) -> Path:
+        return self.data_dir / "teleaula.db"
+
+    @property
+    def thumbs_dir(self) -> Path:
+        return self.data_dir / "thumbs"
 
     @property
     def telegram_configured(self) -> bool:
@@ -46,4 +57,5 @@ def get_settings() -> Settings:
         api_id=int(api_id) if api_id.isdigit() else None,
         api_hash=os.environ.get("TG_API_HASH") or None,
         data_dir=Path(os.environ.get("TELEAULA_DATA_DIR", "./data")).resolve(),
+        user_id=os.environ.get("TELEAULA_USER", "").strip() or "local",
     )
