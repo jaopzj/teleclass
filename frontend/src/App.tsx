@@ -16,12 +16,16 @@ import { stopAmbient } from "./focus/ambient";
 
 // A tela de indexação é uma ferramenta de inspeção; carrega só quando usada.
 const IndexingPage = lazy(() => import("./indexing/IndexingPage"));
+// O Caderno traz o editor completo (fórmulas, código...); carrega quando aberto.
+const NotebookPage = lazy(() => import("./notebook/NotebookPage"));
 
 function Page({ path }: { path: string }) {
   let params;
   if ((params = matchPath("/cursos/:id/aulas/:key", path))) return <LessonPage courseId={params.id} lessonKey={params.key} />;
   if ((params = matchPath("/cursos/:id", path))) return <CoursePage courseId={params.id} />;
   if (matchPath("/indexacao", path)) return <IndexingPage />;
+  if (path === "/caderno") return <NotebookPage />;
+  if ((params = matchPath("/caderno/nota/:id", path))) return <NotebookPage noteId={params.id} />;
   if (path === "/foco") return <FocusPage />;
   if ((params = matchPath("/foco/:tab", path))) return <FocusPage tab={params.tab} />;
   if (path === "/") return <LibraryPage />;
@@ -87,6 +91,7 @@ function Redirect({ to }: { to: string }) {
 function Shell({ path, userId }: { path: string; userId: string }) {
   const inIndexing = path.startsWith("/indexacao");
   const inFocus = path === "/foco" || path.startsWith("/foco/");
+  const inNotebook = path === "/caderno" || path.startsWith("/caderno/");
   // Envia trechos de estudo pendentes (de visitas anteriores) e troca o cache ao trocar de conta.
   useEffect(() => {
     resetStudyMetrics();
@@ -111,8 +116,11 @@ function Shell({ path, userId }: { path: string; userId: string }) {
           Teleaula
         </Link>
         <nav className="topnav">
-          <Link to={paths.library()} className={!inIndexing && !inFocus ? "is-active" : ""}>
+          <Link to={paths.library()} className={!inIndexing && !inFocus && !inNotebook ? "is-active" : ""}>
             Meus cursos
+          </Link>
+          <Link to={paths.notebook()} className={inNotebook ? "is-active" : ""}>
+            Caderno
           </Link>
           <Link to={paths.focus()} className={inFocus ? "is-active" : ""}>
             Foco
@@ -123,7 +131,7 @@ function Shell({ path, userId }: { path: string; userId: string }) {
         </nav>
         <AccountMenu />
       </header>
-      <main className="app-main">
+      <main className={`app-main ${inNotebook ? "is-notebook" : ""}`}>
         <Suspense fallback={<div className="page page-narrow muted">Carregando...</div>}>
           <Page path={path} />
         </Suspense>

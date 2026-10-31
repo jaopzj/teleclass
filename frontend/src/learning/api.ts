@@ -78,12 +78,6 @@ export interface CourseDetail extends CourseCard {
   sections: CourseSection[];
 }
 
-export interface Note {
-  body: string;
-  revision: number;
-  updated_at: string | null;
-}
-
 export interface MaterialInfo {
   message_id: number;
   kind: string;
@@ -97,7 +91,6 @@ export interface LessonDetail {
   lesson: LessonSummary & { path: string[]; description: string; materials: MaterialInfo[] };
   previous: LessonRef | null;
   next: LessonRef | null;
-  note: Note;
 }
 
 const base = (courseId: string) => `/api/courses/${encodeURIComponent(courseId)}`;
@@ -126,12 +119,5 @@ export const learningApi = {
     ).then((result) => {
       invalidateStudyMetrics(); // aulas concluídas e progresso geral mudaram
       return result;
-    }),
-
-  saveNote: (id: string, key: string, body: string, baseRevision: number, keepalive = false) =>
-    request<Note>(`${lessonBase(id, key)}/notes`, {
-      method: "PUT",
-      keepalive,
-      body: JSON.stringify({ body, base_revision: baseRevision }),
     }),
 };

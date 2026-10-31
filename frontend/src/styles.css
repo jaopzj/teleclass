@@ -327,6 +327,9 @@ button { font: inherit; color: inherit; }
 .notes-conflict pre { max-height: 140px; overflow: auto; white-space: pre-wrap; font: inherit; background: var(--panel); padding: 8px; border-radius: 6px; }
 .notes-conflict-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
+.module.is-target, .subtopic.is-target { animation: target-flash 2.2s ease; scroll-margin-top: calc(var(--topbar-h) + 16px); }
+@keyframes target-flash { 0%, 40% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); border-radius: 12px; } }
+
 /* ---- responsivo ---------------------------------------------------------------- */
 
 @media (max-width: 1023px) {

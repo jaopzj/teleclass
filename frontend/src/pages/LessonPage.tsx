@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Icon from "../components/Icon";
-import NotesPanel from "../components/NotesPanel";
 import RichText from "../components/RichText";
 import Player from "../player/Player";
 import { formatSize } from "../format";
 import { useResource } from "../hooks/useResource";
 import { learningApi, LessonDetail, LessonProgress, mediaUrl, thumbUrl } from "../learning/api";
-import { Link, paths } from "../router";
+import { Link, paths, useSearchParam } from "../router";
+import { getPlayer } from "../player/controller";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthProvider";
 import QuickStart from "../focus/QuickStart";
+
+// O editor das anotações carrega à parte, sem atrasar o vídeo.
+const LessonNotes = lazy(() => import("../notebook/LessonNotes"));
 
 // Consultado uma vez por sessão: sem o cryptg, o download do Telegram fica muito lento.
 let slowCryptoCheck: Promise<boolean> | null = null;
@@ -74,6 +77,14 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
     () => (userId ? { userId, courseId: course.id, lessonKey: lesson.key } : undefined),
     [userId, course.id, lesson.key],
   );
+  const playerLesson = useMemo(() => ({ courseId: course.id, lessonKey: lesson.key }), [course.id, lesson.key]);
+  // `?t=194`: veio de uma anotação. Ao abrir, o player começa ali; com a aula já aberta, só salta.
+  const t = useSearchParam("t");
+  const [startAt] = useState(() => (t && /^\d+$/.test(t) ? Number(t) : null));
+  useEffect(() => {
+    if (!t || !/^\d+$/.test(t)) return;
+    getPlayer(course.id, lesson.key)?.seek(Number(t), { play: true });
+  }, [t, course.id, lesson.key]);
 
   const savePosition = useCallback(
     (position: number, duration: number | null, keepalive: boolean) => {
@@ -156,6 +167,8 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
               initialPosition={lesson.progress?.position_seconds ?? 0}
               onSavePosition={savePosition}
               study={study}
+              lesson={playerLesson}
+              startAt={startAt}
             />
           ) : (
             <NoVideo detail={detail} />
@@ -229,7 +242,9 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
           {lesson.description && <RichText text={lesson.description} />}
         </div>
 
-        <NotesPanel courseId={course.id} lessonKey={lesson.key} initial={detail.note} />
+        <Suspense fallback={<div className="notes skeleton" />}>
+          <LessonNotes courseId={course.id} lessonKey={lesson.key} lessonTitle={lesson.title} duration={lesson.duration} />
+        </Suspense>
       </div>
     </div>
   );

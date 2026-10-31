@@ -5,14 +5,16 @@ experiência de área de membros. O plano completo está em [PLANO.md](PLANO.md)
 
 **Estado atual:** indexação + área de membros. O app lê um canal, monta
 módulos, subtópicos e aulas, e permite assistir às aulas com streaming direto do
-Telegram, retomada de onde parou, progresso por curso, anotações por aula e
+Telegram, retomada de onde parou, progresso por curso, um Caderno Digital (notas rápidas na aula com marca de
+tempo, documentos com pastas, busca, referências a aulas e histórico) e
 métricas de estudo (tempo real de reprodução, sequência, média diária) e um
 temporizador de estudos (Pomodoro, 52/17, Deep Work, métodos próprios, metas,
 XP e conquistas).
 Arquitetura: [docs/indexacao.md](docs/indexacao.md),
 [docs/area-de-membros.md](docs/area-de-membros.md),
-[docs/metricas-de-estudo.md](docs/metricas-de-estudo.md) e
-[docs/temporizador.md](docs/temporizador.md).
+[docs/metricas-de-estudo.md](docs/metricas-de-estudo.md),
+[docs/temporizador.md](docs/temporizador.md) e
+[docs/caderno.md](docs/caderno.md).
 
 ## Requisitos
 
@@ -67,8 +69,12 @@ http://127.0.0.1:8000.
   snapshot coletado, com progresso.
 - **Curso** (`/cursos/<snapshot>`): módulos, subtópicos e aulas, percentual,
   última aula assistida e "Continuar de onde parei".
-- **Aula**: player, anotações com salvamento automático, marcar como concluída,
-  aula anterior e próxima.
+- **Aula**: player, notas rápidas com marca de tempo clicável, marcar como
+  concluída, aula anterior e próxima.
+- **Caderno** (`/caderno`): documentos com editor completo (tabelas, imagens,
+  anexos, código, fórmulas), pastas, favoritas, fixadas, etiquetas, lixeira,
+  busca, referências `@` a cursos e aulas, histórico de versões e resolução de
+  conflitos entre aparelhos.
 - **Foco** (`/foco`): temporizador de estudos com técnicas prontas e métodos
   próprios, Focus Mode com sons ambientes, pausas guiadas, metas, níveis,
   conquistas, histórico e estatísticas. Um widget flutuante acompanha a sessão
@@ -79,7 +85,8 @@ Cada usuário tem a própria biblioteca, progresso e anotações; ninguém vê o
 cursos de outra pessoa. Os vídeos tocam pela conta do Telegram de cada usuário. Depois de atualizar o projeto, rode `pip install -e .` de novo:
 o pacote `cryptg` é o que deixa o streaming rápido. Trechos já assistidos ficam
 em `data/cache/` (até 4 GB, configurável no `.env`). Progresso, anotações e
-tempo de estudo ficam em `data/teleaula.db` (o pacote `tzdata` traz os fusos
+tempo de estudo ficam em `data/teleaula.db`, e imagens e anexos do Caderno em
+`data/notebook/` (o pacote `tzdata` traz os fusos
 horários no Windows).
 
 Sem credenciais, dá para testar com o canal de exemplo:
@@ -89,7 +96,7 @@ Sem credenciais, dá para testar com o canal de exemplo:
 
 ```bash
 pytest                          # backend
-cd frontend && npm test         # captura do player e fila de envio (vitest)
+cd frontend && npm test         # player, fila de envio e marcas de tempo (vitest)
 ```
 
 ## Segurança

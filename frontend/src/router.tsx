@@ -5,7 +5,7 @@ import { AnchorHTMLAttributes, MouseEvent, useEffect, useSyncExternalStore } fro
 const EVENT = "teleaula:navigate";
 
 export function navigate(to: string, { replace = false } = {}) {
-  if (to === location.pathname + location.search) return;
+  if (to === location.pathname + location.search + location.hash) return;
   history[replace ? "replaceState" : "pushState"](null, "", to);
   window.dispatchEvent(new Event(EVENT));
 }
@@ -21,6 +21,16 @@ function subscribe(callback: () => void) {
 
 export function usePathname() {
   return useSyncExternalStore(subscribe, () => location.pathname);
+}
+
+/** Parâmetros da URL (`?t=194`); muda junto com a navegação. */
+export function useSearchParam(name: string): string | null {
+  const search = useSyncExternalStore(subscribe, () => location.search);
+  return new URLSearchParams(search).get(name);
+}
+
+export function useSearch(): string {
+  return useSyncExternalStore(subscribe, () => location.search);
 }
 
 /** Compara o caminho com um padrão como `/cursos/:id`; devolve os parâmetros ou null. */
@@ -56,7 +66,16 @@ export function useScrollReset(path: string) {
 export const paths = {
   library: () => "/",
   course: (id: string) => `/cursos/${encodeURIComponent(id)}`,
-  lesson: (id: string, key: string) => `/cursos/${encodeURIComponent(id)}/aulas/${encodeURIComponent(key)}`,
+  lesson: (id: string, key: string, at?: number | null) =>
+    `/cursos/${encodeURIComponent(id)}/aulas/${encodeURIComponent(key)}${at != null ? `?t=${Math.floor(at)}` : ""}`,
+  module: (id: string, sectionId: string) => `/cursos/${encodeURIComponent(id)}#modulo-${sectionId}`,
   indexing: () => "/indexacao",
   focus: (tab?: string) => (tab ? `/foco/${tab}` : "/foco"),
+  notebook: (params?: Record<string, string | undefined>) => {
+    const search = new URLSearchParams();
+    for (const [k, v] of Object.entries(params ?? {})) if (v) search.set(k, v);
+    const s = search.toString();
+    return `/caderno${s ? `?${s}` : ""}`;
+  },
+  note: (id: string, q?: string) => `/caderno/nota/${id}${q ? `?q=${encodeURIComponent(q)}` : ""}`,
 };

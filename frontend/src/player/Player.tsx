@@ -4,6 +4,7 @@ import { formatClock } from "../format";
 import { SavePosition, useProgressSync } from "../hooks/useProgressSync";
 import type { LessonContext } from "../study/recorder";
 import { useStudyTracking } from "../study/useStudyTracking";
+import { registerPlayer } from "./controller";
 import ControlButton from "./ControlButton";
 import { diagnose, PlaybackError } from "./errors";
 import { FullscreenIcon, PauseIcon, PlayIcon, SkipIcon } from "./icons";
@@ -35,6 +36,10 @@ export interface PlayerProps {
   next?: NextLesson;
   /** Aula a que o tempo de reprodução é creditado (métricas de estudo). */
   study?: LessonContext;
+  /** Aula do player, para as anotações lerem o tempo e pedirem saltos (player/controller.ts). */
+  lesson?: { courseId: string; lessonKey: string };
+  /** Instante pedido na URL (`?t=194`, vindo de uma anotação). Tem prioridade sobre a retomada. */
+  startAt?: number | null;
 }
 
 /**
@@ -48,7 +53,7 @@ export interface PlayerProps {
  * - useStudyTracking: mede o tempo de reprodução efetiva (métricas de estudo).
  */
 export default function Player(props: PlayerProps) {
-  const { src, poster, title, mimeType, width, height, initialPosition, onSavePosition, next, study } = props;
+  const { src, poster, title, mimeType, width, height, initialPosition, onSavePosition, next, study, lesson, startAt } = props;
   const root = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const { state, store } = useMedia(video);
@@ -63,6 +68,7 @@ export default function Player(props: PlayerProps) {
   const [resumedAt, setResumedAt] = useState<number | null>(null);
   const lastPosition = useRef(initialPosition);
   const metadataApplied = useRef(false);
+  const pendingSeek = useRef<number | null>(startAt ?? null);
 
   const { status } = state;
   const playing = status === "playing" || status === "buffering";
@@ -76,6 +82,12 @@ export default function Player(props: PlayerProps) {
 
   const onLoadedMetadata = useCallback(() => {
     const v = video.current!;
+    if (pendingSeek.current !== null) {
+      v.currentTime = Math.min(pendingSeek.current, Number.isFinite(v.duration) ? v.duration : pendingSeek.current);
+      pendingSeek.current = null;
+      metadataApplied.current = true;
+      return;
+    }
     const start = lastPosition.current;
     if (start > 1 && Number.isFinite(v.duration) && start < v.duration - RESUME_TAIL_SECONDS) {
       v.currentTime = start;
@@ -158,6 +170,37 @@ export default function Player(props: PlayerProps) {
     },
     [actions, show],
   );
+
+  // --- saltos pedidos pelas anotações (timestamps clicáveis) ----------------------
+  const seekTo = useCallback(
+    (seconds: number, opts?: { play?: boolean }) => {
+      const v = video.current;
+      if (!v) return;
+      setResumedAt(null);
+      if (v.readyState < 1 || !Number.isFinite(v.duration)) {
+        pendingSeek.current = seconds; // aplicado em loadedmetadata
+      } else {
+        v.currentTime = Math.max(0, Math.min(seconds, v.duration - 0.1));
+      }
+      if (opts?.play) actions.play();
+      wake();
+      root.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    },
+    [actions, wake],
+  );
+  useEffect(() => {
+    if (!lesson) return;
+    return registerPlayer({
+      courseId: lesson.courseId,
+      lessonKey: lesson.lessonKey,
+      currentTime: () => video.current?.currentTime ?? 0,
+      duration: () => {
+        const d = video.current?.duration;
+        return d && Number.isFinite(d) ? d : null;
+      },
+      seek: seekTo,
+    });
+  }, [lesson?.courseId, lesson?.lessonKey, seekTo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useShortcuts(root, {
     togglePlay: () => {

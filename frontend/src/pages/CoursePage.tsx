@@ -47,10 +47,24 @@ function CourseView({ course }: { course: CourseDetail }) {
   const resume = progress.resume;
   const done = progress.total > 0 && progress.completed === progress.total;
 
+  // `#modulo-2.1`: veio de uma referência do Caderno; abre o módulo e rola até ele.
+  const anchor = typeof location !== "undefined" && location.hash.startsWith("#modulo-") ? decodeURIComponent(location.hash.slice(8)) : null;
   const initialOpen = useMemo(() => {
+    if (anchor) return new Set([anchor.split(".")[0]]);
     const target = resume ? course.sections.find((s) => containsLesson(s, resume.key)) : course.sections[0];
     return new Set(target ? [target.id] : []);
-  }, [course, resume]);
+  }, [course, resume, anchor]);
+  useEffect(() => {
+    if (!anchor) return;
+    const t = window.setTimeout(() => {
+      const el = document.getElementById(`modulo-${anchor}`);
+      if (!el) return;
+      el.scrollIntoView({ block: "start", behavior: "smooth" });
+      el.classList.add("is-target");
+      window.setTimeout(() => el.classList.remove("is-target"), 2200);
+    }, 60);
+    return () => window.clearTimeout(t);
+  }, [anchor]);
   const [open, setOpen] = useState<Set<string>>(initialOpen);
   useEffect(() => {
     setOpen(initialOpen);
@@ -170,7 +184,7 @@ function ModuleView({
   const percent = section.total ? (section.completed / section.total) * 100 : 0;
   const complete = section.total > 0 && section.completed === section.total;
   return (
-    <div className={`module ${open ? "is-open" : ""}`}>
+    <div className={`module ${open ? "is-open" : ""}`} id={`modulo-${section.id}`}>
       <button className="module-head" onClick={onToggle} aria-expanded={open}>
         <span className={`module-index ${complete ? "is-complete" : ""}`}>
           {complete ? <Icon name="check" size={16} /> : String(index).padStart(2, "0")}
@@ -222,7 +236,7 @@ function SectionContent({
         </ol>
       )}
       {section.children.map((child) => (
-        <div key={child.id} className={`subtopic level-${Math.min(child.level, 4)}`}>
+        <div key={child.id} className={`subtopic level-${Math.min(child.level, 4)}`} id={`modulo-${child.id}`}>
           <h3 className="subtopic-title">
             <span>{child.title}</span>
             <span className="muted small">

@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 /** Confirmação com foco no botão seguro e Esc para cancelar. */
 export default function ConfirmDialog({
@@ -29,7 +30,8 @@ export default function ConfirmDialog({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [busy, onCancel]);
-  return (
+  // No body, para não ficar preso sob camadas como a barra lateral fixa do Caderno.
+  return createPortal(
     <div className={`dialog-backdrop focus-dialog-backdrop ${tone ? `is-${tone}` : ""}`} onMouseDown={(e) => e.target === e.currentTarget && !busy && onCancel()}>
       <div className="dialog focus-dialog" role="alertdialog" aria-modal="true" aria-labelledby="focus-confirm-title">
         <h2 id="focus-confirm-title">{title}</h2>
@@ -43,6 +45,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
