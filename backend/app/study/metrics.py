@@ -121,6 +121,26 @@ def compute_time(daily: Mapping[date, Mapping[str, float]], today: date) -> dict
     }
 
 
+def compute_month(daily: Mapping[date, Mapping[str, float]], year: int, month: int, today: date) -> dict:
+    """Dias de um mês do calendário: segundos estudados e se o dia foi ativo.
+
+    Dias depois de hoje vêm com `seconds = None` (ainda não aconteceram).
+    """
+    first = date(year, month, 1)
+    next_first = date(year + (month == 12), month % 12 + 1, 1)
+    days = []
+    cursor = first
+    while cursor < next_first:
+        seconds = _total(daily.get(cursor))
+        days.append({
+            "date": cursor.isoformat(),
+            "seconds": seconds if cursor <= today else None,
+            "active": cursor <= today and is_active(seconds),
+        })
+        cursor += timedelta(days=1)
+    return {"month": f"{year:04d}-{month:02d}", "today": today.isoformat(), "days": days}
+
+
 @dataclass(frozen=True, slots=True)
 class CourseTally:
     completed: int  # aulas válidas concluídas
@@ -202,3 +222,8 @@ class StudyMetrics:
             **compute_time(self.ledger.daily_totals(user_id), today),
             **compute_courses(tallies, monday_start),
         }
+
+    def month(self, user_id: str, year: int, month: int) -> dict:
+        tz = load_timezone(self.preferences.effective_timezone(user_id))
+        today = datetime.fromtimestamp(self.clock(), tz).date()
+        return compute_month(self.ledger.daily_totals(user_id), year, month, today)

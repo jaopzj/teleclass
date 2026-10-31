@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import AccountMenu from "./auth/AccountMenu";
 import { AuthProvider, useAuth } from "./auth/AuthProvider";
 import AuthScreen, { AUTH_PATHS } from "./auth/AuthScreen";
@@ -6,6 +6,11 @@ import Icon from "./components/Icon";
 import CoursePage from "./pages/CoursePage";
 import LessonPage from "./pages/LessonPage";
 import LibraryPage from "./pages/LibraryPage";
+import DashboardPage from "./dashboard/DashboardPage";
+import Sidebar from "./layout/Sidebar";
+import CourseSearch from "./layout/CourseSearch";
+import Logo, { LogoMark } from "./ui/Logo";
+import { resetCourses } from "./learning/coursesStore";
 import { Link, matchPath, navigate, paths, usePathname, useScrollReset } from "./router";
 import { resetStudyMetrics } from "./study/metricsStore";
 import { startStudySync } from "./study/queue";
@@ -28,13 +33,14 @@ function Page({ path }: { path: string }) {
   if ((params = matchPath("/caderno/nota/:id", path))) return <NotebookPage noteId={params.id} />;
   if (path === "/foco") return <FocusPage />;
   if ((params = matchPath("/foco/:tab", path))) return <FocusPage tab={params.tab} />;
-  if (path === "/") return <LibraryPage />;
+  if (path === "/cursos") return <LibraryPage />;
+  if (path === "/") return <DashboardPage />;
   return (
     <div className="page page-narrow">
       <div className="empty">
         <h2>Página não encontrada</h2>
-        <Link className="button" to={paths.library()}>
-          Ir para meus cursos
+        <Link className="button" to={paths.home()}>
+          Voltar ao início
         </Link>
       </div>
     </div>
@@ -57,8 +63,8 @@ function Gate() {
   if (state.status === "loading") {
     return (
       <div className="boot" aria-busy="true">
-        <span className="brand-mark">
-          <Icon name="play" size={12} />
+        <span className="boot-mark">
+          <LogoMark size={64} />
         </span>
       </div>
     );
@@ -89,12 +95,11 @@ function Redirect({ to }: { to: string }) {
 }
 
 function Shell({ path, userId }: { path: string; userId: string }) {
-  const inIndexing = path.startsWith("/indexacao");
-  const inFocus = path === "/foco" || path.startsWith("/foco/");
-  const inNotebook = path === "/caderno" || path.startsWith("/caderno/");
+  const [menuOpen, setMenuOpen] = useState(false);
   // Envia trechos de estudo pendentes (de visitas anteriores) e troca o cache ao trocar de conta.
   useEffect(() => {
     resetStudyMetrics();
+    resetCourses();
     return startStudySync(userId);
   }, [userId]);
   // Temporizador: estado vindo do servidor, independente da página aberta.
@@ -105,37 +110,47 @@ function Shell({ path, userId }: { path: string; userId: string }) {
       stopAmbient();
     };
   }, [userId]);
+  // Gaveta do celular: fecha ao trocar de página e com Esc.
+  useEffect(() => setMenuOpen(false), [path]);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  const fullBleed = path === "/caderno" || path.startsWith("/caderno/");
   return (
     <>
-      <div id="app-content">
-      <header className="topbar">
-        <Link to={paths.library()} className="brand">
-          <span className="brand-mark">
-            <Icon name="play" size={12} />
-          </span>
-          Teleaula
-        </Link>
-        <nav className="topnav">
-          <Link to={paths.library()} className={!inIndexing && !inFocus && !inNotebook ? "is-active" : ""}>
-            Meus cursos
-          </Link>
-          <Link to={paths.notebook()} className={inNotebook ? "is-active" : ""}>
-            Caderno
-          </Link>
-          <Link to={paths.focus()} className={inFocus ? "is-active" : ""}>
-            Foco
-          </Link>
-          <Link to={paths.indexing()} className={inIndexing ? "is-active" : ""}>
-            Indexação
-          </Link>
-        </nav>
-        <AccountMenu />
-      </header>
-      <main className={`app-main ${inNotebook ? "is-notebook" : ""}`}>
-        <Suspense fallback={<div className="page page-narrow muted">Carregando...</div>}>
-          <Page path={path} />
-        </Suspense>
-      </main>
+      <div id="app-content" className="shell">
+        <Sidebar path={path} open={menuOpen} onNavigate={() => setMenuOpen(false)} />
+        {menuOpen && <div className="scrim shell-scrim" onClick={() => setMenuOpen(false)} />}
+        <div className="shell-body">
+          <header className="mobile-header">
+            <button
+              type="button"
+              className="icon-button"
+              onClick={() => setMenuOpen(true)}
+              aria-label="Abrir menu"
+              aria-expanded={menuOpen}
+            >
+              <Icon name="menu" size={26} />
+            </button>
+            <Link to={paths.home()} className="mobile-brand" aria-label="TeleClass, início">
+              <Logo />
+            </Link>
+            <AccountMenu compact />
+          </header>
+          <header className="topbar">
+            <CourseSearch />
+            <AccountMenu />
+          </header>
+          <main className={`app-main ${fullBleed ? "is-notebook" : ""}`}>
+            <Suspense fallback={<div className="page page-narrow muted">Carregando...</div>}>
+              <Page path={path} />
+            </Suspense>
+          </main>
+        </div>
       </div>
       <FocusLayer onFocusPage={path === "/foco"} contentId="app-content" />
     </>

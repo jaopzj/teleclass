@@ -12,21 +12,6 @@
   --code-text: #24292f;
   --ne-mono: ui-monospace, "SFMono-Regular", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --hl-yellow: #5b4d12;
-    --hl-green: #1d4a2c;
-    --hl-blue: #1b3a66;
-    --hl-pink: #5a1f3e;
-    --hl-purple: #3c2a66;
-    --hl-orange: #5c3714;
-    --hl-red: #5c201b;
-    --hl-gray: #3a3a40;
-    --code-bg: #17171a;
-    --code-text: #e6e6eb;
-  }
-}
-
 .ne { position: relative; min-width: 0; }
 .ne-content { outline: none; color: var(--text); overflow-wrap: anywhere; caret-color: var(--accent); }
 .ne-content > * + * { margin-top: 0.55em; }
@@ -155,16 +140,6 @@
 .hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable, .hljs-property { color: #953800; }
 .hljs-meta, .hljs-tag { color: #116329; }
 .hljs-deletion { color: #82071e; }
-@media (prefers-color-scheme: dark) {
-  .hljs-comment, .hljs-quote { color: #8b949e; }
-  .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-type { color: #ff7b72; }
-  .hljs-string, .hljs-regexp, .hljs-addition { color: #a5d6ff; }
-  .hljs-number, .hljs-built_in, .hljs-symbol { color: #79c0ff; }
-  .hljs-title, .hljs-section, .hljs-function .hljs-title { color: #d2a8ff; }
-  .hljs-attr, .hljs-attribute, .hljs-variable, .hljs-template-variable, .hljs-property { color: #ffa657; }
-  .hljs-meta, .hljs-tag { color: #7ee787; }
-}
-
 /* imagem e anexo */
 .ne-image { margin: 1em 0; }
 .ne-image figure { margin: 0 auto; position: relative; }

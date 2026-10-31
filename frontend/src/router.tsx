@@ -64,7 +64,8 @@ export function useScrollReset(path: string) {
 }
 
 export const paths = {
-  library: () => "/",
+  home: () => "/",
+  library: () => "/cursos",
   course: (id: string) => `/cursos/${encodeURIComponent(id)}`,
   lesson: (id: string, key: string, at?: number | null) =>
     `/cursos/${encodeURIComponent(id)}/aulas/${encodeURIComponent(key)}${at != null ? `?t=${Math.floor(at)}` : ""}`,

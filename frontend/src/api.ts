@@ -98,7 +98,7 @@ export async function request<T>(url: string, init?: RequestInit): Promise<T> {
       headers: { "Content-Type": "application/json", ...init?.headers },
     });
   } catch {
-    throw new ApiError("Sem conexão com o servidor do Teleaula. Verifique se ele está rodando.", 0, {
+    throw new ApiError("Sem conexão com o servidor do TeleClass. Verifique se ele está rodando.", 0, {
       code: "network_error",
     });
   }

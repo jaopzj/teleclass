@@ -1,5 +1,5 @@
 // Sessão da plataforma (quem está logado) e situação da conta do Telegram.
-// A autenticação no Teleaula e a do Telegram são coisas separadas: aqui só
+// A autenticação no TeleClass e a do Telegram são coisas separadas: aqui só
 // guardamos o que o backend informa sobre cada uma.
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AUTH_EVENT } from "../api";
@@ -72,4 +72,9 @@ export function useAuth() {
   const value = useContext(AuthContext);
   if (!value) throw new Error("useAuth fora do AuthProvider");
   return value;
+}
+
+/** Nome para exibir: o nome da conta do Telegram quando houver, senão o usuário. */
+export function displayName(user: User, telegram: TelegramStatus) {
+  return telegram.account?.name?.trim() || user.username;
 }

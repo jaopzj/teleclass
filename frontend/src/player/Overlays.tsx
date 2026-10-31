@@ -6,7 +6,7 @@ import { Feedback } from "./useFeedback";
 import { AlertIcon, NextIcon, PauseIcon, PlayIcon, ReplayIcon, VolumeIcon } from "./icons";
 import { formatRate } from "./SpeedMenu";
 
-/** Marca do Teleaula (o "play" arredondado) com um brilho que a percorre. */
+/** Marca do TeleClass (o "play" arredondado) com um brilho que a percorre. */
 export function Loader({ variant }: { variant: "initial" | "buffering" }) {
   return (
     <div className={`pp-loader pp-loader-${variant}`} role="status" aria-label={variant === "initial" ? "Carregando a aula" : "Carregando"}>

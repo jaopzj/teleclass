@@ -1,6 +1,7 @@
 // Tipos e chamadas da área de membros. Espelham app/api/courses.py.
 import { request } from "../api";
 import { invalidateStudyMetrics } from "../study/metricsStore";
+import { invalidateCourses } from "./coursesStore";
 
 export type LessonKind = "video" | "file" | "text" | "unavailable";
 
@@ -105,12 +106,14 @@ export const learningApi = {
   lesson: (id: string, key: string) => request<LessonDetail>(lessonBase(id, key)),
 
   /** `keepalive` deixa a requisição terminar mesmo se a página for fechada. */
-  savePosition: (id: string, key: string, position: number, duration: number | null, keepalive = false) =>
-    request<LessonProgress>(`${lessonBase(id, key)}/progress`, {
+  savePosition: (id: string, key: string, position: number, duration: number | null, keepalive = false) => {
+    invalidateCourses(); // "continuar de onde parou" muda
+    return request<LessonProgress>(`${lessonBase(id, key)}/progress`, {
       method: "PUT",
       keepalive,
       body: JSON.stringify({ position_seconds: position, duration_seconds: duration }),
-    }),
+    });
+  },
 
   setCompleted: (id: string, key: string, completed: boolean) =>
     request<{ progress: LessonProgress; course: { completed: number; total: number; percent: number } }>(
@@ -118,6 +121,7 @@ export const learningApi = {
       { method: "PUT", body: JSON.stringify({ completed }) },
     ).then((result) => {
       invalidateStudyMetrics(); // aulas concluídas e progresso geral mudaram
+      invalidateCourses();
       return result;
     }),
 };

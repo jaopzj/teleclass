@@ -52,7 +52,7 @@ export default function SettingsTab() {
           <Toggle label="Avisos na tela" hint="Cartões discretos no canto superior direito" checked={prefs.in_app} onChange={(v) => update({ in_app: v })} />
           <Toggle
             label="Notificações do sistema"
-            hint={permission === "denied" ? "Bloqueadas pelo navegador neste dispositivo" : "Aparecem mesmo com o Teleaula em segundo plano"}
+            hint={permission === "denied" ? "Bloqueadas pelo navegador neste dispositivo" : "Aparecem mesmo com o TeleClass em segundo plano"}
             checked={prefs.system && permission === "granted"}
             onChange={toggleSystem}
           />

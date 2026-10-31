@@ -1,0 +1,121 @@
+/* TeleClass — tokens da identidade visual.
+ *
+ * Fonte: Figma "Dashboard" (frame 2:4). Toda cor, tamanho de texto, raio,
+ * sombra e duração da interface sai daqui. As telas usam os tokens semânticos
+ * (--surface, --ink, --accent...); a escala de marca (--brand-*) existe para
+ * compor esses tokens e para gráficos.
+ */
+:root {
+  color-scheme: light;
+
+  /* ---- marca ---------------------------------------------------------------- */
+  --brand-50: #eef8fd;
+  --brand-100: #aedff4; /* capas e áreas de destaque suave */
+  --brand-200: #9adbf8; /* trilho de progresso fino */
+  --brand-300: #64b2d4; /* barra secundária em gráficos */
+  --brand-500: #13a5e4; /* cor principal: ativos, progresso, ícones */
+  --brand-600: #0e8fca; /* hover de preenchimentos */
+  --brand-700: #0a7ab0; /* texto e botões sobre branco (contraste AA) */
+  --brand-800: #086590;
+  --steel-600: #467488; /* destaque escuro em gráficos (hoje) */
+  --logo: #1e99dc;
+
+  /* transparências da cor principal, como no Figma */
+  --brand-a08: rgb(19 165 228 / 0.08);
+  --brand-a14: rgb(19 165 228 / 0.14);
+  --brand-a26: rgb(19 165 228 / 0.26);
+  --brand-a30: rgb(19 165 228 / 0.3);
+
+  /* sequência (chama) */
+  --streak-from: #e44313;
+  --streak-to: #ffcc00;
+  --gradient-streak: linear-gradient(90deg, var(--streak-from) 0%, var(--streak-to) 71.37%);
+
+  /* ---- neutros --------------------------------------------------------------- */
+  --canvas: #d7e5ed; /* fundo da aplicação */
+  --surface: #ffffff; /* cartões, barra lateral */
+  --surface-sunken: #f2f7fa; /* áreas dentro de cartões */
+  --surface-hover: #eaf3f8;
+  --line: #e2ebf0; /* bordas e divisórias */
+  --line-strong: #cfdde5;
+  --divider: rgb(217 217 217 / 0.59); /* divisória vertical das métricas */
+
+  --ink: #0b0d0e; /* títulos */
+  --ink-2: #3c3c3c; /* valores e texto principal */
+  --ink-3: #6d6d6d; /* texto secundário (≥ 4.5:1 sobre branco) */
+  --ink-4: #858585; /* rótulos grandes, ícones de navegação (≥ 3:1) */
+  --ink-on-brand: #ffffff;
+
+  /* ---- estados ---------------------------------------------------------------- */
+  --success: #15803d;
+  --success-soft: #e3f5ea;
+  --danger: #c0352b;
+  --danger-soft: #fdecea;
+  --warning: #b54708;
+  --warning-soft: #fff4e0;
+
+  /* ---- tipografia -------------------------------------------------------------- */
+  --font-sans: "Host Grotesk Variable", "Host Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-brand: "Poppins", var(--font-sans);
+
+  --text-display: clamp(2rem, 1.2rem + 1.6vw, 3rem); /* 48 — títulos de seção */
+  --text-h1: clamp(1.625rem, 1.15rem + 1vw, 2.25rem); /* 36 — título do destaque */
+  --text-h2: clamp(1.5rem, 1.15rem + 0.7vw, 2rem); /* 32 — números de destaque */
+  --text-lg: clamp(1.125rem, 0.95rem + 0.4vw, 1.5rem); /* 24 — rótulos grandes, calendário */
+  --text-md: 1.25rem; /* 20 — navegação, título de cartão */
+  --text-base: 1rem; /* 16 */
+  --text-sm: 0.875rem; /* 14 */
+  --text-xs: 0.75rem; /* 12 */
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+
+  /* ---- espaço (base 4) ------------------------------------------------------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- forma ------------------------------------------------------------------------ */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 15px; /* blocos dentro de cartões */
+  --radius-lg: 25px; /* cartões */
+  --radius-xl: 50px; /* barra lateral */
+  --radius-pill: 999px;
+
+  --shadow-xs: 0 1px 2px rgb(9 46 66 / 0.06);
+  --shadow-card: 0 15px 30px -3px rgb(9 46 66 / 0.2); /* cartões de curso */
+  --shadow-card-hover: 0 22px 36px -6px rgb(9 46 66 / 0.26);
+  --shadow-pop: 0 18px 40px -12px rgb(9 46 66 / 0.32), 0 2px 6px rgb(9 46 66 / 0.06);
+  --focus-ring: 0 0 0 3px rgb(19 165 228 / 0.45);
+
+  /* ---- movimento ------------------------------------------------------------------- */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+
+  /* ---- estrutura ------------------------------------------------------------------- */
+  --sidebar-w: clamp(272px, 18.75vw, 360px);
+  --topbar-h: 0px; /* altura de barras fixas no topo (só no celular) */
+  --page-pad-x: clamp(20px, 3.75vw, 72px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

@@ -17,14 +17,6 @@
   --rest-ink: #1f3a35;
   --rest-muted: #5d7772;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --rest-bg-a: #0f1d1b;
-    --rest-bg-b: #132724;
-    --rest-ink: #dcefe9;
-    --rest-muted: #8fb0a8;
-  }
-}
 .tone-focus { --tone: var(--tone-focus); }
 .tone-rest { --tone: var(--tone-rest); }
 .tone-ready { --tone: var(--tone-ready); }
@@ -143,7 +135,6 @@ body.is-resting { overflow: hidden; }
   padding: 16px 16px 16px 18px; border-radius: 16px; background: color-mix(in srgb, var(--rest-bg-a) 60%, rgb(255 255 255 / 0.5));
   border: 1px solid color-mix(in srgb, var(--rest-ink) 8%, transparent);
 }
-@media (prefers-color-scheme: dark) { .rest-tip { background: rgb(255 255 255 / 0.04); } }
 .rest-tip-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: color-mix(in srgb, var(--tone-rest) 22%, transparent); color: var(--rest-ink); }
 .rest-tip strong { font-size: 0.95rem; }
 .rest-tip p { margin: 2px 0 0; font-size: 0.86rem; color: var(--rest-muted); }

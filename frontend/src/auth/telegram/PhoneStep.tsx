@@ -71,7 +71,7 @@ export default function PhoneStep({ busy, error, onSubmit, draft, onDraft }: Pro
 
       <p className="auth-footnote">
         <Icon name="shield" size={14} />
-        O Teleaula só lê os canais de que você já participa. Nunca envia mensagens nem altera nada na sua conta.
+        O TeleClass só lê os canais de que você já participa. Nunca envia mensagens nem altera nada na sua conta.
       </p>
     </form>
   );

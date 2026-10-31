@@ -61,6 +61,18 @@ export interface StudyMetrics {
   };
 }
 
+export interface CalendarDay {
+  date: string;
+  seconds: number | null; // null = dia ainda não chegou
+  active: boolean;
+}
+
+export interface StudyMonth {
+  month: string; // "2026-10"
+  today: string;
+  days: CalendarDay[];
+}
+
 export const studyApi = {
   openSession: (body: { id: string; source: "video"; course_id: string; lesson_key: string; timezone: string }) =>
     request<StudySession>("/api/study/sessions", { method: "POST", body: JSON.stringify(body) }),
@@ -73,6 +85,7 @@ export const studyApi = {
     ),
 
   metrics: () => request<StudyMetrics>("/api/study/metrics"),
+  calendar: (month: string) => request<StudyMonth>(`/api/study/calendar?month=${encodeURIComponent(month)}`),
   setTimezone: (timezone: string) =>
     request<{ timezone: string }>("/api/study/preferences", { method: "PUT", body: JSON.stringify({ timezone }) }),
 };

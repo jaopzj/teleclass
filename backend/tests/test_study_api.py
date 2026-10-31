@@ -147,3 +147,23 @@ def test_timezone_preference(setup):
     # A abertura de sessão não troca um fuso já escolhido.
     open_session(client)
     assert client.get("/api/study/preferences").json() == {"timezone": "Europe/Lisbon"}
+
+
+def test_calendar_month(setup):
+    client, clock = setup
+    sid, _ = open_session(client)
+    clock.t += 15 * 60
+    segments = [seg(i, i * 15, i * 15 + 15) for i in range(40)]  # 10 min: dia ativo
+    assert client.post(f"/api/study/sessions/{sid}/segments", json={"segments": segments}).status_code == 200
+
+    body = client.get("/api/study/calendar?month=2026-10").json()
+    assert body["month"] == "2026-10" and body["today"] == "2026-10-29"
+    assert len(body["days"]) == 31
+    by_date = {d["date"]: d for d in body["days"]}
+    assert by_date["2026-10-29"] == {"date": "2026-10-29", "seconds": 600, "active": True}
+    assert by_date["2026-10-28"] == {"date": "2026-10-28", "seconds": 0, "active": False}
+    assert by_date["2026-10-30"]["seconds"] is None  # ainda não aconteceu
+
+    assert len(client.get("/api/study/calendar?month=2026-02").json()["days"]) == 28
+    assert client.get("/api/study/calendar?month=2026-13").status_code == 422
+    assert client.get("/api/study/calendar?month=1999-01").status_code == 422

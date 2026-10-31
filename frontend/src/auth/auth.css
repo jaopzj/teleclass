@@ -206,17 +206,7 @@
 
 /* ---- menu da conta (topo) ------------------------------------------------ */
 
-.account-menu { position: relative; margin-left: auto; }
-.account-trigger { display: flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); cursor: pointer; font-size: 0.88rem; font-weight: 600; }
-.account-trigger:hover { background: var(--panel-2); }
-.account-trigger-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.account-popover { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: 280px; padding: 8px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); box-shadow: var(--shadow-md); animation: step-in 0.18s ease; }
-.account-popover-head { display: grid; padding: 8px 10px 10px; }
-.account-popover-tg { display: flex; gap: 10px; align-items: center; padding: 10px; margin-bottom: 6px; border-radius: 10px; background: var(--panel-2); font-size: 0.88rem; }
-.account-popover-tg > div { display: grid; min-width: 0; }
 .tg-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
-.account-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 9px; background: none; cursor: pointer; font-size: 0.9rem; text-align: left; }
-.account-item:hover { background: var(--panel-2); }
 
 .dialog-backdrop { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgb(10 12 20 / 0.5); backdrop-filter: blur(3px); animation: fade 0.15s ease; }
 @keyframes fade { from { opacity: 0; } }
@@ -239,6 +229,5 @@
   .code-box { height: 52px; font-size: 1.3rem; }
   .auth-head h1 { font-size: 1.4rem; }
   .stepper-label { font-size: 0.68rem; }
-  .account-trigger-name { display: none; }
 }
 .auth-submit-label { display: inline-flex; align-items: center; gap: 8px; }
