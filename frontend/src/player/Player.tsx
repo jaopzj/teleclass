@@ -5,7 +5,7 @@ import { SavePosition, useProgressSync } from "../hooks/useProgressSync";
 import ControlButton from "./ControlButton";
 import { diagnose, PlaybackError } from "./errors";
 import { FullscreenIcon, PauseIcon, PlayIcon, SkipIcon } from "./icons";
-import { EndOverlay, ErrorOverlay, FeedbackLayer, Loader, StartOverlay } from "./Overlays";
+import { EndOverlay, ErrorOverlay, FeedbackLayer, Loader, NextLesson, StartOverlay } from "./Overlays";
 import { loadPreferences, savePreferences } from "./preferences";
 import ProgressBar from "./ProgressBar";
 import SpeedMenu from "./SpeedMenu";
@@ -30,7 +30,7 @@ export interface PlayerProps {
   height: number | null;
   initialPosition: number;
   onSavePosition: SavePosition;
-  next?: { title: string; href: string };
+  next?: NextLesson;
 }
 
 /**

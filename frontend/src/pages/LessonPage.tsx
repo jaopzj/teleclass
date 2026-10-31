@@ -130,7 +130,16 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
           {video ? (
             <Player
               title={lesson.title}
-              next={next ? { title: next.title, href: paths.lesson(course.id, next.key) } : undefined}
+              next={
+                next
+                  ? {
+                      title: next.title,
+                      href: paths.lesson(course.id, next.key),
+                      // Terminou o vídeo e seguiu: conta como concluída.
+                      beforeNavigate: completed ? undefined : () => learningApi.setCompleted(course.id, lesson.key, true),
+                    }
+                  : undefined
+              }
               src={mediaUrl(course.id, video.message_id)}
               poster={thumbUrl(course.id, video.message_id)}
               mimeType={video.mime_type}
