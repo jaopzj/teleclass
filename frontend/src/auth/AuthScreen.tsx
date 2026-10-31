@@ -57,10 +57,10 @@ export default function AuthScreen({ mode }: { mode: AuthMode }) {
           <h1>{reauth ? "Reconecte seu Telegram" : linkStep.step === "done" ? "Conta criada" : `Falta pouco, ${user.username}`}</h1>
           <p className="muted">
             {linkStep.step === "done"
-              ? "Conta do Teleaula e Telegram conectados."
+              ? "Conta do TeleClass e Telegram conectados."
               : reauth
                 ? "A sessão do Telegram foi encerrada (por exemplo, pelo app do Telegram). Vincule de novo para voltar a assistir."
-                : "Sua conta no Teleaula está criada. Agora vincule o Telegram para acessar os cursos."}
+                : "Sua conta no TeleClass está criada. Agora vincule o Telegram para acessar os cursos."}
           </p>
         </header>
         {!reauth && <Stepper steps={list} current={current} />}
@@ -68,7 +68,7 @@ export default function AuthScreen({ mode }: { mode: AuthMode }) {
           <div className="form-alert" role="alert">
             <Icon name="alert" size={16} />
             <span>
-              O servidor ainda não está configurado para o Telegram. Quem administra o Teleaula precisa definir TG_API_ID e
+              O servidor ainda não está configurado para o Telegram. Quem administra o TeleClass precisa definir TG_API_ID e
               TG_API_HASH no arquivo .env e reiniciar o servidor.
             </span>
           </div>
@@ -88,7 +88,7 @@ export default function AuthScreen({ mode }: { mode: AuthMode }) {
 
   return (
     <AuthShell
-      footer={<span className="muted">Seus dados ficam no servidor do Teleaula, neste computador.</span>}
+      footer={<span className="muted">Seus dados ficam no servidor do TeleClass, neste computador.</span>}
     >
       <header className="auth-head">
         <h1>{mode === "login" ? "Bem-vindo de volta" : "Crie sua conta"}</h1>

@@ -1,0 +1,54 @@
+/* Cartão de curso (Figma: "Cursos recentes"). Usado na tela inicial e em "Meus cursos". */
+
+.ccard {
+  container: ccard / inline-size;
+  position: relative; display: flex; flex-direction: column; min-height: 346px;
+  border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-card);
+  color: inherit; text-decoration: none; overflow: hidden; isolation: isolate;
+  transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
+}
+.ccard:hover { transform: translateY(-4px); box-shadow: var(--shadow-card-hover); }
+.ccard:active { transform: translateY(-1px); }
+.ccard:focus-visible { outline: none; box-shadow: var(--shadow-card), var(--focus-ring); }
+.ccard-skeleton { background-color: rgb(255 255 255 / 0.6); }
+
+.ccard-cover {
+  position: relative; flex: none; height: 169px; overflow: hidden;
+  background: var(--brand-100); filter: hue-rotate(var(--cover-shift, 0deg));
+}
+.ccard-initials {
+  position: absolute; left: 22px; bottom: 6px;
+  font-size: 4.5rem; font-weight: var(--weight-extrabold); line-height: 1; letter-spacing: -0.05em;
+  color: rgb(255 255 255 / 0.75);
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.ccard:hover .ccard-initials { transform: translateY(-3px); }
+.ccard-action {
+  position: absolute; right: 16px; bottom: 16px; display: grid; place-items: center;
+  width: 40px; height: 40px; border-radius: 50%; background: var(--surface); color: var(--brand-500);
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--duration-base) var(--ease-spring), background var(--duration-fast), color var(--duration-fast);
+}
+.ccard:hover .ccard-action { transform: scale(1.1); background: var(--brand-500); color: #fff; }
+
+.ccard-body { flex: 1; display: flex; flex-direction: column; padding: 24px 14px 17px; }
+.ccard-title {
+  margin: 0 10px; font-size: var(--text-md); font-weight: var(--weight-bold); line-height: 1.05; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ccard-meta { margin: 8px 10px 18px; font-size: var(--text-sm); font-weight: var(--weight-medium); line-height: 1; color: var(--ink-3); }
+.ccard-progress {
+  display: grid; gap: 13px; margin-top: auto; padding: 16px 16px 14px;
+  border-radius: var(--radius-md); background: var(--brand-a08);
+}
+.ccard-progress-foot {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-size: var(--text-sm); font-weight: var(--weight-medium); line-height: 1; color: var(--ink-3); white-space: nowrap;
+}
+.ccard-progress-foot strong { font-weight: var(--weight-bold); color: var(--ink-2); }
+
+@container ccard (max-width: 240px) {
+  .ccard-progress { padding: 14px 12px 12px; }
+  .ccard-progress-foot { font-size: var(--text-xs); }
+  .ccard-title { font-size: 1.125rem; }
+}

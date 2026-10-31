@@ -50,3 +50,12 @@ export function plural(n: number, one: string, many: string) {
 export function formatPercent(percent: number, completed: number) {
   return percent === 0 && completed > 0 ? "<1%" : `${percent}%`;
 }
+
+/** Duração do curso como no Figma: "4h e 12min", "45min", "3h". */
+export function compactDuration(seconds: number) {
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}min`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m ? `${h}h e ${m}min` : `${h}h`;
+}

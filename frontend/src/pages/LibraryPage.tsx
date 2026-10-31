@@ -1,100 +1,60 @@
-import CourseCover from "../components/CourseCover";
+import CourseCard, { CourseCardSkeleton } from "../components/CourseCard";
 import Icon from "../components/Icon";
-import ProgressBar from "../components/ProgressBar";
-import { formatDuration, formatPercent, formatRelative, plural } from "../format";
-import { useResource } from "../hooks/useResource";
-import { CourseCard, learningApi } from "../learning/api";
+import { plural } from "../format";
+import { useCourses } from "../learning/coursesStore";
 import { Link, paths } from "../router";
-import StudyOverview from "../study/StudyOverview";
 
+/** "Meus cursos": a biblioteca inteira, com o mesmo cartão da tela inicial. */
 export default function LibraryPage() {
-  const { data: courses, error, loading } = useResource("courses", learningApi.courses);
+  const { data: courses, error } = useCourses();
 
   return (
-    <div className="page page-narrow">
-      <header className="page-head">
+    <div className="page library">
+      <header className="library-head">
         <div>
-          <h1>Meus cursos</h1>
+          <h1 className="section-title">Meus cursos</h1>
           <p className="muted">
-            {courses ? plural(courses.length, "curso disponível", "cursos disponíveis") : "Carregando seus cursos..."}
+            {courses ? plural(courses.length, "curso na sua biblioteca", "cursos na sua biblioteca") : "Carregando seus cursos..."}
           </p>
         </div>
+        {courses && courses.length > 0 && (
+          <Link className="button button-primary" to={paths.indexing()}>
+            <Icon name="plus" size={18} weight="bold" />
+            Adicionar curso
+          </Link>
+        )}
       </header>
 
       {error && <div className="alert alert-error">Não foi possível carregar os cursos: {error.message}</div>}
 
-      {courses && courses.length > 0 && <StudyOverview />}
-
-      {loading && !courses && (
+      {!courses && !error && (
         <div className="library-grid">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="course-card skeleton" />
+          {[0, 1, 2, 3].map((i) => (
+            <CourseCardSkeleton key={i} />
           ))}
         </div>
       )}
 
       {courses && courses.length === 0 && (
         <div className="empty">
-          <Icon name="library" size={32} />
+          <span className="empty-icon">
+            <Icon name="folderPlus" size={28} />
+          </span>
           <h2>Nenhum curso por aqui ainda</h2>
-          <p className="muted">Colete um canal do Telegram na tela de indexação e ele aparece nesta biblioteca.</p>
+          <p>Cole o link de um canal do Telegram e ele vira um curso organizado em módulos e aulas.</p>
           <Link className="button button-primary" to={paths.indexing()}>
-            Ir para a indexação
+            Adicionar curso
           </Link>
         </div>
       )}
 
       {courses && courses.length > 0 && (
-        <>
-          <h2 className="library-section-title">Cursos</h2>
-          <div className="library-grid">
-            {courses.map((course) => (
-              <CourseCardView key={course.id} course={course} />
-            ))}
-          </div>
-        </>
+        <div className="library-grid">
+          {courses.map((course) => (
+            <CourseCard key={course.id} course={course} />
+          ))}
+        </div>
       )}
     </div>
-  );
-}
-
-function CourseCardView({ course }: { course: CourseCard }) {
-  const { stats, progress } = course;
-  const done = progress.total > 0 && progress.completed === progress.total;
-  return (
-    <Link to={paths.course(course.id)} className="course-card">
-      <div className="course-card-media">
-        <CourseCover id={course.id} title={course.title} />
-        {progress.started && (
-          <span className="course-card-badge">{done ? "Concluído" : formatPercent(progress.percent, progress.completed)}</span>
-        )}
-      </div>
-      <div className="course-card-body">
-        <h2 className="course-card-title" title={course.title}>
-          {course.title}
-        </h2>
-        <p className="course-card-meta">
-          {plural(stats.modules, "módulo", "módulos")} · {plural(stats.lessons, "aula", "aulas")}
-          {stats.duration > 0 && ` · ${formatDuration(stats.duration)}`}
-        </p>
-        <div className="course-card-progress">
-          <ProgressBar value={progress.percent} size="sm" label="Progresso do curso" />
-          <span>
-            {progress.started
-              ? `${progress.completed} de ${progress.total} concluídas`
-              : "Não iniciado"}
-          </span>
-        </div>
-        {progress.last_watched && !done && (
-          <p className="course-card-resume">
-            <Icon name="play" size={12} />
-            <span>
-              Continuar: <strong>{progress.resume?.title ?? progress.last_watched.title}</strong>
-            </span>
-            <span className="muted">{formatRelative(progress.last_watched.watched_at)}</span>
-          </p>
-        )}
-      </div>
-    </Link>
   );
 }

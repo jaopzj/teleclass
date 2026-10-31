@@ -43,7 +43,7 @@ export interface PlayerProps {
 }
 
 /**
- * Player do Teleaula. Composição:
+ * Player do TeleClass. Composição:
  * - mediaStore/useMedia: estado derivado dos eventos reais do <video>;
  * - useFullscreen: tela cheia do contêiner inteiro (controles inclusos);
  * - useIdle: mostra/oculta os controles;

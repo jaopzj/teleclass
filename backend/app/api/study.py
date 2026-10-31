@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from ..courses import CourseNotFound
@@ -138,6 +138,24 @@ def record_segments(
 @router.get("/metrics")
 def metrics(state: AppState = Depends(get_state), user: str = Depends(get_user_id)) -> dict:
     return state.metrics.for_user(user)
+
+
+@router.get("/calendar")
+def calendar(
+    month: str = Query(pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
+    state: AppState = Depends(get_state),
+    user: str = Depends(get_user_id),
+) -> dict:
+    """Dias estudados de um mês (`?month=2026-10`), para o calendário da tela inicial."""
+    year, number = (int(part) for part in month.split("-"))
+    if not 2000 <= year <= 2100:
+        raise MonthOutOfRange()
+    return state.metrics.month(user, year, number)
+
+
+class MonthOutOfRange(AppError):
+    def __init__(self) -> None:
+        super().__init__(422, "month_out_of_range", "Mês fora do intervalo aceito.", field="month")
 
 
 class PreferencesBody(BaseModel):

@@ -1,4 +1,4 @@
-/* Player do Teleaula. Prefixo .pp-. Tudo vive dentro do contêiner .pp, que é
+/* Player do TeleClass. Prefixo .pp-. Tudo vive dentro do contêiner .pp, que é
    o elemento colocado em tela cheia: estilos, camadas e animações valem igual
    nos dois modos. Camadas (z-index): vídeo 0, superfície de clique 1,
    indicadores 2, controles 3, menus 4. */

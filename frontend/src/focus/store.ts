@@ -89,6 +89,17 @@ export function useFocus(): FocusSnapshot {
   );
 }
 
+/** Título do nível atual ("Treineiro"...). Só re-renderiza quando o título muda. */
+export function useLevelTitle(): string | null {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    () => snap.progress?.title ?? null,
+  );
+}
+
 /** "Agora" no relógio do servidor, em segundos. */
 export function serverNow(): number {
   return Date.now() / 1000 + offset;

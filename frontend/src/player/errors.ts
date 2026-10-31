@@ -38,7 +38,7 @@ export async function diagnose(src: string, error: MediaError | null, mimeType: 
       return { title: "Não foi possível carregar", message: body.detail ?? `Erro ${response.status}.`, canRetry: true };
     }
   } catch {
-    return { title: "Sem conexão", message: "O servidor do Teleaula não respondeu.", canRetry: true };
+    return { title: "Sem conexão", message: "O servidor do TeleClass não respondeu.", canRetry: true };
   }
   if (code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED || code === MediaError.MEDIA_ERR_DECODE) {
     return {

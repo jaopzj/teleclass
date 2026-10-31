@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Icon, { IconName } from "../components/Icon";
+import Logo from "../ui/Logo";
 
 const FEATURES: { icon: IconName; title: string; text: string }[] = [
   { icon: "layers", title: "Organizado em módulos", text: "Canais viram cursos com módulos, aulas e materiais." },
@@ -13,11 +14,8 @@ export default function AuthShell({ children, footer }: { children: ReactNode; f
     <div className="auth-page">
       <aside className="auth-aside" aria-hidden="true">
         <div className="auth-aside-inner">
-          <div className="brand auth-brand">
-            <span className="brand-mark">
-              <Icon name="play" size={12} />
-            </span>
-            Teleaula
+          <div className="auth-brand">
+            <Logo />
           </div>
           <div className="auth-pitch">
             <h1>Seus cursos do Telegram, com cara de área de membros.</h1>
@@ -51,11 +49,8 @@ export default function AuthShell({ children, footer }: { children: ReactNode; f
         </div>
       </aside>
       <main className="auth-main">
-        <div className="auth-mobile-brand brand">
-          <span className="brand-mark">
-            <Icon name="play" size={12} />
-          </span>
-          Teleaula
+        <div className="auth-mobile-brand">
+          <Logo />
         </div>
         <div className="auth-card">{children}</div>
         {footer && <div className="auth-footer">{footer}</div>}

@@ -1,15 +1,19 @@
-// Menu da conta no topo: quem está logado, situação do Telegram, desvincular e sair.
+// Conta no topo: foto, nome e título do nível; o menu mostra o Telegram vinculado,
+// desvincular e sair.
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { ApiError } from "../api";
 import Icon from "../components/Icon";
+import { useLevelTitle } from "../focus/store";
+import Avatar from "../ui/Avatar";
 import { telegramApi } from "./api";
-import { useAuth } from "./AuthProvider";
+import { displayName, useAuth } from "./AuthProvider";
 import Field from "./fields/Field";
 import PasswordInput from "./fields/PasswordInput";
 import SubmitButton from "./fields/SubmitButton";
 
-export default function AccountMenu() {
+export default function AccountMenu({ compact = false }: { compact?: boolean }) {
   const auth = useAuth();
+  const levelTitle = useLevelTitle();
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -29,21 +33,38 @@ export default function AccountMenu() {
 
   if (auth.state.status !== "authenticated") return null;
   const { user, telegram } = auth.state;
+  const name = displayName(user, telegram);
 
   return (
-    <div className="account-menu" ref={root}>
-      <button type="button" className="account-trigger" onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-haspopup="menu">
-        <span className="account-avatar sm">{user.username.slice(0, 1).toUpperCase()}</span>
-        <span className="account-trigger-name">{user.username}</span>
+    <div className={`account ${compact ? "is-compact" : ""}`} ref={root}>
+      <button
+        type="button"
+        className="account-trigger"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={`Conta de ${name}`}
+      >
+        <Avatar name={name} size={compact ? 40 : 80} />
+        {!compact && (
+          <span className="account-id">
+            <span className="account-name">{name}</span>
+            {/* Título do nível no temporizador de Foco (ex.: "Treineiro"). */}
+            {levelTitle && <span className="account-level">{levelTitle}</span>}
+          </span>
+        )}
+        <span className="account-caret" aria-hidden="true">
+          <Icon name="down" size={14} weight="fill" />
+        </span>
       </button>
       {open && (
-        <div className="account-popover" role="menu">
-          <div className="account-popover-head">
-            <strong>{user.username}</strong>
-            <span className="muted small">Conta do Teleaula</span>
+        <div className="menu account-menu" role="menu">
+          <div className="menu-head">
+            <strong>{name}</strong>
+            <span className="muted small">@{user.username}{levelTitle && ` · ${levelTitle}`}</span>
           </div>
           {telegram.account && (
-            <div className="account-popover-tg">
+            <div className="account-tg">
               <span className="tg-dot" />
               <div>
                 <span>{telegram.account.name}</span>
@@ -51,12 +72,13 @@ export default function AccountMenu() {
               </div>
             </div>
           )}
-          <button type="button" role="menuitem" className="account-item" onClick={() => { setOpen(false); setConfirming(true); }}>
-            <Icon name="close" size={16} />
+          <div className="menu-sep" />
+          <button type="button" role="menuitem" className="menu-item" onClick={() => { setOpen(false); setConfirming(true); }}>
+            <Icon name="link" size={18} />
             Desvincular Telegram
           </button>
-          <button type="button" role="menuitem" className="account-item" onClick={auth.logout}>
-            <Icon name="logout" size={16} />
+          <button type="button" role="menuitem" className="menu-item" onClick={auth.logout}>
+            <Icon name="logout" size={18} />
             Sair
           </button>
         </div>
@@ -90,10 +112,10 @@ function UnlinkDialog({ onClose }: { onClose: () => void }) {
       <form className="dialog" onSubmit={submit} role="dialog" aria-modal="true" aria-labelledby="unlink-title">
         <h2 id="unlink-title">Desvincular o Telegram?</h2>
         <p className="muted">
-          A sessão do Teleaula será encerrada no Telegram e os vídeos param de tocar até você vincular uma conta de novo. Seu
+          A sessão do TeleClass será encerrada no Telegram e os vídeos param de tocar até você vincular uma conta de novo. Seu
           progresso e suas anotações continuam salvos.
         </p>
-        <Field id="unlink-password" label="Confirme com a senha do Teleaula" error={error}>
+        <Field id="unlink-password" label="Confirme com a senha do TeleClass" error={error}>
           <PasswordInput
             id="unlink-password"
             value={password}
