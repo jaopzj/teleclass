@@ -1,4 +1,6 @@
-"""Área de membros: biblioteca, página do curso, aula, progresso e anotações.
+"""Área de membros: biblioteca, página do curso, aula e progresso.
+
+As anotações das aulas ficam no Caderno Digital (`app/api/notebook.py`).
 
 As rotas são síncronas de propósito: usam SQLite e a indexação (CPU), e o
 FastAPI as executa em threads, sem travar o streaming dos vídeos.
@@ -7,13 +9,11 @@ FastAPI as executa em threads, sem travar o streaming dos vídeos.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from ..courses import Course, CourseLesson, CourseNotFound
 from ..courses.catalog import CourseNode
-from ..learning import CourseProgress, LessonProgress, NoteConflict, summarize
-from ..learning.notes import MAX_NOTE_LENGTH
+from ..learning import CourseProgress, LessonProgress, summarize
 from ..learning.summary import is_valid_lesson
 from .deps import AppState, get_state, get_user_id
 
@@ -179,7 +179,6 @@ def get_lesson(
         },
         "previous": _lesson_ref(course.previous(lesson)),
         "next": _lesson_ref(course.next(lesson)),
-        "note": state.notes.get(user, course.id, lesson.key).to_dict(),
     }
 
 
@@ -223,35 +222,3 @@ def set_completion(
         "progress": saved.to_dict(),
         "course": {"completed": summary.completed, "total": summary.total, "percent": summary.percent},
     }
-
-
-@router.get("/{course_id}/lessons/{key}/notes")
-def get_notes(
-    course_id: str, key: str, state: AppState = Depends(get_state), user: str = Depends(get_user_id)
-) -> dict:
-    lesson = _lesson(_course(state, user, course_id), key)
-    return state.notes.get(user, course_id, lesson.key).to_dict()
-
-
-class NoteBody(BaseModel):
-    body: str = Field(max_length=MAX_NOTE_LENGTH)
-    base_revision: int = Field(ge=0)
-
-
-@router.put("/{course_id}/lessons/{key}/notes")
-def save_notes(
-    course_id: str,
-    key: str,
-    body: NoteBody,
-    state: AppState = Depends(get_state),
-    user: str = Depends(get_user_id),
-):
-    lesson = _lesson(_course(state, user, course_id), key)
-    try:
-        note = state.notes.save(user, course_id, lesson.key, body.body, body.base_revision)
-    except NoteConflict as conflict:
-        return JSONResponse(
-            status_code=409,
-            content={"detail": str(conflict), "current": conflict.current.to_dict()},
-        )
-    return note.to_dict()

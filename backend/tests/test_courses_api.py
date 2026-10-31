@@ -113,15 +113,6 @@ def test_progress_completion_and_resume(client):
     assert client.get(f"{COURSE}/lessons/A001").json()["lesson"]["progress"]["position_seconds"] == 42.5
 
 
-def test_notes_autosave_conflict(client):
-    url = f"{COURSE}/lessons/A001/notes"
-    saved = client.put(url, json={"body": "minha nota", "base_revision": 0}).json()
-    assert saved["revision"] == 1
-    assert client.get(f"{COURSE}/lessons/A001").json()["note"]["body"] == "minha nota"
-    conflict = client.put(url, json={"body": "outra", "base_revision": 0})
-    assert conflict.status_code == 409 and conflict.json()["current"]["body"] == "minha nota"
-
-
 def test_media_requires_telegram(client):
     response = client.get(f"{COURSE}/media/10")
     assert response.status_code == 503 and response.json()["code"] == "telegram_not_configured"

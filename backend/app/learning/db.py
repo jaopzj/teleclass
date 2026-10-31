@@ -244,6 +244,105 @@ MIGRATIONS: list[str] = [
         updated_at  TEXT NOT NULL
     );
     """,
+    # 5: Caderno Digital (docs/caderno.md). As anotações por aula (lesson_notes)
+    # são convertidas em notas rápidas por `NotebookStore.import_legacy`.
+    """
+    CREATE TABLE note_folders (
+        id          TEXT PRIMARY KEY,
+        user_id     TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        parent_id   TEXT REFERENCES note_folders (id) ON DELETE CASCADE,
+        name        TEXT NOT NULL,
+        position    REAL NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL,
+        updated_at  TEXT NOT NULL
+    );
+    CREATE INDEX note_folders_user ON note_folders (user_id, parent_id);
+    CREATE TABLE notes (
+        id                 TEXT PRIMARY KEY,
+        seq                INTEGER NOT NULL UNIQUE,  -- chave da busca (notes_fts.rowid)
+        user_id            TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        kind               TEXT NOT NULL,
+        title              TEXT NOT NULL DEFAULT '',
+        doc                TEXT NOT NULL,
+        text               TEXT NOT NULL DEFAULT '',
+        words              INTEGER NOT NULL DEFAULT 0,
+        folder_id          TEXT REFERENCES note_folders (id) ON DELETE SET NULL,
+        course_id          TEXT,
+        section_id         TEXT,
+        lesson_key         TEXT,
+        timestamp_seconds  REAL,
+        favorite           INTEGER NOT NULL DEFAULT 0,
+        pinned_at          TEXT,
+        archived_at        TEXT,
+        deleted_at         TEXT,
+        revision           INTEGER NOT NULL DEFAULT 1,
+        created_at         TEXT NOT NULL,
+        updated_at         TEXT NOT NULL,
+        content_updated_at TEXT NOT NULL,
+        opened_at          TEXT
+    );
+    CREATE INDEX notes_user_updated ON notes (user_id, deleted_at, updated_at);
+    CREATE INDEX notes_user_folder ON notes (user_id, folder_id);
+    CREATE INDEX notes_user_lesson ON notes (user_id, course_id, lesson_key);
+    CREATE VIRTUAL TABLE notes_fts USING fts5 (
+        title, body, tokenize = 'unicode61 remove_diacritics 2'
+    );
+    CREATE TABLE note_tags (
+        id          TEXT PRIMARY KEY,
+        user_id     TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        name        TEXT NOT NULL,
+        color       TEXT NOT NULL,
+        created_at  TEXT NOT NULL,
+        UNIQUE (user_id, name COLLATE NOCASE)
+    );
+    CREATE TABLE note_tag_links (
+        note_id  TEXT NOT NULL REFERENCES notes (id) ON DELETE CASCADE,
+        tag_id   TEXT NOT NULL REFERENCES note_tags (id) ON DELETE CASCADE,
+        PRIMARY KEY (note_id, tag_id)
+    );
+    CREATE INDEX note_tag_links_tag ON note_tag_links (tag_id);
+    CREATE TABLE note_refs (
+        note_id     TEXT NOT NULL REFERENCES notes (id) ON DELETE CASCADE,
+        user_id     TEXT NOT NULL,
+        course_id   TEXT NOT NULL,
+        kind        TEXT NOT NULL,
+        section_id  TEXT,
+        lesson_key  TEXT,
+        seconds     REAL
+    );
+    CREATE INDEX note_refs_note ON note_refs (note_id);
+    CREATE INDEX note_refs_target ON note_refs (user_id, course_id, lesson_key);
+    CREATE TABLE note_revisions (
+        id          INTEGER PRIMARY KEY,
+        note_id     TEXT NOT NULL REFERENCES notes (id) ON DELETE CASCADE,
+        revision    INTEGER NOT NULL,
+        title       TEXT NOT NULL,
+        doc         TEXT NOT NULL,
+        words       INTEGER NOT NULL,
+        reason      TEXT NOT NULL,
+        created_at  TEXT NOT NULL
+    );
+    CREATE INDEX note_revisions_note ON note_revisions (note_id, id);
+    CREATE TABLE note_files (
+        id          TEXT PRIMARY KEY,
+        user_id     TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        kind        TEXT NOT NULL,
+        name        TEXT NOT NULL,
+        mime        TEXT NOT NULL,
+        size        INTEGER NOT NULL,
+        sha256      TEXT NOT NULL,
+        width       INTEGER,
+        height      INTEGER,
+        created_at  TEXT NOT NULL
+    );
+    CREATE INDEX note_files_user ON note_files (user_id, created_at);
+    CREATE TABLE note_file_links (
+        note_id  TEXT NOT NULL REFERENCES notes (id) ON DELETE CASCADE,
+        file_id  TEXT NOT NULL REFERENCES note_files (id) ON DELETE CASCADE,
+        PRIMARY KEY (note_id, file_id)
+    );
+    CREATE INDEX note_file_links_file ON note_file_links (file_id);
+    """,
 ]
 
 

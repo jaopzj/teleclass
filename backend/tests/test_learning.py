@@ -1,7 +1,7 @@
 import pytest
 
 from app.courses.catalog import IMPLICIT_SECTION_TITLE, build_course
-from app.learning import Database, NoteConflict, NotesStore, ProgressStore, summarize
+from app.learning import Database, ProgressStore, summarize
 
 from .conftest import msg, snapshot
 
@@ -88,16 +88,3 @@ def test_summary_counts_once_and_resumes(course, db):
     store.set_completed("u", "curso", "A003", True)
     result = summarize(course, store.for_course("u", "curso"))
     assert result.resume.key == "A004"  # próxima pendente depois da última assistida
-
-
-def test_notes_revision_conflict(db):
-    notes = NotesStore(db)
-    assert notes.get("u", "c", "A001").revision == 0
-    first = notes.save("u", "c", "A001", "olá", 0)
-    second = notes.save("u", "c", "A001", "olá mundo", first.revision)
-    assert second.revision == 2 and notes.get("u", "c", "A001").body == "olá mundo"
-    with pytest.raises(NoteConflict) as info:
-        notes.save("u", "c", "A001", "versão antiga", first.revision)
-    assert info.value.current.body == "olá mundo"
-    with pytest.raises(NoteConflict):
-        notes.save("u", "c", "A001", "outra aba", 0)

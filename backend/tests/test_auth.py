@@ -108,8 +108,8 @@ def test_library_is_private(client, make_app):
     assert other.get("/api/courses/curso_exemplo").status_code == 404
     assert other.get("/api/courses/curso_exemplo/lessons/A001").status_code == 404
     assert other.get("/api/snapshots/curso_exemplo/index").status_code == 404
-    put = other.put("/api/courses/curso_exemplo/lessons/A001/notes", json={"body": "x", "base_revision": 0})
-    assert put.status_code == 404
+    quick = other.post("/api/notebook/notes", json={"kind": "quick", "link": {"course_id": "curso_exemplo", "lesson_key": "A001"}})
+    assert quick.status_code == 404
 
 
 def test_progress_and_notes_are_private(client, make_app, tmp_path):
@@ -119,11 +119,12 @@ def test_progress_and_notes_are_private(client, make_app, tmp_path):
     # Maria coleta o mesmo canal: mesmo id de curso, dados separados.
     (tmp_path / "snapshots" / maria).mkdir(parents=True)
     shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / maria / "curso_exemplo.json")
-    client.put("/api/courses/curso_exemplo/lessons/A001/notes", json={"body": "nota do joão", "base_revision": 0})
+    doc = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "nota do joão"}]}]}
+    client.post("/api/notebook/notes", json={"kind": "quick", "doc": doc, "link": {"course_id": "curso_exemplo", "lesson_key": "A001"}})
     client.put("/api/courses/curso_exemplo/lessons/A001/completion", json={"completed": True})
     client.put("/api/courses/curso_exemplo/lessons/A002/progress", json={"position_seconds": 30, "duration_seconds": 60})
     lesson = other.get("/api/courses/curso_exemplo/lessons/A001").json()
-    assert lesson["note"]["body"] == ""
+    assert other.get("/api/notebook/lessons/curso_exemplo/A001").json()["quick"] == []
     assert lesson["lesson"]["progress"]["completed"] is False
     progress = other.get("/api/courses/curso_exemplo").json()["progress"]
     assert progress["completed"] == 0 and progress["last_watched"] is None

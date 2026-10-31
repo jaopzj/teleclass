@@ -64,6 +64,11 @@ class Settings:
         return self.data_dir / "cache"
 
     @property
+    def notebook_dir(self) -> Path:
+        # Imagens e anexos do Caderno Digital, uma pasta por usuário.
+        return self.data_dir / "notebook"
+
+    @property
     def thumbs_dir(self) -> Path:
         return self.data_dir / "thumbs"
 

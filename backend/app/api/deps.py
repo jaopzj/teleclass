@@ -10,7 +10,8 @@ from ..accounts import RateLimiter, SessionStore, User, UserStore
 from ..config import Settings
 from ..errors import AppError
 from ..focus import FocusService, FocusStats, GoalStore, MethodStore, NoticeStore
-from ..learning import NotesStore, ProgressStore
+from ..learning import ProgressStore
+from ..notebook import FileStore, NotebookStore
 from ..libraries import Libraries
 from ..study import PreferencesStore, StudyLedger, StudyMetrics
 from ..telegram.accounts import TelegramAccountStore
@@ -25,7 +26,8 @@ class AppState:
     settings: Settings
     libraries: Libraries  # snapshots e catálogo de cada usuário
     progress: ProgressStore
-    notes: NotesStore
+    notebook: NotebookStore  # Caderno Digital (docs/caderno.md)
+    notebook_files: FileStore
     users: UserStore
     sessions: SessionStore
     limiter: RateLimiter
