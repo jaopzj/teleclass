@@ -299,6 +299,69 @@ class StudyLedger:
                 total += seconds
         return total
 
+    # --- tempo medido pelo próprio servidor (temporizador) ------------------------------
+
+    def credit_server_interval(
+        self,
+        conn: sqlite3.Connection,
+        user_id: str,
+        session_id: str,
+        source: StudySource,
+        start: float,
+        end: float,
+        *,
+        course_id: str | None = None,
+        lesson_key: str | None = None,
+    ) -> float:
+        """Credita [start, end) medido pelo relógio do servidor, dentro da transação `conn`.
+
+        Usado pelo temporizador (app/focus): ali os instantes já são do servidor,
+        então não há trecho do cliente para validar. Passa pelas mesmas regras de
+        união (nada conta duas vezes, nem com um vídeo tocando junto) e de dia
+        local. O intervalo é gravado em pedaços de até `MAX_SEGMENT_SECONDS`,
+        que é o que a busca de sobreposição pressupõe.
+        """
+        if end - start < MIN_PIECE_SECONDS:
+            return 0.0
+        row = conn.execute("SELECT * FROM study_sessions WHERE id = ?", (session_id,)).fetchone()
+        if row is None:
+            conn.execute(
+                "INSERT INTO study_sessions (id, user_id, source, course_id, lesson_key, opened_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (session_id, user_id, source.value, course_id, lesson_key, start),
+            )
+            row = conn.execute("SELECT * FROM study_sessions WHERE id = ?", (session_id,)).fetchone()
+        session = _session(row)
+        if session.user_id != user_id:
+            raise SessionNotFound()
+        tz_name = read_timezone(conn, user_id) or DEFAULT_TIMEZONE
+        tz = load_timezone(tz_name)
+        seq = conn.execute(
+            "SELECT COALESCE(MAX(seq), -1) + 1 FROM study_segments WHERE session_id = ?", (session_id,)
+        ).fetchone()[0]
+        total = 0.0
+        cursor = start
+        while end - cursor >= MIN_PIECE_SECONDS:
+            piece_end = min(end, cursor + MAX_SEGMENT_SECONDS)
+            credited = self._credit(conn, session, seq, cursor, piece_end, tz, tz_name)
+            start_ms = int(round((cursor - session.opened_at) * 1000))
+            end_ms = max(start_ms + 1, int(round((piece_end - session.opened_at) * 1000)))
+            claimed = piece_end - cursor
+            reason = None if credited >= claimed - MIN_PIECE_SECONDS else "overlap"
+            conn.execute(
+                "INSERT INTO study_segments (session_id, seq, start_ms, end_ms, claimed_seconds, credited_seconds, "
+                "status, reason, received_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (session_id, seq, start_ms, end_ms, claimed, credited, "accepted" if reason is None else "adjusted",
+                 reason, end),
+            )
+            total += credited
+            seq += 1
+            cursor = piece_end
+        conn.execute(
+            "UPDATE study_sessions SET credited_seconds = credited_seconds + ?, last_activity_at = ? WHERE id = ?",
+            (total, end, session_id),
+        )
+        return total
+
     # --- leitura --------------------------------------------------------------------
 
     def daily_totals(self, user_id: str) -> dict[date, dict[str, float]]:

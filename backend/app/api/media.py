@@ -18,12 +18,21 @@ from ..streaming.range import ByteRange, RangeNotSatisfiable, parse_range
 from ..streaming.streamer import stream_range
 from ..telegram.media import ChannelRef, MediaUnavailable, TelegramMedia
 from ..telegram.clients import TelegramReauthRequired
-from .deps import AppState, get_media, get_state, get_user_id
+from .deps import AppState, get_media, get_state, get_user_id, require_not_resting
 
 router = APIRouter(prefix="/api/courses", tags=["mídia"])
 
 # Pedidos abertos (`bytes=N-`) recebem no máximo esta janela por resposta.
 STREAM_WINDOW = 16 * 1024 * 1024
+
+
+async def get_lesson_media(
+    _rest: None = Depends(require_not_resting),
+    state: AppState = Depends(get_state),
+    user_id: str = Depends(get_user_id),
+) -> TelegramMedia:
+    """Mídia para tocar uma aula. Numa pausa do temporizador, recusa antes de tocar no Telegram."""
+    return await get_media(state, user_id)
 
 
 def _course(state: AppState, user_id: str, course_id: str, message_id: int) -> Course:
@@ -48,7 +57,7 @@ async def stream_media(
     download: bool = False,
     state: AppState = Depends(get_state),
     user_id: str = Depends(get_user_id),
-    media: TelegramMedia = Depends(get_media),
+    media: TelegramMedia = Depends(get_lesson_media),
 ):
     course = _course(state, user_id, course_id, message_id)
     info = course.media_info(message_id)

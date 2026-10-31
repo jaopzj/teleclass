@@ -9,6 +9,7 @@ from fastapi import Depends, Request
 from ..accounts import RateLimiter, SessionStore, User, UserStore
 from ..config import Settings
 from ..errors import AppError
+from ..focus import FocusService, FocusStats, GoalStore, MethodStore, NoticeStore
 from ..learning import NotesStore, ProgressStore
 from ..libraries import Libraries
 from ..study import PreferencesStore, StudyLedger, StudyMetrics
@@ -34,6 +35,11 @@ class AppState:
     study: StudyLedger
     preferences: PreferencesStore
     metrics: StudyMetrics
+    focus: FocusService  # temporizador (docs/temporizador.md)
+    focus_methods: MethodStore
+    focus_goals: GoalStore
+    focus_stats: FocusStats
+    focus_notices: NoticeStore
     # A coleta é sequencial para respeitar os limites do Telegram (PLANO.md, 9).
     collect_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Poucas miniaturas por vez, para não disparar muitas requisições ao Telegram.
@@ -77,6 +83,18 @@ async def get_media(state: AppState = Depends(get_state), user_id: str = Depends
     """Mídia do Telegram pela conta do próprio usuário."""
     require_telegram(state, user_id)
     return await state.clients.media(user_id)
+
+
+class RestingNow(AppError):
+    """Pausa programada do temporizador em andamento: aulas ficam bloqueadas até ela acabar."""
+
+    def __init__(self) -> None:
+        super().__init__(423, "focus_break_lock", "Você está numa pausa do temporizador. As aulas voltam quando ela terminar.")
+
+
+def require_not_resting(state: AppState = Depends(get_state), user_id: str = Depends(get_user_id)) -> None:
+    if state.focus.is_resting(user_id):
+        raise RestingNow()
 
 
 def client_ip(request: Request) -> str:

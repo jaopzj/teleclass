@@ -118,6 +118,132 @@ MIGRATIONS: list[str] = [
         PRIMARY KEY (user_id, day, source)
     );
     """,
+    # 4: temporizador de estudos, metas e gamificação (docs/temporizador.md)
+    """
+    CREATE TABLE focus_methods (
+        id                   TEXT PRIMARY KEY,
+        user_id              TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        name                 TEXT NOT NULL,
+        focus_seconds        INTEGER NOT NULL,
+        short_break_seconds  INTEGER NOT NULL,
+        long_break_seconds   INTEGER NOT NULL,
+        long_break_every     INTEGER,
+        cycles               INTEGER NOT NULL,
+        created_at           TEXT NOT NULL,
+        updated_at           TEXT NOT NULL,
+        deleted_at           TEXT
+    );
+    CREATE INDEX focus_methods_user ON focus_methods (user_id, deleted_at);
+    CREATE TABLE focus_sessions (
+        id                   TEXT PRIMARY KEY,
+        user_id              TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        technique            TEXT NOT NULL,
+        method_id            TEXT,
+        method_name          TEXT NOT NULL,
+        plan                 TEXT NOT NULL,
+        intention            TEXT,
+        course_id            TEXT,
+        lesson_key           TEXT,
+        course_title         TEXT,
+        lesson_title         TEXT,
+        status               TEXT NOT NULL,
+        stage                TEXT NOT NULL,
+        phase_index          INTEGER NOT NULL,
+        cycle                INTEGER NOT NULL,
+        phase_started_at     REAL,
+        phase_ends_at        REAL,
+        run_started_at       REAL,
+        paused_at            REAL,
+        phase_focus_seconds  REAL NOT NULL DEFAULT 0,
+        phase_pause_seconds  REAL NOT NULL DEFAULT 0,
+        focus_seconds        REAL NOT NULL DEFAULT 0,
+        break_seconds        REAL NOT NULL DEFAULT 0,
+        pause_seconds        REAL NOT NULL DEFAULT 0,
+        cycles_completed     INTEGER NOT NULL DEFAULT 0,
+        cycles_invalidated   INTEGER NOT NULL DEFAULT 0,
+        breaks_completed     INTEGER NOT NULL DEFAULT 0,
+        breaks_unlocked      INTEGER NOT NULL DEFAULT 0,
+        pending_cycle        INTEGER,
+        ledger_seq           INTEGER NOT NULL DEFAULT 0,
+        version              INTEGER NOT NULL DEFAULT 1,
+        timezone             TEXT NOT NULL,
+        started_at           REAL NOT NULL,
+        ended_at             REAL,
+        end_reason           TEXT,
+        xp                   INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE UNIQUE INDEX focus_sessions_one_active ON focus_sessions (user_id) WHERE status = 'active';
+    CREATE INDEX focus_sessions_user ON focus_sessions (user_id, started_at);
+    CREATE TABLE focus_phases (
+        session_id       TEXT NOT NULL REFERENCES focus_sessions (id) ON DELETE CASCADE,
+        idx              INTEGER NOT NULL,
+        stage            TEXT NOT NULL,
+        cycle            INTEGER NOT NULL,
+        planned_seconds  REAL,
+        started_at       REAL NOT NULL,
+        ended_at         REAL NOT NULL,
+        focus_seconds    REAL NOT NULL DEFAULT 0,
+        pause_seconds    REAL NOT NULL DEFAULT 0,
+        outcome          TEXT NOT NULL,
+        PRIMARY KEY (session_id, idx)
+    );
+    CREATE TABLE focus_events (
+        id          INTEGER PRIMARY KEY,
+        user_id     TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        session_id  TEXT NOT NULL REFERENCES focus_sessions (id) ON DELETE CASCADE,
+        type        TEXT NOT NULL,
+        at          REAL NOT NULL,
+        request_id  TEXT,
+        detail      TEXT
+    );
+    CREATE UNIQUE INDEX focus_events_request ON focus_events (user_id, request_id) WHERE request_id IS NOT NULL;
+    CREATE INDEX focus_events_session ON focus_events (session_id, id);
+    CREATE TABLE focus_daily (
+        user_id  TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        day      TEXT NOT NULL,
+        seconds  REAL NOT NULL DEFAULT 0,
+        cycles   INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, day)
+    );
+    CREATE TABLE focus_goals (
+        user_id         TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        period          TEXT NOT NULL,
+        target_seconds  INTEGER NOT NULL,
+        updated_at      TEXT NOT NULL,
+        PRIMARY KEY (user_id, period)
+    );
+    CREATE TABLE xp_events (
+        id      INTEGER PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        ref     TEXT NOT NULL,
+        kind    TEXT NOT NULL,
+        xp      INTEGER NOT NULL,
+        day     TEXT NOT NULL,
+        at      REAL NOT NULL,
+        detail  TEXT,
+        UNIQUE (user_id, ref)
+    );
+    CREATE INDEX xp_events_user_day ON xp_events (user_id, day, kind);
+    CREATE TABLE user_achievements (
+        user_id      TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        code         TEXT NOT NULL,
+        unlocked_at  REAL NOT NULL,
+        PRIMARY KEY (user_id, code)
+    );
+    CREATE TABLE focus_notices (
+        id       INTEGER PRIMARY KEY,
+        user_id  TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        kind     TEXT NOT NULL,
+        payload  TEXT NOT NULL,
+        at       REAL NOT NULL
+    );
+    CREATE INDEX focus_notices_user ON focus_notices (user_id, id);
+    CREATE TABLE focus_preferences (
+        user_id     TEXT PRIMARY KEY REFERENCES users (id) ON DELETE CASCADE,
+        data        TEXT NOT NULL,
+        updated_at  TEXT NOT NULL
+    );
+    """,
 ]
 
 

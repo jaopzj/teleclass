@@ -19,10 +19,11 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 
 from .accounts import RateLimiter, SessionStore, UserStore
-from .api import auth, courses, media, snapshots, study, telegram
+from .api import auth, courses, focus, media, snapshots, study, telegram
 from .api.deps import AppState
 from .config import Settings, get_settings
 from .errors import AppError
+from .focus import FocusService, FocusStats, GoalStore, MethodStore, NoticeStore
 from .learning import Database, NotesStore, ProgressStore
 from .libraries import Libraries
 from .study import PreferencesStore, StudyLedger, StudyMetrics
@@ -64,6 +65,11 @@ def build_state(settings: Settings) -> AppState:
         study=ledger,
         preferences=preferences,
         metrics=StudyMetrics(ledger, preferences, progress, libraries),
+        focus=FocusService(database, ledger),
+        focus_methods=MethodStore(database),
+        focus_goals=GoalStore(database),
+        focus_stats=FocusStats(database),
+        focus_notices=NoticeStore(database),
     )
 
 
@@ -142,6 +148,7 @@ def create_app() -> FastAPI:
     app.include_router(courses.router)
     app.include_router(media.router)
     app.include_router(study.router)
+    app.include_router(focus.router)
     if FRONTEND_DIST.is_dir():
         # SPA: qualquer rota que não seja da API devolve o index.html (ex.: /cursos/x).
         @app.get("/{path:path}", include_in_schema=False)
