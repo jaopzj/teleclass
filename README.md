@@ -6,10 +6,13 @@ experiência de área de membros. O plano completo está em [PLANO.md](PLANO.md)
 **Estado atual:** indexação + área de membros. O app lê um canal, monta
 módulos, subtópicos e aulas, e permite assistir às aulas com streaming direto do
 Telegram, retomada de onde parou, progresso por curso, anotações por aula e
-métricas de estudo (tempo real de reprodução, sequência, média diária).
+métricas de estudo (tempo real de reprodução, sequência, média diária) e um
+temporizador de estudos (Pomodoro, 52/17, Deep Work, métodos próprios, metas,
+XP e conquistas).
 Arquitetura: [docs/indexacao.md](docs/indexacao.md),
-[docs/area-de-membros.md](docs/area-de-membros.md) e
-[docs/metricas-de-estudo.md](docs/metricas-de-estudo.md).
+[docs/area-de-membros.md](docs/area-de-membros.md),
+[docs/metricas-de-estudo.md](docs/metricas-de-estudo.md) e
+[docs/temporizador.md](docs/temporizador.md).
 
 ## Requisitos
 
@@ -66,6 +69,10 @@ http://127.0.0.1:8000.
   última aula assistida e "Continuar de onde parei".
 - **Aula**: player, anotações com salvamento automático, marcar como concluída,
   aula anterior e próxima.
+- **Foco** (`/foco`): temporizador de estudos com técnicas prontas e métodos
+  próprios, Focus Mode com sons ambientes, pausas guiadas, metas, níveis,
+  conquistas, histórico e estatísticas. Um widget flutuante acompanha a sessão
+  em todas as páginas, e a aula tem um atalho para estudar com o temporizador.
 - **Indexação** (`/indexacao`): coleta canais e mostra a árvore e o relatório.
 
 Cada usuário tem a própria biblioteca, progresso e anotações; ninguém vê os

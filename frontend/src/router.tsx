@@ -58,4 +58,5 @@ export const paths = {
   course: (id: string) => `/cursos/${encodeURIComponent(id)}`,
   lesson: (id: string, key: string) => `/cursos/${encodeURIComponent(id)}/aulas/${encodeURIComponent(key)}`,
   indexing: () => "/indexacao",
+  focus: (tab?: string) => (tab ? `/foco/${tab}` : "/foco"),
 };

@@ -9,6 +9,7 @@ import { learningApi, LessonDetail, LessonProgress, mediaUrl, thumbUrl } from ".
 import { Link, paths } from "../router";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthProvider";
+import QuickStart from "../focus/QuickStart";
 
 // Consultado uma vez por sessão: sem o cryptg, o download do Telegram fica muito lento.
 let slowCryptoCheck: Promise<boolean> | null = null;
@@ -220,7 +221,10 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
               Aula {lesson.number} de {course.total}
               {lesson.path.length > 0 && ` · ${lesson.path[lesson.path.length - 1]}`}
             </p>
-            <h1>{lesson.title}</h1>
+            <div className="lesson-title-row">
+              <h1>{lesson.title}</h1>
+              <QuickStart courseId={course.id} lessonKey={lesson.key} />
+            </div>
           </header>
           {lesson.description && <RichText text={lesson.description} />}
         </div>

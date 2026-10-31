@@ -67,8 +67,8 @@ export default function StudyOverview() {
       </dl>
 
       <p className="study-footnote">
-        Conta só o tempo real de reprodução: pausas, carregamentos e vídeo parado ficam de fora, e assistir em 2× não
-        dobra o tempo. Um dia entra na sequência com {formatStudyTime(threshold)} ou mais (a linha tracejada no gráfico). Dias pelo fuso de{" "}
+        Conta o tempo real de reprodução e o tempo de concentração do temporizador de Foco, sem contar duas vezes o
+        mesmo minuto: pausas, carregamentos e vídeo parado ficam de fora, e assistir em 2× não dobra o tempo. Um dia entra na sequência com {formatStudyTime(threshold)} ou mais (a linha tracejada no gráfico). Dias pelo fuso de{" "}
         {timezoneLabel(data.timezone)}.
       </p>
     </section>
