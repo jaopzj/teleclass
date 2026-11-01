@@ -30,7 +30,7 @@ export default function CourseCard({ course }: { course: Course }) {
       <div className="ccard-cover" style={coverTint(course.id)} aria-hidden="true">
         <span className="ccard-initials">{initials(course.title)}</span>
         <span className="ccard-action">
-          <Icon name={done ? "check" : "play"} size={18} weight={done ? "bold" : "fill"} />
+          <Icon name={done ? "check" : "play"} size={14} weight={done ? "bold" : "fill"} />
         </span>
       </div>
       <div className="ccard-body">
@@ -41,7 +41,7 @@ export default function CourseCard({ course }: { course: Course }) {
           {plural(stats.modules, "módulo", "módulos")} e {plural(stats.lessons, "aula", "aulas")}
         </p>
         <div className="ccard-progress">
-          <ProgressBar value={progress.percent} size="lg" label={`Progresso de ${course.title}`} />
+          <ProgressBar value={progress.percent} size="md" label={`Progresso de ${course.title}`} />
           <div className="ccard-progress-foot">
             <span>{stats.duration > 0 ? compactDuration(stats.duration) : plural(stats.video_lessons, "vídeo", "vídeos")}</span>
             <span>

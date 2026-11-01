@@ -9,21 +9,21 @@
 /* ---- superfícies ------------------------------------------------------------ */
 
 .surface { background: var(--surface); border-radius: var(--radius-lg); }
-.surface-pad { padding: var(--space-8); }
+.surface-pad { padding: var(--space-6); }
 .surface-sunken { background: var(--brand-a08); border-radius: var(--radius-md); }
 
 .section-title {
   margin: 0;
   font-size: var(--text-display);
   font-weight: var(--weight-bold);
-  line-height: 1.02;
-  letter-spacing: -0.025em;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 .title-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); }
 .section-link {
   display: inline-flex; align-items: center; gap: 6px;
-  font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--brand-700); text-decoration: none;
+  font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--brand-700); text-decoration: none;
   border-radius: var(--radius-xs);
   transition: color var(--duration-fast);
 }
@@ -33,9 +33,9 @@
 
 .button {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 40px; padding: 8px 18px; border-radius: var(--radius-pill);
+  min-height: 38px; padding: 7px 16px; border-radius: var(--radius-pill);
   border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
-  font-weight: var(--weight-semibold); font-size: 0.94rem; line-height: 1.2; text-decoration: none; cursor: pointer;
+  font-weight: var(--weight-semibold); font-size: 0.875rem; line-height: 1.2; text-decoration: none; cursor: pointer;
   transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast),
     transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast);
 }
@@ -51,8 +51,8 @@
 .button-ghost:hover { color: var(--ink-2); background: var(--brand-a08); }
 .button-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
 .button-danger:hover { background: var(--danger); filter: brightness(1.08); }
-.button-sm { min-height: 32px; padding: 5px 12px; font-size: 0.85rem; }
-.button-lg { min-height: 48px; padding: 12px 22px; font-size: 1rem; }
+.button-sm { min-height: 32px; padding: 5px 12px; font-size: var(--text-sm); }
+.button-lg { min-height: 44px; padding: 10px 20px; font-size: var(--text-base); }
 .button-block { width: 100%; }
 .button-sub { font-weight: 500; opacity: 0.85; }
 .button-on-dark { background: rgb(255 255 255 / 0.16); border-color: rgb(255 255 255 / 0.28); color: #fff; }
@@ -60,7 +60,7 @@
 
 .icon-button {
   display: inline-grid; place-items: center; flex: none;
-  width: 40px; height: 40px; padding: 0; border: 0; border-radius: var(--radius-pill);
+  width: 38px; height: 38px; padding: 0; border: 0; border-radius: var(--radius-pill);
   background: transparent; color: var(--ink-3); cursor: pointer;
   transition: background var(--duration-fast), color var(--duration-fast), transform var(--duration-fast) var(--ease-out);
 }
@@ -95,27 +95,27 @@
 .progress-xs { height: 6px; background: var(--brand-200); }
 .progress-sm { height: 6px; }
 .progress-md { height: 8px; }
-.progress-lg { height: 16px; }
+.progress-lg { height: 12px; }
 .progress > span {
   position: absolute; inset: 0 auto 0 0; background: var(--brand-500); border-radius: inherit;
   transition: width var(--duration-slow) var(--ease-out);
 }
 
-.alert { padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 16px; }
+.alert { padding: 12px 16px; border-radius: var(--radius-md); margin-bottom: 16px; font-size: var(--text-sm); }
 .alert-error { background: var(--danger-soft); color: var(--danger); }
-.alert-warning { background: var(--warning-soft); color: var(--warning); font-size: 0.9rem; }
+.alert-warning { background: var(--warning-soft); color: var(--warning); font-size: var(--text-sm); }
 .alert code { font-size: 0.85em; padding: 1px 5px; border-radius: 4px; background: rgb(0 0 0 / 0.06); }
 
 /* ---- estados ------------------------------------------------------------------------- */
 
 .empty {
   display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
-  padding: 48px 24px; border-radius: var(--radius-lg); background: var(--surface); color: var(--ink-3);
+  padding: var(--space-10) var(--space-6); border-radius: var(--radius-lg); background: var(--surface); color: var(--ink-3);
 }
-.empty-icon { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 50%; background: var(--brand-a14); color: var(--brand-500); }
+.empty-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--brand-a14); color: var(--brand-500); }
 .empty h2 { margin: 8px 0 0; color: var(--ink); font-size: var(--text-md); }
 .empty p { margin: 0 0 12px; max-width: 420px; }
-.empty-compact { padding: 32px 20px; }
+.empty-compact { padding: var(--space-8) var(--space-5); }
 
 .skeleton {
   background: linear-gradient(90deg, rgb(255 255 255 / 0.55) 25%, rgb(255 255 255 / 0.95) 50%, rgb(255 255 255 / 0.55) 75%);
@@ -143,7 +143,7 @@
 .menu-item {
   width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px;
   border: 0; border-radius: var(--radius-sm); background: none; color: var(--ink-2);
-  font-size: 0.94rem; font-weight: var(--weight-medium); text-align: left; text-decoration: none; cursor: pointer;
+  font-size: var(--text-sm); font-weight: var(--weight-medium); text-align: left; text-decoration: none; cursor: pointer;
   transition: background var(--duration-fast), color var(--duration-fast);
 }
 .menu-item:hover, .menu-item:focus-visible, .menu-item[aria-selected="true"] { outline: none; background: var(--brand-a08); color: var(--ink); }
@@ -167,6 +167,10 @@
 
 .scrim { position: fixed; inset: 0; z-index: 70; background: rgb(8 30 44 / 0.42); backdrop-filter: blur(2px); animation: fade var(--duration-base) ease; }
 @keyframes fade { from { opacity: 0; } }
+
+/* Títulos dentro de superfícies escuras (palco do Foco, painel do login, capa do
+   curso, player) herdam a cor do texto da superfície em vez do --ink global. */
+:is(.stage, .auth-aside, .course-hero, .pp, .ftimer, .fbar, .on-dark) :is(h1, h2, h3, h4) { color: inherit; }
 
 /* ---- utilitários -------------------------------------------------------------------------- */
 

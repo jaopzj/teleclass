@@ -255,6 +255,7 @@
 
 /* variações */
 .ne-compact { font-size: 0.93rem; line-height: 1.6; min-height: 1.6em; }
+.ne-compact .is-empty::before { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } /* o texto de ajuda não vaza da caixa em painéis estreitos */
 .ne-compact h2 { font-size: 1.12em; margin-top: 0.8em; }
 .ne-compact h3 { font-size: 1.02em; margin-top: 0.7em; }
 .ne-full { font-size: 1.02rem; line-height: 1.72; min-height: 40vh; padding-bottom: 30vh; }

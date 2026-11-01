@@ -36,24 +36,24 @@ export default function StudyCalendar({ metrics }: { metrics: StudyMetrics }) {
         <div className="calendar-head">
           <button
             type="button"
-            className="icon-button"
+            className="icon-button icon-button-sm"
             onClick={() => setMonth((m) => shiftMonth(m, -1))}
             disabled={month <= firstMonth}
             aria-label="Mês anterior"
           >
-            <Icon name="left" size={24} />
+            <Icon name="left" size={18} />
           </button>
           <h3 className="calendar-month" aria-live="polite">
             {title}
           </h3>
           <button
             type="button"
-            className="icon-button"
+            className="icon-button icon-button-sm"
             onClick={() => setMonth((m) => shiftMonth(m, 1))}
             disabled={month >= currentMonth}
             aria-label="Próximo mês"
           >
-            <Icon name="right" size={24} />
+            <Icon name="right" size={18} />
           </button>
         </div>
 

@@ -58,14 +58,16 @@
   --font-sans: "Host Grotesk Variable", "Host Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-brand: "Poppins", var(--font-sans);
 
-  --text-display: clamp(2rem, 1.2rem + 1.6vw, 3rem); /* 48 — títulos de seção */
-  --text-h1: clamp(1.625rem, 1.15rem + 1vw, 2.25rem); /* 36 — título do destaque */
-  --text-h2: clamp(1.5rem, 1.15rem + 0.7vw, 2rem); /* 32 — números de destaque */
-  --text-lg: clamp(1.125rem, 0.95rem + 0.4vw, 1.5rem); /* 24 — rótulos grandes, calendário */
-  --text-md: 1.25rem; /* 20 — navegação, título de cartão */
-  --text-base: 1rem; /* 16 */
-  --text-sm: 0.875rem; /* 14 */
-  --text-xs: 0.75rem; /* 12 */
+  /* Escala compacta: pensada para 1920 × 1080 sem rolagem na tela inicial e para
+   * crescer pouco entre notebook e monitor (os maiores são fluidos e travam cedo). */
+  --text-display: clamp(1.5rem, 1.05rem + 0.6vw, 1.875rem); /* 24 → 30 — títulos de página e seção */
+  --text-h1: clamp(1.375rem, 1rem + 0.5vw, 1.625rem); /* 22 → 26 — título do destaque */
+  --text-h2: clamp(1.25rem, 1rem + 0.35vw, 1.5rem); /* 20 → 24 — números de destaque */
+  --text-lg: 1.125rem; /* 18 — subtítulos, valores de linha */
+  --text-md: 1rem; /* 16 — título de cartão */
+  --text-base: 0.9375rem; /* 15 — texto, navegação, campos */
+  --text-sm: 0.8125rem; /* 13 — texto secundário */
+  --text-xs: 0.75rem; /* 12 — legendas */
 
   --weight-regular: 400;
   --weight-medium: 500;
@@ -88,14 +90,14 @@
   /* ---- forma ------------------------------------------------------------------------ */
   --radius-xs: 6px;
   --radius-sm: 10px;
-  --radius-md: 15px; /* blocos dentro de cartões */
-  --radius-lg: 25px; /* cartões */
-  --radius-xl: 50px; /* barra lateral */
+  --radius-md: 12px; /* blocos dentro de cartões */
+  --radius-lg: 20px; /* cartões */
+  --radius-xl: 32px; /* barra lateral */
   --radius-pill: 999px;
 
   --shadow-xs: 0 1px 2px rgb(9 46 66 / 0.06);
-  --shadow-card: 0 15px 30px -3px rgb(9 46 66 / 0.2); /* cartões de curso */
-  --shadow-card-hover: 0 22px 36px -6px rgb(9 46 66 / 0.26);
+  --shadow-card: 0 1px 2px rgb(9 46 66 / 0.05), 0 8px 24px -8px rgb(9 46 66 / 0.16); /* cartões de curso */
+  --shadow-card-hover: 0 2px 4px rgb(9 46 66 / 0.06), 0 16px 32px -10px rgb(9 46 66 / 0.24);
   --shadow-pop: 0 18px 40px -12px rgb(9 46 66 / 0.32), 0 2px 6px rgb(9 46 66 / 0.06);
   --focus-ring: 0 0 0 3px rgb(19 165 228 / 0.45);
 
@@ -107,9 +109,18 @@
   --duration-slow: 360ms;
 
   /* ---- estrutura ------------------------------------------------------------------- */
-  --sidebar-w: clamp(272px, 18.75vw, 360px);
-  --topbar-h: 0px; /* altura de barras fixas no topo (só no celular) */
-  --page-pad-x: clamp(20px, 3.75vw, 72px);
+  /* Barra lateral: completa ≥ 1280px, trilho de ícones 1024–1279px, gaveta abaixo. */
+  --sidebar-w: clamp(232px, 14vw, 264px);
+  --rail-w: 76px;
+  /* Altura da barra do topo (busca e conta). Fica fixa no desktop e no celular,
+   * e as áreas "grudadas" (notas da aula, Caderno, Foco) descontam esse valor. */
+  --topbar-h: 72px;
+  /* Margens laterais do conteúdo e largura máxima: em monitores grandes o
+   * conteúdo para de crescer e fica centrado, em vez de esticar até a borda. */
+  --page-pad-x: clamp(20px, 2.5vw, 48px);
+  --content-max: 1360px;
+  /* Espaço vertical entre blocos de uma página. */
+  --stack-gap: var(--space-6);
 }
 
 @media (prefers-reduced-motion: reduce) {
