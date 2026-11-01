@@ -152,7 +152,7 @@ function Inspection({ result, snapshot, onBack }: { result: IndexResult; snapsho
       )}
 
       <header className="surface ix-card ix-course">
-        <CourseCover id={name} title={course.title} className="ix-course-cover" />
+        <CourseCover id={name} className="ix-course-cover" />
         <div className="ix-course-text">
           <p className="eyebrow">Prévia da importação</p>
           <h1>{course.title}</h1>

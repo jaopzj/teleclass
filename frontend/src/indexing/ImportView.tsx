@@ -8,35 +8,23 @@ import { dismissFresh, draft, startCollection } from "./collectStore";
 import type { TelegramState } from "./IndexingPage";
 import { LINK_EXAMPLES, parseChannelLink } from "./links";
 
-export function IndexingHeader({ telegram }: { telegram?: TelegramState }) {
+export function IndexingHeader() {
   return (
-    <header className="page-head ix-head">
+    <header className="page-head">
       <div>
         <h1>Adicionar curso</h1>
         <p className="muted">Transforme um canal do Telegram em um curso organizado em módulos e aulas.</p>
       </div>
-      {telegram && <TelegramStatus state={telegram} />}
     </header>
   );
 }
 
-const TELEGRAM_STATUS: Record<TelegramState, { label: string; tone: string; tip?: string }> = {
-  loading: { label: "Verificando Telegram", tone: "" },
-  unknown: { label: "Telegram indisponível", tone: "badge-warning", tip: "Não foi possível consultar a conexão agora" },
-  unconfigured: { label: "Telegram não configurado", tone: "badge-warning", tip: "O servidor não tem as credenciais da API do Telegram" },
-  unlinked: { label: "Telegram não conectado", tone: "badge-warning", tip: "Vincule sua conta do Telegram para coletar canais" },
-  linked: { label: "Telegram conectado", tone: "badge-success" },
+/** Por que a coleta está indisponível; o campo mostra isto em vez da dica. */
+const TELEGRAM_BLOCKED: Partial<Record<TelegramState, string>> = {
+  unknown: "Não foi possível consultar a conexão com o Telegram agora.",
+  unconfigured: "O servidor não tem as credenciais da API do Telegram.",
+  unlinked: "Vincule sua conta do Telegram para coletar canais.",
 };
-
-function TelegramStatus({ state }: { state: TelegramState }) {
-  const { label, tone, tip } = TELEGRAM_STATUS[state];
-  return (
-    <span className={`badge ix-status ${tone}`} role="status" data-tip={tip}>
-      <span className="ix-status-dot" aria-hidden="true" />
-      {label}
-    </span>
-  );
-}
 
 interface Props {
   telegram: TelegramState;
@@ -49,7 +37,7 @@ export default function ImportView({ telegram, snapshots, snapshotsError }: Prop
   useEffect(dismissFresh, []);
   return (
     <>
-      <IndexingHeader telegram={telegram} />
+      <IndexingHeader />
       <div className="ix-import">
         <ImportCard telegram={telegram} />
         <RecentImports snapshots={snapshots} error={snapshotsError} />
@@ -97,7 +85,7 @@ function ImportCard({ telegram }: { telegram: TelegramState }) {
 
   let message: { text: string; error?: boolean };
   if (!ready && telegram !== "loading") {
-    message = { text: `${TELEGRAM_STATUS[telegram].tip ?? "A coleta precisa do Telegram conectado"}.`, error: true };
+    message = { text: TELEGRAM_BLOCKED[telegram] ?? "A coleta precisa do Telegram conectado.", error: true };
   } else if (showInvalid) {
     message = { text: "Link não reconhecido. Use um dos formatos abaixo.", error: true };
   } else {
@@ -216,7 +204,7 @@ function RecentImports({ snapshots, error }: { snapshots: SnapshotInfo[] | undef
             return (
               <li key={s.name}>
                 <Link className="ix-recent-item" to={paths.indexing(s.name)}>
-                  <CourseCover id={s.name} title={title} className="ix-recent-cover" />
+                  <CourseCover id={s.name} className="ix-recent-cover" />
                   <span className="ix-recent-text">
                     <strong>{title}</strong>
                     <span className="ix-recent-meta">

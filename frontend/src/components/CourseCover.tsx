@@ -1,7 +1,8 @@
-import type { CSSProperties } from "react";
-// Identidade visual gerada a partir do curso: um degradê com tons derivados do
-// id (estável entre visitas) e as iniciais do título. Quando houver capas
-// (PLANO.md, fase 2), basta trocar o conteúdo deste componente.
+import { CSSProperties, useEffect, useState } from "react";
+import Icon from "./Icon";
+
+// Capa do curso (foto do canal) e as cores derivadas do id, que ainda tingem
+// o destaque da página do curso.
 
 function hash(text: string) {
   let h = 2166136261;
@@ -29,10 +30,38 @@ export function coverStyle(id: string) {
   } as CSSProperties;
 }
 
-export default function CourseCover({ id, title, className = "" }: { id: string; title: string; className?: string }) {
+/** Capas que o servidor não tem (canal sem foto ou inacessível): não pede de novo nesta visita. */
+const missing = new Set<string>();
+
+export const coverUrl = (id: string) => `/api/courses/${encodeURIComponent(id)}/photo`;
+
+/**
+ * Capa do curso: a foto do canal do Telegram. Enquanto carrega, ou se o canal
+ * não tiver foto, mostra uma superfície neutra com o ícone do Telegram.
+ */
+export default function CourseCover({ id, className = "" }: { id: string; className?: string }) {
+  const [failed, setFailed] = useState(() => missing.has(id));
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    setFailed(missing.has(id));
+    setLoaded(false);
+  }, [id]);
   return (
-    <div className={`cover ${className}`} style={coverStyle(id)} aria-hidden="true">
-      <span className="cover-mark">{initials(title)}</span>
+    <div className={`cover ${loaded ? "is-loaded" : ""} ${className}`} aria-hidden="true">
+      {!loaded && <Icon name="telegram" className="cover-placeholder" />}
+      {!failed && (
+        <img
+          src={coverUrl(id)}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onLoad={() => setLoaded(true)}
+          onError={() => {
+            missing.add(id);
+            setFailed(true);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@ recebe o curso e confere se a mensagem faz parte dele.
 
 from __future__ import annotations
 
+import time
 import unicodedata
 from urllib.parse import quote
 
@@ -14,6 +15,7 @@ from fastapi.responses import Response, StreamingResponse
 from telethon import errors
 
 from ..courses import Course, CourseNotFound
+from ..snapshots import SnapshotNotFound
 from ..streaming.range import ByteRange, RangeNotSatisfiable, parse_range
 from ..streaming.streamer import stream_range
 from ..telegram.media import ChannelRef, MediaUnavailable, TelegramMedia
@@ -135,6 +137,50 @@ async def thumbnail(
     if not data:
         missing.touch()
         raise HTTPException(404, "Sem miniatura")
+    path.write_bytes(data)
+    return Response(data, media_type="image/jpeg", headers=cache)
+
+
+# Sem foto: tenta de novo depois deste tempo (o canal pode ganhar uma).
+PHOTO_MISSING_TTL = 24 * 60 * 60
+
+
+@router.get("/{course_id}/photo")
+async def channel_photo(
+    course_id: str,
+    state: AppState = Depends(get_state),
+    user_id: str = Depends(get_user_id),
+    media: TelegramMedia = Depends(get_media),
+):
+    """Foto do canal do curso, usada como capa. Fica em disco por usuário e é
+    buscada de novo quando o canal é coletado outra vez."""
+    try:
+        course = state.libraries.catalog(user_id).get(course_id)
+        collected_at = state.libraries.store(user_id).modified_at(course_id)
+    except (CourseNotFound, SnapshotNotFound) as exc:
+        raise HTTPException(404, "Curso não encontrado") from exc
+    folder = state.settings.thumbs_dir / user_id / str(course.channel_id or course.id)
+    path = folder / "channel.jpg"
+    missing = folder / "channel.none"
+    cache = {"Cache-Control": "private, max-age=3600"}
+    if path.is_file() and path.stat().st_mtime >= collected_at:
+        return Response(path.read_bytes(), media_type="image/jpeg", headers=cache)
+    if missing.is_file() and missing.stat().st_mtime >= max(collected_at, time.time() - PHOTO_MISSING_TTL):
+        raise HTTPException(404, "Canal sem foto")
+    async with state.thumbs_semaphore:
+        try:
+            data = await media.channel_photo(_channel(course))
+        except MediaUnavailable as exc:
+            raise HTTPException(404, str(exc)) from exc
+        except errors.UnauthorizedError as exc:
+            await state.clients.revoked(user_id)
+            raise TelegramReauthRequired() from exc
+    folder.mkdir(parents=True, exist_ok=True)
+    if not data:
+        path.unlink(missing_ok=True)
+        missing.touch()
+        raise HTTPException(404, "Canal sem foto")
+    missing.unlink(missing_ok=True)
     path.write_bytes(data)
     return Response(data, media_type="image/jpeg", headers=cache)
 
