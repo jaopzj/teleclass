@@ -48,36 +48,32 @@ export default function WeekStats({ metrics }: { metrics: StudyMetrics }) {
           })}
         </ol>
 
-        <dl className="stats-rows">
-          <div className="stats-row">
+        {/* Resumo em três colunas: cabe ao lado da agenda sem alongar a página. */}
+        <dl className="stats-summary">
+          <div className="stats-cell">
             <dt>Esta semana</dt>
-            <dd>
-              <strong>{formatStudyTime(week.seconds)}</strong>
-              {(week.seconds > 0 || week.previous_to_date_seconds > 0) && (
-                <span className={`badge ${delta >= 0 ? "badge-success" : "badge-warning"}`}>
-                  {formatDelta(delta)} vs. semana passada
-                </span>
-              )}
-            </dd>
+            <dd className="stats-value">{formatStudyTime(week.seconds)}</dd>
+            {(week.seconds > 0 || week.previous_to_date_seconds > 0) && (
+              <dd className={`stats-delta ${delta >= 0 ? "is-up" : "is-down"}`} title="Em relação ao mesmo ponto da semana passada">
+                {formatDelta(delta)}
+                <span className="sr-only"> em relação à semana passada</span>
+              </dd>
+            )}
           </div>
-          <div className="stats-row">
+          <div className="stats-cell">
             <dt>Hoje</dt>
-            <dd>
-              <strong>{formatStudyTime(today.seconds)}</strong>
-              <span className="stats-hint">
+            <dd className="stats-value">{formatStudyTime(today.seconds)}</dd>
+            <dd className="stats-progress" title={today.active ? "Dia já conta para a sequência" : `Faltam ${formatStudyTime(todayLeft)} para o dia contar`}>
+              <ProgressBar value={(today.seconds / threshold) * 100} size="xs" label="Mínimo do dia para a sequência" />
+              <span className="sr-only">
                 {today.active ? "Dia já conta para a sequência" : `Faltam ${formatStudyTime(todayLeft)} para o dia contar`}
               </span>
             </dd>
-            <dd className="stats-progress">
-              <ProgressBar value={(today.seconds / threshold) * 100} size="xs" label="Mínimo do dia para a sequência" />
-            </dd>
           </div>
-          <div className="stats-row">
+          <div className="stats-cell">
             <dt>Melhor sequência</dt>
-            <dd>
-              <strong>
-                {metrics.streak.best} {metrics.streak.best === 1 ? "dia" : "dias"}
-              </strong>
+            <dd className="stats-value">
+              {metrics.streak.best} {metrics.streak.best === 1 ? "dia" : "dias"}
             </dd>
           </div>
         </dl>

@@ -9,7 +9,7 @@
  */
 
 .shell { display: grid; grid-template-columns: auto minmax(0, 1fr); min-height: 100vh; }
-.shell-body { min-width: 0; padding: 0 var(--page-pad-x) var(--space-12); overflow-x: clip; }
+.shell-body { min-width: 0; padding: 0 var(--page-pad-x) var(--space-8); overflow-x: clip; }
 .shell-body > * { max-width: var(--content-max); margin-inline: auto; }
 .shell-body:has(.app-main.is-notebook) { padding-bottom: 0; }
 

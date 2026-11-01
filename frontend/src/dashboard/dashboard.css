@@ -10,7 +10,8 @@
  *  < 600px               tudo empilhado; cursos em carrossel
  */
 
-.dashboard-wrap { container: dashboard / inline-size; padding-top: var(--space-2); }
+/* O respiro no topo é o espaço por onde a chama sai do destaque. */
+.dashboard-wrap { container: dashboard / inline-size; padding-top: var(--space-12); }
 .dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(280px, 27%, 340px);
@@ -29,7 +30,7 @@
 .dashboard-aside > :nth-child(2) { animation-delay: 120ms; }
 
 /* Título de seção + conteúdo: mesmo respiro em todas as seções da tela. */
-.recent, .agenda, .stats { display: grid; gap: var(--space-4); align-content: start; }
+.recent, .agenda, .stats { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); align-content: start; }
 .dashboard .section-title { font-size: var(--text-h2); }
 
 /* ---- destaque da sequência ---------------------------------------------------------- */
@@ -51,10 +52,12 @@
 .streak-message { max-width: 300px; margin: var(--space-2) 0 0; font-size: var(--text-base); line-height: 1.35; text-wrap: pretty; }
 .streak-message strong { font-weight: var(--weight-bold); }
 
-/* A chama (412 × 402 com a rotação) sai um pouco pelo topo do cartão. */
+/* A chama (412 × 402 com a rotação) sai de propósito pelo topo e pela direita do
+   cartão, como no Figma; o respiro acima vem de .dashboard-wrap e o da direita,
+   do espaço entre as colunas. */
 .streak-flame {
-  position: absolute; z-index: 0; top: -20px; right: -8px;
-  width: 220px; height: auto; pointer-events: none; user-select: none;
+  position: absolute; z-index: 0; top: -92px; right: -106px;
+  width: 320px; height: auto; pointer-events: none; user-select: none;
   transform-origin: 55% 80%;
   animation: flame-in 700ms var(--ease-spring) both, flame-sway 5s ease-in-out 700ms infinite;
   transition: filter var(--duration-slow), opacity var(--duration-slow);
@@ -72,7 +75,7 @@
   .streak-text { max-width: 66%; padding: var(--space-6) 0 var(--space-6) var(--space-6); }
   .streak-date { font-size: var(--text-sm); }
   .streak-title { margin-top: var(--space-4); }
-  .streak-flame { width: 148px; top: -12px; right: -18px; }
+  .streak-flame { width: 156px; top: -28px; right: -14px; }
 }
 
 /* ---- aviso de fuso -------------------------------------------------------------------- */
@@ -129,7 +132,7 @@
   height: 28px; padding: 0; text-align: center;
   font-size: var(--text-xs); font-weight: var(--weight-semibold); line-height: 1; color: var(--brand-700);
 }
-.calendar-grid td { height: 38px; padding: 0; text-align: center; vertical-align: middle; }
+.calendar-grid td { height: 34px; padding: 0; text-align: center; vertical-align: middle; }
 .calendar-day {
   position: relative; display: inline-grid; place-items: center; width: min(32px, calc(100% - 2px)); aspect-ratio: 1; border-radius: 50%;
   font-size: var(--text-sm); font-weight: var(--weight-medium); line-height: 1; color: var(--ink-2);
@@ -157,7 +160,7 @@
 .stats-card { display: flex; flex-direction: column; padding: var(--space-4) var(--space-5) var(--space-4); }
 .week-chart {
   display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--space-2);
-  height: 148px; padding: var(--space-3) var(--space-3) 0; border-radius: var(--radius-md); background: var(--brand-a08);
+  height: 116px; padding: var(--space-2) var(--space-3) 0; border-radius: var(--radius-md); background: var(--brand-a08);
 }
 .week-day { display: grid; grid-template-rows: 22px 1fr; justify-items: center; min-width: 0; }
 .week-letter { font-size: var(--text-xs); font-weight: var(--weight-semibold); line-height: 1; color: var(--ink-3); }
@@ -177,14 +180,18 @@
 .week-day.is-future .week-bar { visibility: hidden; }
 @keyframes bar-grow { from { transform: scaleY(0); } }
 
-.stats-rows { display: grid; margin: var(--space-2) 0 0; }
-.stats-row { display: grid; gap: 2px; padding: var(--space-3) 2px; border-bottom: 1px solid var(--line); }
-.stats-row dt { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--ink-3); }
-.stats-row dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0; }
-.stats-row strong { font-size: var(--text-md); font-weight: var(--weight-bold); color: var(--ink); font-variant-numeric: tabular-nums; }
-.stats-hint { font-size: var(--text-xs); color: var(--ink-3); }
-.stats-progress { margin-top: 6px !important; }
-.stats-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: auto; padding: var(--space-3) 2px 0; font-size: var(--text-xs); color: var(--ink-3); }
+.stats-summary { display: flex; margin: var(--space-4) 0 0; }
+.stats-cell { position: relative; flex: 1 1 auto; display: grid; align-content: start; gap: 4px; padding: 0 var(--space-2) 0 var(--space-3); }
+.stats-cell:first-child { padding-left: 2px; }
+.stats-cell + .stats-cell::before { content: ""; position: absolute; left: 0; top: 2px; bottom: 2px; width: 1px; background: var(--line); }
+.stats-cell dt { font-size: var(--text-xs); font-weight: var(--weight-medium); line-height: 1.2; color: var(--ink-3); }
+.stats-cell dd { margin: 0; }
+.stats-value { font-size: var(--text-md); font-weight: var(--weight-bold); line-height: 1.2; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stats-delta { font-size: var(--text-xs); font-weight: var(--weight-semibold); white-space: nowrap; }
+.stats-delta.is-up { color: var(--success); }
+.stats-delta.is-down { color: var(--warning); }
+.stats-progress { margin-top: 4px !important; }
+.stats-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: auto; padding: var(--space-4) 2px 0; font-size: var(--text-xs); color: var(--ink-3); }
 .stats-legend li { display: inline-flex; align-items: center; gap: 6px; }
 .legend-dot { width: 8px; height: 8px; border-radius: 2px; background: var(--brand-500); }
 .legend-dot.is-low { background: var(--brand-300); }
@@ -196,7 +203,7 @@
 .aside-skeleton { display: grid; gap: var(--space-4); }
 .skeleton-title { width: 50%; height: 28px; border-radius: var(--radius-sm); }
 .calendar.skeleton { min-height: 324px; }
-.stats-card.skeleton { min-height: 360px; }
+.stats-card.skeleton { min-height: 260px; }
 
 /* ---- larguras menores ---------------------------------------------------------------------------------- */
 
@@ -206,6 +213,8 @@
   .dashboard { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); }
   .dashboard-aside { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-8) var(--space-6); align-items: stretch; }
   .agenda, .stats { grid-template-rows: auto 1fr; }
+  /* Uma coluna: o cartão vai até a margem da página, então a chama sai menos pela direita. */
+  .streak-flame { width: 272px; top: -78px; right: -76px; }
 }
 /* Cartões de curso: três lado a lado enquanto couberem com folga. */
 @container dashboard (max-width: 719px) {
