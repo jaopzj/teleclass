@@ -15,7 +15,7 @@
 
 /* ---- anel ------------------------------------------------------------------- */
 .fx-ring { position: relative; display: grid; place-items: center; flex: none; }
-.fx-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.fx-ring > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .fx-ring-track { stroke: color-mix(in srgb, var(--tone, var(--brand-500)) 16%, transparent); transition: stroke var(--duration-slow); }
 .fx-ring-value {
   stroke: var(--tone, var(--brand-500));
@@ -33,6 +33,7 @@
   transition: width var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
 }
 .fx-float.is-expanded { width: 320px; }
+.fx-float.is-mini { width: 48px; }
 .fx-float.is-dragging { transition: width var(--duration-slow) var(--ease-out); cursor: grabbing; }
 .fx-float.is-dragging .fx-float-card { box-shadow: var(--shadow-float), 0 24px 48px -16px rgb(5 16 24 / 0.5); }
 /* Dentro do player em tela cheia: acima dos controles e com cursor visível. */
@@ -51,8 +52,28 @@
 .from-bottom.from-right .fx-float-card { transform-origin: bottom right; }
 .from-bottom.from-left .fx-float-card { transform-origin: bottom left; }
 .fx-float.is-expanded .fx-float-card { border-radius: 20px; }
-.fx-float-card.is-leaving { opacity: 0; transform: scale(0.94); }
 @keyframes fx-float-in { from { opacity: 0; transform: scale(0.9); } }
+
+/* Fim da sessão: o widget se recolhe sobre o próprio centro e some. */
+.fx-float.is-leaving { pointer-events: none; }
+.fx-float.is-leaving .fx-float-card { transform-origin: center; animation: fx-float-out 460ms var(--ease-in-out) forwards; }
+@keyframes fx-float-out {
+  0% { opacity: 1; transform: scale(1); filter: blur(0); }
+  28% { opacity: 1; transform: scale(1.03); filter: blur(0); }
+  100% { opacity: 0; transform: scale(0.2); filter: blur(6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fx-float.is-leaving .fx-float-card { animation: none; opacity: 0; }
+}
+
+/* Mínimo: só o anel de progresso. */
+.fx-float-mini {
+  display: grid; place-items: center; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--float-ink); cursor: grab;
+}
+.fx-float-mini:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.fx-float-mini .fx-float-ring { width: 36px; height: 36px; }
+.fx-float.is-mini .fx-float-card { animation: fx-float-in var(--duration-base) var(--ease-out); }
 
 .fx-float-bar { display: flex; align-items: center; gap: 6px; padding: 7px 6px 7px 8px; cursor: grab; }
 .fx-float-ring { width: 32px; height: 32px; color: var(--float-ink); }
@@ -84,8 +105,6 @@
 .fx-float-btn.is-primary:hover { background: #fff; }
 .fx-float-grip { cursor: grab; opacity: 0.6; }
 .fx-float-grip:hover, .fx-float-grip:focus-visible { opacity: 1; }
-.fx-float-badge { display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--float-hover); color: var(--float-ink-2); }
-.tone-done .fx-float-badge { background: var(--success); color: #fff; }
 
 /* corpo expandido: abre a partir do próprio widget (altura 0fr → 1fr) */
 .fx-float-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--duration-slow) var(--ease-out); cursor: default; }
