@@ -76,6 +76,18 @@ import folderPlusRegular from "@phosphor-icons/core/regular/folder-plus.svg?raw"
 import magnifyingGlassRegular from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
 import listRegular from "@phosphor-icons/core/regular/list.svg?raw";
 import bookOpenRegular from "@phosphor-icons/core/regular/book-open.svg?raw";
+import telegramLogoRegular from "@phosphor-icons/core/regular/telegram-logo.svg?raw";
+import clipboardTextRegular from "@phosphor-icons/core/regular/clipboard-text.svg?raw";
+import imageRegular from "@phosphor-icons/core/regular/image.svg?raw";
+import fileVideoRegular from "@phosphor-icons/core/regular/file-video.svg?raw";
+import microphoneRegular from "@phosphor-icons/core/regular/microphone.svg?raw";
+import infoRegular from "@phosphor-icons/core/regular/info.svg?raw";
+import checkCircleRegular from "@phosphor-icons/core/regular/check-circle.svg?raw";
+import checkCircleFill from "@phosphor-icons/core/fill/check-circle-fill.svg?raw";
+import warningCircleRegular from "@phosphor-icons/core/regular/warning-circle.svg?raw";
+import warningCircleFill from "@phosphor-icons/core/fill/warning-circle-fill.svg?raw";
+import treeStructureRegular from "@phosphor-icons/core/regular/tree-structure.svg?raw";
+import arrowsClockwiseRegular from "@phosphor-icons/core/regular/arrows-clockwise.svg?raw";
 
 type Weight = "regular" | "fill" | "bold";
 
@@ -152,6 +164,16 @@ const ICONS = {
   search: { regular: magnifyingGlassRegular },
   menu: { regular: listRegular },
   book: { regular: bookOpenRegular },
+  telegram: { regular: telegramLogoRegular },
+  paste: { regular: clipboardTextRegular },
+  image: { regular: imageRegular },
+  video: { regular: fileVideoRegular },
+  audio: { regular: microphoneRegular },
+  info: { regular: infoRegular },
+  checkCircle: { regular: checkCircleRegular, fill: checkCircleFill },
+  warningCircle: { regular: warningCircleRegular, fill: warningCircleFill },
+  structure: { regular: treeStructureRegular },
+  refresh: { regular: arrowsClockwiseRegular },
 } satisfies Record<string, Partial<Record<Weight, string>> & { regular: string }>;
 
 export type IconName = keyof typeof ICONS;

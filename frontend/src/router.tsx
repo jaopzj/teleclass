@@ -70,7 +70,8 @@ export const paths = {
   lesson: (id: string, key: string, at?: number | null) =>
     `/cursos/${encodeURIComponent(id)}/aulas/${encodeURIComponent(key)}${at != null ? `?t=${Math.floor(at)}` : ""}`,
   module: (id: string, sectionId: string) => `/cursos/${encodeURIComponent(id)}#modulo-${sectionId}`,
-  indexing: () => "/indexacao",
+  /** Tela "Adicionar curso"; com `snapshot`, abre a inspeção daquele canal. */
+  indexing: (snapshot?: string) => (snapshot ? `/indexacao?curso=${encodeURIComponent(snapshot)}` : "/indexacao"),
   focus: (tab?: string) => (tab ? `/foco/${tab}` : "/foco"),
   notebook: (params?: Record<string, string | undefined>) => {
     const search = new URLSearchParams();

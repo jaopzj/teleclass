@@ -1,111 +1,56 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { api, IndexResult, SnapshotInfo } from "../api";
-import CourseTree from "./CourseTree";
-import ReportPanel from "./ReportPanel";
+// "Adicionar curso": coleta um canal do Telegram e mostra a estrutura extraída.
+//
+// Três estados, decididos aqui e em mais nenhum lugar:
+//   importação  → formulário do link e importações anteriores (snapshots)
+//   coleta      → uma coleta em andamento ou que acabou de falhar (collectStore)
+//   inspeção    → estrutura e relatório de um snapshot (`?curso=<nome>` na URL)
+// A inspeção fica na URL para o voltar do navegador e o recarregar funcionarem.
+import { useCallback, useEffect, useState } from "react";
+import { api } from "../api";
+import { useResource } from "../hooks/useResource";
+import { navigate, paths, useSearchParam } from "../router";
+import { clearCollection, useCollection } from "./collectStore";
+import ImportView from "./ImportView";
+import InspectionView from "./InspectionView";
+import ProcessingView from "./ProcessingView";
 import "./indexing.css";
 
-export default function IndexingPage() {
-  const [status, setStatus] = useState<{ configured: boolean; linked: boolean }>();
-  const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
-  const [selected, setSelected] = useState<string>();
-  const [result, setResult] = useState<IndexResult>();
-  const [link, setLink] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string>();
+export type TelegramState = "loading" | "unknown" | "unconfigured" | "unlinked" | "linked";
 
-  const refresh = useCallback(async () => {
-    try {
-      setSnapshots(await api.snapshots());
-    } catch (e) {
-      setError((e as Error).message);
-    }
+export default function IndexingPage() {
+  const selected = useSearchParam("curso");
+  const collection = useCollection();
+  const [telegram, setTelegram] = useState<TelegramState>("loading");
+  const snapshots = useResource("snapshots", () => api.snapshots());
+
+  useEffect(() => {
+    api
+      .status()
+      .then((s) => setTelegram(!s.configured ? "unconfigured" : s.linked ? "linked" : "unlinked"))
+      .catch(() => setTelegram("unknown"));
   }, []);
 
+  // Coleta concluída: abre a inspeção do canal e libera o formulário.
+  const done = collection?.index === "completed" ? collection.name : undefined;
   useEffect(() => {
-    api.status().then(setStatus).catch(() => setStatus(undefined));
-    refresh();
-  }, [refresh]);
+    if (!done) return;
+    navigate(paths.indexing(done));
+    clearCollection();
+    snapshots.reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
 
-  useEffect(() => {
-    if (!selected) return;
-    setResult(undefined);
-    setError(undefined);
-    api.index(selected).then(setResult).catch((e: Error) => setError(e.message));
-  }, [selected]);
+  const back = useCallback(() => navigate(paths.indexing()), []);
 
-  async function collect(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError(undefined);
-    try {
-      const { name } = await api.collect(link.trim());
-      await refresh();
-      setSelected(name);
-      setLink("");
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
+  let view;
+  if (collection) {
+    // Também enquanto a navegação para a inspeção não acontece.
+    view = <ProcessingView collection={collection} onSnapshotsChanged={snapshots.reload} />;
+  } else if (selected) {
+    view = <InspectionView name={selected} snapshots={snapshots.data} onBack={back} />;
+  } else {
+    view = <ImportView telegram={telegram} snapshots={snapshots.data} snapshotsError={snapshots.error} />;
   }
 
-  return (
-    <div className="indexing">
-      <aside className="indexing-side">
-        <h1>Indexação</h1>
-        <p className="muted small">Colete canais e confira a estrutura antes de estudar.</p>
-        <p className="muted">
-          Telegram:{" "}
-          {!status ? "?" : !status.configured ? "não configurado" : status.linked ? "conectado" : "não conectado"}
-        </p>
-
-        <form onSubmit={collect} className="collect">
-          <input
-            placeholder="https://t.me/canal"
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            disabled={busy || !status?.linked}
-          />
-          <button disabled={busy || !link.trim() || !status?.linked}>
-            {busy ? "Coletando..." : "Coletar canal"}
-          </button>
-        </form>
-
-        <h2>Snapshots</h2>
-        {snapshots.length === 0 && <p className="muted">Nenhum snapshot em data/snapshots.</p>}
-        <ul className="snapshots">
-          {snapshots.map((s) => (
-            <li key={s.name}>
-              <button className={s.name === selected ? "active" : ""} onClick={() => setSelected(s.name)}>
-                <strong>{s.title ?? s.name}</strong>
-                <span className="muted">
-                  {s.name} · {s.messages} mensagens
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      <div className="indexing-main">
-        {error && <div className="error">{error}</div>}
-        {!selected && <p className="muted">Selecione um snapshot para ver a estrutura extraída.</p>}
-        {selected && !result && !error && <p className="muted">Indexando...</p>}
-        {result && (
-          <div className="content">
-            <section className="course">
-              <h2>{result.course.title}</h2>
-              <p className="muted">
-                Estratégia: {result.course.strategy === "summary" ? "sumário" : "fallback cronológico"}
-                {result.report.summary.message_ids.length > 0 &&
-                  ` · sumário nas mensagens ${result.report.summary.message_ids.join(", ")}`}
-              </p>
-              <CourseTree sections={result.course.sections} />
-            </section>
-            <ReportPanel report={result.report} />
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <div className="page ix">{view}</div>;
 }
