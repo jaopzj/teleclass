@@ -13,9 +13,11 @@ Fora da página Foco:
 - Os endereços antigos `/foco/conquistas` e `/foco/ajustes` redirecionam.
 
 Um widget flutuante acompanha a sessão nas outras páginas (e nas outras áreas
-do Foco): compacto ou expandido, arrastável, encaixa nas bordas, guarda a
-posição neste dispositivo (começa no canto superior direito) e acompanha o
-player em tela cheia. Pelo teclado, a alça de mover troca de canto com as setas
+do Foco) em três tamanhos: expandido (detalhes e ações), compacto (tempo e
+etapa) e mínimo (só o anel de progresso). É arrastável, encaixa nas bordas,
+guarda a posição neste dispositivo (começa no canto superior direito) e
+acompanha o player em tela cheia, onde começa no tamanho mínimo e volta ao
+tamanho anterior ao sair. Quando a sessão termina, ele se recolhe e some. Pelo teclado, a alça de mover troca de canto com as setas
 e Esc recolhe o widget. Some durante as pausas, quando a tela de descanso cobre
 o app (o player sai da tela cheia nesse momento).
 
