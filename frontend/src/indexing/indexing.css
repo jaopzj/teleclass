@@ -14,12 +14,6 @@
 
 /* ---- cabeçalho ---------------------------------------------------------------- */
 
-.ix-head { align-items: center; }
-.ix-head p { max-width: 560px; }
-.ix-status { gap: 8px; padding: 6px 12px; }
-.ix-status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-.ix-status:not(.badge-success):not(.badge-warning) .ix-status-dot { animation: ix-pulse 1.2s ease-in-out infinite; }
-@keyframes ix-pulse { 50% { opacity: 0.3; } }
 
 /* ---- cartões ------------------------------------------------------------------- */
 
@@ -68,7 +62,6 @@
 .ix-recent-item:hover { background: var(--surface-hover); }
 .ix-recent-item:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .ix-recent-cover { width: 44px; height: 44px; border-radius: var(--radius-sm); }
-.ix-recent-cover .cover-mark { font-size: var(--text-base); }
 .ix-recent-text { display: grid; gap: 2px; min-width: 0; }
 .ix-recent-text strong { font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ix-recent-meta { font-size: var(--text-xs); color: var(--ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -128,7 +121,6 @@
 
 .ix-course { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--space-5); align-items: center; }
 .ix-course-cover { width: 72px; height: 72px; border-radius: var(--radius-lg); }
-.ix-course-cover .cover-mark { font-size: var(--text-h2); }
 .ix-course-text { min-width: 0; }
 .ix-course .eyebrow { margin-bottom: var(--space-1); }
 .ix-course h1 { font-size: var(--text-h1); font-weight: var(--weight-bold); line-height: 1.15; letter-spacing: -0.02em; overflow-wrap: anywhere; }
@@ -304,7 +296,6 @@
   .ix-card { padding: var(--space-5); }
   .ix-course { gap: var(--space-4); }
   .ix-course-cover { width: 56px; height: 56px; border-radius: var(--radius-md); }
-  .ix-course-cover .cover-mark { font-size: var(--text-lg); }
 }
 
 @container ix (max-width: 559px) {
@@ -318,8 +309,4 @@
   .ix-lesson-body { padding-left: var(--space-3); }
   .ix-material { grid-template-columns: auto minmax(0, 1fr); }
   .ix-reason { grid-column: 2; justify-self: start; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ix-status-dot { animation: none !important; }
 }

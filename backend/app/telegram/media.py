@@ -155,6 +155,15 @@ class TelegramMedia:
             return None
         return data or None
 
+    async def channel_photo(self, channel: ChannelRef) -> bytes | None:
+        """Foto do canal (versão pequena do Telegram, 160 px). None se não houver."""
+        peer = await self._peer(channel)
+        try:
+            data = await self.client.download_profile_photo(peer, file=bytes, download_big=False)
+        except (TypeError, ValueError):
+            return None
+        return data or None
+
 
 class _MessageChunks:
     """`ChunkSource` de uma mensagem (ver a docstring do módulo)."""

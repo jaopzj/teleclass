@@ -89,7 +89,7 @@ function CourseView({ course }: { course: CourseDetail }) {
 
       <section className="course-hero" style={coverStyle(course.id)}>
         <div className="course-hero-main">
-          <CourseCover id={course.id} title={course.title} className="cover-hero" />
+          <CourseCover id={course.id} className="cover-hero" />
           <div>
             <p className="eyebrow">Curso</p>
             <h1>{course.title}</h1>
