@@ -51,7 +51,7 @@ export default function IndexingPage() {
 
   return (
     <div className="indexing">
-      <aside className="sidebar">
+      <aside className="indexing-side">
         <h1>Indexação</h1>
         <p className="muted small">Colete canais e confira a estrutura antes de estudar.</p>
         <p className="muted">

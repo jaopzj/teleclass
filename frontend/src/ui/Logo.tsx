@@ -1,6 +1,6 @@
 // Marca do TeleClass: o capelo em azul (vetor exportado do Figma, nó 5:198) e o
 // nome em Poppins SemiBold. `compact` mostra só o símbolo.
-export function LogoMark({ size = 82 }: { size?: number }) {
+export function LogoMark({ size = 44 }: { size?: number }) {
   return (
     <svg width={size} height={(size * 63) / 82} viewBox="0 0 82 63" fill="none" aria-hidden="true" focusable="false">
       <path

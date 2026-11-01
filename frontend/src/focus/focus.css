@@ -560,7 +560,7 @@ body.is-focus-mode { --topbar-h: 56px; }
 /* ---- responsivo ------------------------------------------------------------------------ */
 @media (max-width: 1023px) {
   .focus-layout { grid-template-columns: 1fr; }
-  .focus-rail { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .focus-rail { position: static; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; }
   .chart-grid, .settings { grid-template-columns: 1fr; }
   .ladder { grid-template-columns: repeat(5, minmax(0, 1fr)); row-gap: 14px; }
   .ladder li:nth-child(6)::before { display: none; }

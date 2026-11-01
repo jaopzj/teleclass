@@ -353,18 +353,19 @@ function FormatBubble({ editor, variant }: { editor: Editor; variant: "compact" 
   useEffect(() => {
     const onKey = () => setPanel(null);
     editor.on("selectionUpdate", onKey);
-    // Ctrl/⌘+K abre o campo de link.
-    const dom = editor.view.dom;
+    // Ctrl/⌘+K abre o campo de link. O efeito roda antes de o EditorContent montar
+    // a view (acessar editor.view aqui lança erro), então a escuta fica no documento
+    // e só olha a view no momento da tecla.
     const onKeyDown = (e: globalThis.KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k" && !editor.state.selection.empty) {
-        e.preventDefault();
-        setPanel("link");
-      }
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "k" || editor.isDestroyed) return;
+      if (!(e.target instanceof Node) || !editor.view.dom.contains(e.target) || editor.state.selection.empty) return;
+      e.preventDefault();
+      setPanel("link");
     };
-    dom.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown);
     return () => {
       editor.off("selectionUpdate", onKey);
-      dom.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [editor]);
   return (

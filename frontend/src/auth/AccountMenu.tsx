@@ -45,7 +45,7 @@ export default function AccountMenu({ compact = false }: { compact?: boolean }) 
         aria-haspopup="menu"
         aria-label={`Conta de ${name}`}
       >
-        <Avatar name={name} size={compact ? 40 : 80} />
+        <Avatar name={name} size={compact ? 34 : 36} />
         {!compact && (
           <span className="account-id">
             <span className="account-name">{name}</span>
@@ -54,7 +54,7 @@ export default function AccountMenu({ compact = false }: { compact?: boolean }) 
           </span>
         )}
         <span className="account-caret" aria-hidden="true">
-          <Icon name="down" size={14} weight="fill" />
+          <Icon name="down" size={12} weight="fill" />
         </span>
       </button>
       {open && (

@@ -29,7 +29,7 @@ export default function Sidebar({ path, open, onNavigate }: { path: string; open
           </li>
           <li>
             <button type="button" className="nav-item" onClick={logout} data-tip="Sair" data-tip-side="right">
-              <Icon name="logout" size={38} />
+              <Icon name="logout" size={22} />
               <span className="nav-label">Sair</span>
             </button>
           </li>
@@ -50,7 +50,7 @@ function NavLink({ item, path, onNavigate }: { item: NavItem; path: string; onNa
       data-tip={item.label}
       data-tip-side="right"
     >
-      <Icon name={item.icon} size={38} />
+      <Icon name={item.icon} size={22} />
       <span className="nav-label">{item.label}</span>
     </Link>
   );
