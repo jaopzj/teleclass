@@ -1,47 +1,47 @@
 import { ReactNode } from "react";
+import { Tone } from "./derive";
 
-/** Anel de progresso da etapa. `fraction` null: sem duração (cronômetro), anel contínuo animado. */
+/**
+ * Anel de progresso da etapa. Escala pelo CSS (`--ring-size`); a espessura é
+ * proporcional. `fraction` null: sem fim definido (cronômetro), o anel fica
+ * cheio e estático, sem animação contínua.
+ */
 export default function TimerRing({
   fraction,
-  size = 280,
-  stroke = 6,
   tone = "focus",
+  stroke = 4,
   children,
   label,
+  className = "",
 }: {
   fraction: number | null;
-  size?: number;
+  tone?: Tone;
   stroke?: number;
-  tone?: "focus" | "rest" | "ready" | "paused";
   children?: ReactNode;
   label?: string;
+  className?: string;
 }) {
-  const r = (size - stroke) / 2;
+  const r = 50 - stroke / 2;
   const c = 2 * Math.PI * r;
-  const value = fraction ?? 0;
+  const value = fraction ?? 1;
   return (
-    <div
-      className={`ring ring-${tone} ${fraction == null ? "is-open" : ""}`}
-      style={{ width: size, height: size }}
-      role="img"
-      aria-label={label}
-    >
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-        <circle className="ring-track" cx={size / 2} cy={size / 2} r={r} strokeWidth={stroke} fill="none" />
+    <div className={`fx-ring tone-${tone} ${fraction == null ? "is-open" : ""} ${className}`} role={label ? "img" : undefined} aria-label={label}>
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <circle className="fx-ring-track" cx="50" cy="50" r={r} strokeWidth={stroke} fill="none" />
         <circle
-          className="ring-value"
-          cx={size / 2}
-          cy={size / 2}
+          className="fx-ring-value"
+          cx="50"
+          cy="50"
           r={r}
           strokeWidth={stroke}
           fill="none"
           strokeDasharray={c}
-          strokeDashoffset={fraction == null ? c * 0.78 : c * (1 - value)}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          strokeDashoffset={c * (1 - value)}
+          transform="rotate(-90 50 50)"
           strokeLinecap="round"
         />
       </svg>
-      <div className="ring-center">{children}</div>
+      {children && <div className="fx-ring-center">{children}</div>}
     </div>
   );
 }

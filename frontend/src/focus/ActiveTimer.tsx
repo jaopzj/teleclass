@@ -1,141 +1,164 @@
-import { useEffect } from "react";
 import Icon from "../components/Icon";
 import { Link, paths } from "../router";
+import AmbientMini from "./AmbientMini";
 import { EndedSummary, FocusSession } from "./api";
-import AmbientControl from "./AmbientControl";
 import Controls from "./Controls";
-import CycleDots from "./CycleDots";
-import { clock, duration, isBreak, readout, stageLabel } from "./derive";
-import { toneOf } from "./FloatingTimer";
-import { setFocusMode, useFocusModePreference } from "./focusMode";
+import { displayTime, duration, ENDED_LABEL, isStopwatch, nextLabel, readout, shortStage, toneOf } from "./derive";
 import { dismissEnded } from "./store";
 import Timeline, { timelineIndex } from "./Timeline";
 import TimerRing from "./TimerRing";
 import { useServerNow } from "./useNow";
 
-/** O temporizador em destaque na seção de foco (e em tela cheia no Focus Mode). */
+/**
+ * A visualização completa da sessão em andamento. Tudo vem do mesmo estado que
+ * o temporizador flutuante usa: não há contagem própria aqui.
+ */
 export default function ActiveTimer({ session }: { session: FocusSession }) {
   const now = useServerNow(true);
   const r = readout(session, now);
   const tone = toneOf(session);
-  const focusMode = useFocusModePreference();
-  const stopwatch = session.plan.focus_seconds == null;
+  const stopwatch = isStopwatch(session);
   const index = timelineIndex(session.timeline, session.stage, session.cycle);
-  useEffect(() => {
-    if (!focusMode) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !e.defaultPrevented && !document.querySelector(".dialog-backdrop")) setFocusMode(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [focusMode]);
-  const big =
-    session.stage === "ready" ? clock(session.plan.focus_seconds ?? 0) : stopwatch ? clock(r.elapsed) : clock(r.remaining ?? 0, { ceil: true });
+  const time = displayTime(session, r);
+  const stage = shortStage(session);
+  const next = nextLabel(session);
+  const sub =
+    session.stage === "ready"
+      ? "próximo bloco de concentração"
+      : stopwatch
+        ? "de concentração"
+        : session.paused
+          ? "restantes, contagem parada"
+          : "restantes";
 
   return (
-    <div className={`active tone-${tone} ${focusMode ? "is-immersive" : ""}`}>
-      {focusMode && (
-        <div className="immersive-top">
-          <span className="immersive-brand">
-            <Icon name="moon" size={14} /> Focus Mode
-          </span>
-          <button type="button" className="fbar-btn" onClick={() => setFocusMode(false)}>
-            <Icon name="close" size={15} /> <span className="fbar-btn-label">Sair</span>
-          </button>
-        </div>
-      )}
-      <div className="active-head">
-        <p className="active-method">
-          {session.method_name}
-          {!stopwatch && (
-            <span>
-              {" "}
-              · ciclo {session.cycle} de {session.cycles_total}
+    <div className="fx-timer-grid">
+      <section className={`surface fx-card fx-live tone-${tone}`} aria-labelledby="fx-live-title">
+        <header className="fx-live-head">
+          <h2 id="fx-live-title" className="fx-card-title">
+            {session.method_name}
+          </h2>
+          <p className="fx-status">
+            <span className="fx-dot" aria-hidden="true" />
+            <span key={stage} className="fx-swap">
+              {stage}
             </span>
+            {!stopwatch && session.stage !== "ready" && (
+              <span className="muted">
+                · ciclo {session.cycle} de {session.cycles_total}
+              </span>
+            )}
+          </p>
+        </header>
+
+        <TimerRing
+          className="fx-live-ring"
+          fraction={session.stage === "ready" ? 0 : stopwatch ? null : r.fraction}
+          tone={tone}
+          stroke={3}
+          label={`${stage}: ${time}`}
+        >
+          <span className="fx-live-time tabular" aria-hidden="true">
+            {time}
+          </span>
+          <span className="fx-live-sub">{sub}</span>
+        </TimerRing>
+
+        <Controls session={session} />
+
+        {!stopwatch && (
+          <Timeline steps={session.timeline} current={index != null && Number.isInteger(index) ? index : index != null ? Math.ceil(index) : undefined} progress={r.fraction ?? 0} />
+        )}
+      </section>
+
+      <aside className="surface fx-card fx-live-side" aria-label="Detalhes da sessão">
+        <h2 className="fx-card-title">Esta sessão</h2>
+        <dl className="fx-details">
+          <div>
+            <dt>Concentração acumulada</dt>
+            <dd className="tabular">{duration(r.focus)}</dd>
+          </div>
+          {!stopwatch && (
+            <div>
+              <dt>Ciclos concluídos</dt>
+              <dd className="tabular">
+                {session.cycles_completed} de {session.cycles_total}
+              </dd>
+            </div>
           )}
-        </p>
-        {session.intention && <p className="active-intention">{session.intention}</p>}
-      </div>
+          {next && (
+            <div>
+              <dt>Próxima etapa</dt>
+              <dd>{next}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Início</dt>
+            <dd className="tabular">{new Date(session.started_at * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</dd>
+          </div>
+        </dl>
 
-      <TimerRing fraction={session.stage === "ready" ? 0 : r.fraction} size={focusMode ? 360 : 300} stroke={focusMode ? 5 : 6} tone={tone} label={`${stageLabel(session.stage, session.paused)}: ${big}`}>
-        <span className="active-stage">{stageLabel(session.stage, session.paused)}</span>
-        <span className="active-time">{big}</span>
-        <span className="active-sub">
-          {session.stage === "ready"
-            ? "a próxima concentração"
-            : stopwatch
-              ? "de foco nesta sessão"
-              : session.next?.stage === "end"
-                ? "para o fim da sessão"
-                : isBreak(session.next?.stage as never)
-                  ? `depois, ${session.next?.stage === "long_break" ? "pausa longa" : "pausa"} de ${duration(session.next?.seconds ?? 0)}`
-                  : "restantes"}
-        </span>
-      </TimerRing>
-
-      <CycleDots session={session} />
-      {!stopwatch && <Timeline steps={session.timeline} current={index != null && Number.isInteger(index) ? index : undefined} progress={r.fraction ?? 0} compact />}
-
-      <Controls session={session} />
-
-      <div className="active-foot">
-        {session.lesson && session.course ? (
-          <Link className="active-link" to={paths.lesson(session.course.id, session.lesson.key)}>
-            <Icon name="play" size={11} /> {session.lesson.title}
-            <span className="muted"> · {session.course.title}</span>
-          </Link>
-        ) : session.course ? (
-          <Link className="active-link" to={paths.course(session.course.id)}>
-            <Icon name="library" size={14} /> {session.course.title}
-          </Link>
-        ) : (
-          <span className="muted small">Sessão sem curso vinculado</span>
+        {(session.intention || session.course) && <hr className="fx-sep" />}
+        {session.intention && (
+          <div className="fx-detail-block">
+            <span className="fx-label">Objetivo</span>
+            <p>{session.intention}</p>
+          </div>
         )}
-        <span className="active-total">
-          <Icon name="target" size={14} /> {duration(r.focus)} de foco
-        </span>
-        {!focusMode && session.stage !== "ready" && (
-          <button type="button" className="link-button" onClick={() => setFocusMode(true)}>
-            <Icon name="moon" size={14} /> Focus Mode
-          </button>
+        {session.course && (
+          <div className="fx-detail-block">
+            <span className="fx-label">Vinculada a</span>
+            <Link className="fx-link-row" to={session.lesson ? paths.lesson(session.course.id, session.lesson.key) : paths.course(session.course.id)}>
+              <Icon name={session.lesson ? "play" : "courses"} size={16} />
+              <span>
+                <strong>{session.lesson?.title ?? session.course.title}</strong>
+                {session.lesson && <span className="muted">{session.course.title}</span>}
+              </span>
+              <Icon name="chevron" size={14} />
+            </Link>
+          </div>
         )}
-      </div>
-      {session.deadline_at && (session.stage === "ready" || session.paused) && (
-        <p className="active-note">Sem atividade, a sessão encerra sozinha em {duration(Math.max(0, session.deadline_at - now))}. O que já foi feito fica registrado.</p>
-      )}
-      {focusMode && (
-        <div className="immersive-sound">
-          <AmbientControl />
-        </div>
-      )}
+
+        {session.deadline_at && (session.stage === "ready" || session.paused) && (
+          <p className="fx-note" role="status">
+            <Icon name="info" size={16} />
+            Sem atividade, a sessão encerra sozinha em {duration(Math.max(0, session.deadline_at - now))}. O que já foi feito fica registrado.
+          </p>
+        )}
+
+        <hr className="fx-sep" />
+        <AmbientMini />
+        <p className="fx-hint">Ao sair desta página, o temporizador continua no canto da tela.</p>
+      </aside>
     </div>
   );
 }
 
-const STATUS_TEXT: Record<EndedSummary["status"], string> = {
-  completed: "Sessão concluída",
-  stopped: "Sessão encerrada",
-  expired: "Sessão encerrada por inatividade",
-};
-
-/** Resumo depois de encerrar. */
-export function EndedCard({ ended }: { ended: EndedSummary }) {
+/** Resumo da última sessão encerrada, acima da preparação da próxima. */
+export function EndedSummaryCard({ ended }: { ended: EndedSummary }) {
+  const done = ended.status === "completed";
   return (
-    <div className={`ended ended-${ended.status}`} role="status">
-      <span className="ended-icon">
-        <Icon name={ended.status === "completed" ? "check" : "stop"} size={18} />
+    <section className={`surface fx-ended ${done ? "is-done" : ""}`} role="status" aria-live="polite">
+      <span className="fx-ended-icon" aria-hidden="true">
+        <Icon name={done ? "checkCircle" : ended.status === "expired" ? "clock" : "stop"} size={22} weight={done ? "fill" : undefined} />
       </span>
-      <div className="ended-text">
-        <strong>{STATUS_TEXT[ended.status]}</strong>
+      <div className="fx-ended-text">
+        <strong>
+          Sessão {ENDED_LABEL[ended.status].toLowerCase()}
+          {ended.status === "expired" && " por inatividade"}
+        </strong>
         <span>
-          {duration(ended.focus_seconds)} de foco · {ended.cycles_completed} {ended.cycles_completed === 1 ? "ciclo concluído" : "ciclos concluídos"}
-          {ended.cycles_invalidated > 0 && ` · ${ended.cycles_invalidated} invalidado${ended.cycles_invalidated > 1 ? "s" : ""}`}
-          {ended.xp > 0 && ` · +${ended.xp} XP`}
+          {ended.method_name} · {duration(ended.focus_seconds)} de concentração · {ended.cycles_completed}{" "}
+          {ended.cycles_completed === 1 ? "ciclo concluído" : "ciclos concluídos"}
+          {ended.cycles_invalidated > 0 && ` · ${ended.cycles_invalidated} sem validar`}
         </span>
       </div>
-      <button type="button" className="ftimer-icon" onClick={dismissEnded} aria-label="Fechar resumo">
-        <Icon name="close" size={14} />
+      <Link className="button button-ghost button-sm" to={paths.focus("historico")}>
+        Ver no histórico
+      </Link>
+      <button type="button" className="icon-button icon-button-sm" onClick={dismissEnded} aria-label="Fechar resumo">
+        <Icon name="close" size={16} />
       </button>
-    </div>
+    </section>
   );
 }

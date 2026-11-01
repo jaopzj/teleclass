@@ -2,6 +2,13 @@
 // identidade visual. Usamos os SVGs do pacote oficial (@phosphor-icons/core) só nos
 // pesos necessários: o pacote React embute os 6 pesos de cada ícone (~200 KB a mais).
 // Para um ícone novo: importe o SVG do peso desejado e dê um nome em ICONS.
+import fanRegular from "@phosphor-icons/core/regular/fan.svg?raw";
+import starRegular from "@phosphor-icons/core/regular/star.svg?raw";
+import starFill from "@phosphor-icons/core/fill/star-fill.svg?raw";
+import dotsSixVerticalRegular from "@phosphor-icons/core/regular/dots-six-vertical.svg?raw";
+import arrowsOutSimpleRegular from "@phosphor-icons/core/regular/arrows-out-simple.svg?raw";
+import caretUpRegular from "@phosphor-icons/core/regular/caret-up.svg?raw";
+import pauseFill from "@phosphor-icons/core/fill/pause-fill.svg?raw";
 import playRegular from "@phosphor-icons/core/regular/play.svg?raw";
 import playFill from "@phosphor-icons/core/fill/play-fill.svg?raw";
 import checkRegular from "@phosphor-icons/core/regular/check.svg?raw";
@@ -125,7 +132,12 @@ const ICONS = {
   target: { regular: targetRegular },
   spark: { regular: sparkleRegular },
   timer: { regular: timerRegular },
-  pause: { regular: pauseRegular },
+  pause: { regular: pauseRegular, fill: pauseFill },
+  fan: { regular: fanRegular },
+  star: { regular: starRegular, fill: starFill },
+  grip: { regular: dotsSixVerticalRegular },
+  open: { regular: arrowsOutSimpleRegular },
+  up: { regular: caretUpRegular },
   stop: { regular: stopRegular },
   skip: { regular: skipForwardRegular },
   leaf: { regular: leafRegular },

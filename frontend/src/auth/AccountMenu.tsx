@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { ApiError } from "../api";
 import Icon from "../components/Icon";
 import { useLevelTitle } from "../focus/store";
+import { Link, paths } from "../router";
 import Avatar from "../ui/Avatar";
 import { telegramApi } from "./api";
 import { displayName, useAuth } from "./AuthProvider";
@@ -73,6 +74,10 @@ export default function AccountMenu({ compact = false }: { compact?: boolean }) 
             </div>
           )}
           <div className="menu-sep" />
+          <Link to={paths.progress()} role="menuitem" className="menu-item" onClick={() => setOpen(false)}>
+            <Icon name="trophy" size={18} />
+            Conquistas e metas
+          </Link>
           <button type="button" role="menuitem" className="menu-item" onClick={() => { setOpen(false); setConfirming(true); }}>
             <Icon name="link" size={18} />
             Desvincular Telegram

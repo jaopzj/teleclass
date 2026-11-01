@@ -16,6 +16,8 @@ import { resetStudyMetrics } from "./study/metricsStore";
 import { startStudySync } from "./study/queue";
 import FocusPage from "./focus/FocusPage";
 import FocusLayer from "./focus/FocusLayer";
+import ProgressPage from "./focus/ProgressPage";
+import SettingsPage from "./focus/Settings";
 import { attachFocus } from "./focus/store";
 import { stopAmbient } from "./focus/ambient";
 
@@ -33,6 +35,8 @@ function Page({ path }: { path: string }) {
   if ((params = matchPath("/caderno/nota/:id", path))) return <NotebookPage noteId={params.id} />;
   if (path === "/foco") return <FocusPage />;
   if ((params = matchPath("/foco/:tab", path))) return <FocusPage tab={params.tab} />;
+  if (path === "/configuracoes") return <SettingsPage />;
+  if (path === "/conquistas") return <ProgressPage />;
   if (path === "/cursos") return <LibraryPage />;
   if (path === "/") return <DashboardPage />;
   return (

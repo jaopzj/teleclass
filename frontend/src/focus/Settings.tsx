@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { chime, notify, requestSystemPermission, systemPermission } from "../notifications/center";
 import { NoticeKind, NotificationPreferences } from "./api";
-import AmbientControl from "./AmbientControl";
+import Icon from "../components/Icon";
+import { Link, paths } from "../router";
 import { savePreferences, useFocus } from "./store";
+import "./settings.css";
 
 const KINDS: [NoticeKind, string, string][] = [
   ["focus_completed", "Fim de um ciclo de foco", "Hora de descansar ou de começar o próximo"],
@@ -14,13 +16,30 @@ const KINDS: [NoticeKind, string, string][] = [
   ["level_up", "Novo nível", ""],
 ];
 
-/** Preferências de aviso (guardadas na conta) e som ambiente (guardado neste dispositivo). */
-export default function SettingsTab() {
+/**
+ * Configurações: hoje, os avisos do temporizador (guardados na conta). O som
+ * ambiente fica na página Foco, na área Som ambiente.
+ */
+export default function SettingsPage() {
+  return (
+    <div className="page">
+      <header className="page-head">
+        <div>
+          <h1>Configurações</h1>
+          <p className="muted">Preferências da sua conta, válidas em todos os seus dispositivos.</p>
+        </div>
+      </header>
+      <SettingsBody />
+    </div>
+  );
+}
+
+function SettingsBody() {
   const { prefs } = useFocus();
   const [permission, setPermission] = useState(systemPermission());
   const [error, setError] = useState<string | null>(null);
 
-  if (!prefs) return <div className="skeleton" style={{ height: 300, borderRadius: 16 }} />;
+  if (!prefs) return <div className="surface skeleton" style={{ height: 300 }} />;
 
   async function update(next: Partial<NotificationPreferences>) {
     setError(null);
@@ -45,8 +64,8 @@ export default function SettingsTab() {
 
   return (
     <div className="settings">
-      <section className="settings-block" aria-labelledby="notif-title">
-        <h2 id="notif-title">Avisos</h2>
+      <section className="surface settings-block" aria-labelledby="notif-title">
+        <h2 id="notif-title">Avisos do temporizador</h2>
         <p className="muted small">Valem para todos os seus dispositivos.</p>
         <div className="settings-rows">
           <Toggle label="Avisos na tela" hint="Cartões discretos no canto superior direito" checked={prefs.in_app} onChange={(v) => update({ in_app: v })} />
@@ -79,12 +98,13 @@ export default function SettingsTab() {
           Testar aviso
         </button>
         {error && <div className="alert alert-error">{error}</div>}
-        <p className="muted small">No Focus Mode só aparecem avisos essenciais (fim de ciclo e de pausa).</p>
       </section>
-      <section className="settings-block" aria-labelledby="sound-title">
+      <section className="surface settings-block" aria-labelledby="sound-title">
         <h2 id="sound-title">Som ambiente</h2>
-        <p className="muted small">Escolha e volume ficam guardados neste dispositivo.</p>
-        <AmbientControl inline />
+        <p className="muted small">Sons, volumes e favoritos ficam na página Foco.</p>
+        <Link className="button button-sm settings-link" to={paths.focus("som")}>
+          <Icon name="volume" size={16} /> Abrir Som ambiente
+        </Link>
       </section>
     </div>
   );

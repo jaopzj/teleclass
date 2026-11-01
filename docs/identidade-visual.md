@@ -27,6 +27,7 @@ do padrão; as próximas telas devem usar as mesmas peças antes de criar novas.
 | Barra lateral | completa ≥ 1280px (`--sidebar-w`, 232–264px), trilho de ícones 1024–1279px (`--rail-w`), gaveta abaixo de 1024px |
 | Espaço | base 4 (`--space-*`); entre blocos de uma página `--stack-gap` (24px) |
 | Adicionar curso | importação: formulário e importações recentes lado a lado com conteúdo ≥ 880px. Inspeção: módulos, prévia e painel em três colunas ≥ 1040px; abaixo disso os módulos viram uma faixa rolável e, abaixo de 760px, o painel desce para depois da prévia. Classes com prefixo `ix-` |
+| Foco | classes com prefixo `fx-` (`focus/page.css` na página, `focus/focus.css` no widget, na tela de descanso e nos diálogos). Temporizador em duas colunas com conteúdo ≥ 860px (técnicas \| configuração; sessão \| detalhes); abaixo disso uma coluna e, abaixo de 600px, tudo empilhado. Pausas usam `--rest-500/700`; pausado, `--paused`. O widget flutuante é a única superfície escura (`--float-*`, `--shadow-float`) |
 | Tela inicial | duas colunas com conteúdo ≥ 960px; abaixo disso a agenda e as estatísticas descem lado a lado; abaixo de 600px tudo empilha e os cursos viram carrossel. Em 1920 × 1080 cabe sem rolar, mesmo descontando a barra do navegador. A chama sai de propósito pelo topo e pela direita do destaque (como no Figma): não a prenda dentro do cartão |
 
 Referência de densidade: navegação com 44px de altura e ícones de 22px, botões de 38px,

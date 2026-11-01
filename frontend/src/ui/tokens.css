@@ -54,6 +54,22 @@
   --warning: #b54708;
   --warning-soft: #fff4e0;
 
+  /* ---- temporizador (Foco) ------------------------------------------------------- */
+  /* Concentração usa a cor principal. Descanso tem um tom próprio, frio e calmo,
+   * para nunca ser confundido com "concluído" (--success). Pausado é neutro. */
+  --rest-500: #2a9d8f;
+  --rest-700: #1d7268; /* texto sobre branco (AA) */
+  --rest-a14: rgb(42 157 143 / 0.14);
+  --paused: var(--ink-4);
+  /* Superfície escura do temporizador flutuante: legível sobre qualquer página e
+   * sobre o vídeo em tela cheia. */
+  --float-surface: rgb(16 24 30 / 0.94);
+  --float-line: rgb(255 255 255 / 0.1);
+  --float-ink: #f3f7fa;
+  --float-ink-2: rgb(243 247 250 / 0.64);
+  --float-hover: rgb(255 255 255 / 0.08);
+  --shadow-float: 0 16px 40px -14px rgb(5 16 24 / 0.55), 0 2px 6px rgb(5 16 24 / 0.18);
+
   /* ---- tipografia -------------------------------------------------------------- */
   --font-sans: "Host Grotesk Variable", "Host Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-brand: "Poppins", var(--font-sans);
@@ -104,6 +120,7 @@
   /* ---- movimento ------------------------------------------------------------------- */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 120ms;
   --duration-base: 200ms;
   --duration-slow: 360ms;

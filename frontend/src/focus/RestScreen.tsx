@@ -69,7 +69,6 @@ export default function RestScreen({ session }: { session: FocusSession }) {
   const current = TIPS[tip];
   return (
     <div className={`rest ${isLong ? "is-long" : ""}`} role="dialog" aria-modal="true" aria-labelledby="rest-title" ref={root} tabIndex={-1}>
-      <div className="rest-glow" aria-hidden="true" />
       <header className="rest-head">
         <p className="rest-eyebrow">
           <Icon name="leaf" size={14} /> {isLong ? "Pausa longa" : "Pausa"} · {session.method_name}
@@ -110,14 +109,14 @@ export default function RestScreen({ session }: { session: FocusSession }) {
           <strong>{current.title}</strong>
           <p>{current.text}</p>
         </div>
-        <button type="button" className="rest-tip-next" onClick={() => setTip((tip + 1) % TIPS.length)} aria-label="Outra sugestão">
+        <button type="button" className="icon-button icon-button-sm rest-tip-next" onClick={() => setTip((tip + 1) % TIPS.length)} aria-label="Outra sugestão">
           <Icon name="right" size={16} />
         </button>
       </section>
 
       <footer className="rest-foot">
         <p>As aulas e os cursos voltam quando a pausa terminar, neste e nos seus outros dispositivos.</p>
-        <button type="button" className="rest-unlock" onClick={() => setConfirming(true)}>
+        <button type="button" className="button button-ghost button-sm rest-unlock" onClick={() => setConfirming(true)}>
           Preciso voltar agora
         </button>
       </footer>
@@ -136,11 +135,10 @@ export default function RestScreen({ session }: { session: FocusSession }) {
           }}
         >
           <p>
-            A pausa será cancelada e o <strong>ciclo {session.cycle} não contará como concluído</strong>
-            {session.plan.focus_seconds && session.plan.focus_seconds >= 900 ? ", sem o bônus de ciclo" : ""}.
+            A pausa será cancelada e o <strong>ciclo {session.cycle} não contará como concluído</strong>.
           </p>
           <p className="muted">
-            O tempo de foco que você já fez, os ciclos anteriores, o histórico e o XP já conquistado continuam valendo.
+            O tempo de concentração que você já fez, os ciclos anteriores e o histórico continuam valendo.
             {last ? " Como era a última pausa, a sessão termina aqui." : ` Depois, o ciclo ${session.cycle + 1} fica pronto para começar.`}
           </p>
         </ConfirmDialog>

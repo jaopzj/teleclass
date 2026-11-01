@@ -1,7 +1,6 @@
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import Icon from "../components/Icon";
 import { useResource } from "../hooks/useResource";
-import { Link, paths } from "../router";
 import { Achievement, focusApi, Progression } from "./api";
 import { useFocus } from "./store";
 
@@ -38,21 +37,6 @@ export function LevelCard({ progress, compact = false }: { progress: Progression
         </p>
       </div>
     </div>
-  );
-}
-
-export function LevelRail() {
-  const { progress } = useFocus();
-  return (
-    <section className="rail-block" aria-label="Seu nível">
-      <div className="rail-head">
-        <h3 className="rail-title">Progressão</h3>
-        <Link to={paths.focus("conquistas")} className="link-button">
-          Conquistas <Icon name="arrow" size={13} />
-        </Link>
-      </div>
-      {progress ? <LevelCard progress={progress} compact /> : <div className="skeleton" style={{ height: 64, borderRadius: 12 }} />}
-    </section>
   );
 }
 

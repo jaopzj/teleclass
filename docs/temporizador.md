@@ -1,8 +1,23 @@
 # Temporizador de estudos
 
-A página **Foco** (`/foco`) reúne o temporizador, as metas, a progressão
-(XP, níveis e conquistas), o histórico e as estatísticas. Um widget flutuante
-acompanha a sessão em todas as páginas.
+A página **Foco** (`/foco`) tem quatro áreas, numa navegação secundária abaixo
+do título: **Temporizador** (`/foco`), **Estatísticas** (`/foco/estatisticas`),
+**Histórico** (`/foco/historico`) e **Som ambiente** (`/foco/som`). O cabeçalho
+mostra o tempo de concentração e os ciclos de hoje.
+
+Fora da página Foco:
+
+- **Conquistas e metas** (nível, XP, conquistas, metas diária e semanal) ficam
+  em `/conquistas`, pelo menu da conta. O XP continua sendo ganho como antes.
+- **Avisos do temporizador** ficam em `/configuracoes`.
+- Os endereços antigos `/foco/conquistas` e `/foco/ajustes` redirecionam.
+
+Um widget flutuante acompanha a sessão nas outras páginas (e nas outras áreas
+do Foco): compacto ou expandido, arrastável, encaixa nas bordas, guarda a
+posição neste dispositivo (começa no canto superior direito) e acompanha o
+player em tela cheia. Pelo teclado, a alça de mover troca de canto com as setas
+e Esc recolhe o widget. Some durante as pausas, quando a tela de descanso cobre
+o app (o player sai da tela cheia nesse momento).
 
 ## Princípio: o servidor guarda instantes, não conta segundos
 
@@ -103,7 +118,7 @@ O servidor grava avisos em `focus_notices` (ciclo concluído, pausa encerrada,
 sessão concluída, meta batida, conquista, nível). O cliente busca os avisos
 novos junto com o estado e guarda um cursor, para não repetir um aviso já
 mostrado. O aviso "a pausa termina em X s" é gerado no navegador a partir do
-`deadline_at`. Em **Ajustes**, cada tipo pode ser desligado, e há opções para
+`deadline_at`. Em **Configurações** (`/configuracoes`), cada tipo pode ser desligado, e há opções para
 avisos na tela, notificações do sistema (pede permissão ao navegador) e som.
 
 ## Proteção contra pedidos repetidos e concorrência
@@ -133,11 +148,26 @@ avisos na tela, notificações do sistema (pede permissão ao navegador) e som.
 
 ## Sons ambientes
 
-Chuva, floresta, café, ondas, lareira, ruído branco e ruído marrom são gerados
-no navegador com Web Audio. Não há arquivos de áudio, então não há licença de
-terceiros a respeitar.
+Chuva, floresta, oceano, lareira, café, ventilação, ruído branco e ruído
+marrom são gerados no navegador com Web Audio. Não há arquivos de áudio, então
+não há licença de terceiros a respeitar.
+
+Vários sons tocam juntos (mixagem), cada um com seu volume, além do volume
+geral. Favoritos, recentes e volumes ficam guardados neste dispositivo
+(`localStorage`), não na conta. Não há categoria de música.
 
 ## Limitações conhecidas
+
+- O servidor registra três estados finais: concluída, interrompida e expirada
+  (sem atividade). Não existe "cancelada".
+- No histórico, a API filtra só por técnica, curso e data (`before`). Busca,
+  período e estado são aplicados no navegador sobre as páginas já carregadas
+  (para "período", a página carrega mais sessões sozinha até cobrir o intervalo).
+- As estatísticas não filtram por curso e o mapa de calor não traz o número de
+  sessões por dia. A proporção foco/pausa não é exibida porque o resumo do
+  período não traz o tempo de pausa.
+- Na Pomodoro e nas outras técnicas prontas, a pausa longa não é configurável;
+  para isso, use um método personalizado.
 
 - O bloqueio de pausa vale só no Teleaula. Outros sites e apps continuam livres.
 - Notificações do sistema dependem da permissão do navegador e de a aba estar

@@ -23,5 +23,4 @@
 .toast-action { justify-self: start; margin-top: 6px; padding: 0; border: 0; background: none; color: var(--accent); font-weight: 600; cursor: pointer; font-size: 0.84rem; }
 .toast-close { display: grid; place-items: center; width: 24px; height: 24px; border: 0; border-radius: 8px; background: none; color: var(--muted); cursor: pointer; }
 .toast-close:hover { background: var(--panel-2); color: var(--text); }
-body.is-focus-mode .toasts { top: 76px; }
 @media (max-width: 720px) { .toasts { left: 16px; right: 16px; width: auto; } }

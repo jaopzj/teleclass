@@ -1,51 +1,102 @@
-// Sons ambientes do Focus Mode, sintetizados com a Web Audio API.
+// Som ambiente, sintetizado com a Web Audio API.
 //
-// Nada é baixado: chuva, floresta, cafeteria, ondas, lareira e ruídos são
-// gerados no próprio navegador a partir de ruído filtrado e eventos curtos
-// (gotas, pássaros, estalos) agendados no relógio de áudio. Não há arquivos de
-// terceiros, então não há licença a respeitar nem carregamento a esperar, e o
-// custo é baixo (alguns nós de áudio por som).
+// Nada é baixado: chuva, floresta, cafeteria, ondas, lareira, ventilação e
+// ruídos são gerados no navegador a partir de ruído filtrado e eventos curtos
+// (gotas, pássaros, estalos) agendados no relógio de áudio. Sem arquivos de
+// terceiros, sem licença a respeitar e sem carregamento a esperar.
+//
+// Mixagem: cada som tem o próprio ganho (volume individual) ligado a um ganho
+// geral. Tocar, pausar ou parar um som não mexe nos outros. O motor vive fora
+// do React, então a reprodução continua ao trocar de página. O som nunca
+// controla a sessão de foco (e a sessão não controla o som).
+//
+// Escolhas (volume, favoritos, recentes) ficam guardadas neste dispositivo.
 import { useSyncExternalStore } from "react";
+import type { IconName } from "../components/Icon";
 
-export type SoundId = "rain" | "forest" | "cafe" | "waves" | "fire" | "white" | "brown";
+export type SoundId = "rain" | "forest" | "waves" | "fire" | "cafe" | "fan" | "white" | "brown";
+export type SoundCategory = "nature" | "places" | "noise";
 
-export const SOUNDS: { id: SoundId; name: string; icon: "rain" | "tree" | "coffee" | "wave" | "fire" | "noise" | "wind" }[] = [
-  { id: "rain", name: "Chuva", icon: "rain" },
-  { id: "forest", name: "Floresta", icon: "tree" },
-  { id: "cafe", name: "Cafeteria", icon: "coffee" },
-  { id: "waves", name: "Ondas", icon: "wave" },
-  { id: "fire", name: "Lareira", icon: "fire" },
-  { id: "white", name: "Ruído branco", icon: "noise" },
-  { id: "brown", name: "Ruído marrom", icon: "wind" },
+export interface Sound {
+  id: SoundId;
+  name: string;
+  description: string;
+  icon: IconName;
+  category: SoundCategory;
+}
+
+export const CATEGORIES: { id: SoundCategory; name: string }[] = [
+  { id: "nature", name: "Natureza" },
+  { id: "places", name: "Ambientes" },
+  { id: "noise", name: "Ruídos" },
 ];
 
-interface AmbientState {
-  sound: SoundId | null;
+export const SOUNDS: Sound[] = [
+  { id: "rain", name: "Chuva", description: "Chuva constante, com gotas próximas", icon: "rain", category: "nature" },
+  { id: "forest", name: "Floresta", description: "Vento nas folhas e pássaros ao longe", icon: "tree", category: "nature" },
+  { id: "waves", name: "Oceano", description: "Ondas lentas quebrando na praia", icon: "wave", category: "nature" },
+  { id: "fire", name: "Lareira", description: "Fogo baixo com estalos de lenha", icon: "fire", category: "nature" },
+  { id: "cafe", name: "Café", description: "Conversas abafadas e xícaras", icon: "coffee", category: "places" },
+  { id: "fan", name: "Ventilação", description: "Ventilador contínuo, grave e estável", icon: "fan", category: "places" },
+  { id: "white", name: "Ruído branco", description: "Chiado uniforme que cobre ruídos agudos", icon: "noise", category: "noise" },
+  { id: "brown", name: "Ruído marrom", description: "Ruído grave e profundo, mais suave", icon: "wind", category: "noise" },
+];
+
+export const soundById = (id: SoundId) => SOUNDS.find((s) => s.id === id) as Sound;
+
+export interface AmbientState {
+  /** Sons na mixagem, na ordem em que entraram. */
+  mix: SoundId[];
+  /** Ligado a tudo: a mixagem inteira pode ser pausada e retomada. */
   status: "stopped" | "playing" | "paused";
-  volume: number; // 0..1
+  master: number; // 0..1
+  volumes: Record<SoundId, number>; // 0..1
+  favorites: SoundId[];
+  recent: SoundId[];
   supported: boolean;
+  error: string | null;
 }
 
 const STORAGE = "teleaula:focus:ambient";
+const DEFAULT_VOLUME = 0.6;
 const listeners = new Set<() => void>();
-let state: AmbientState = { sound: null, status: "stopped", volume: 0.5, supported: typeof AudioContext !== "undefined", ...restore() };
+const ids = SOUNDS.map((s) => s.id);
+
+let state: AmbientState = {
+  mix: [],
+  status: "stopped",
+  master: 0.7,
+  volumes: Object.fromEntries(ids.map((id) => [id, DEFAULT_VOLUME])) as Record<SoundId, number>,
+  favorites: [],
+  recent: [],
+  supported: typeof AudioContext !== "undefined",
+  error: null,
+};
+state = { ...state, ...restore() };
 
 function restore(): Partial<AmbientState> {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE) ?? "null");
-    if (saved && typeof saved.volume === "number") return { volume: Math.min(1, Math.max(0, saved.volume)), sound: saved.sound ?? null };
+    if (!saved || typeof saved !== "object") return {};
+    const valid = (list: unknown) => (Array.isArray(list) ? list.filter((x): x is SoundId => ids.includes(x)) : []);
+    const unit = (v: unknown, fallback: number) => (typeof v === "number" && v >= 0 && v <= 1 ? v : fallback);
+    const volumes = { ...state.volumes };
+    for (const id of ids) volumes[id] = unit(saved.volumes?.[id], DEFAULT_VOLUME);
+    return { master: unit(saved.master ?? saved.volume, 0.7), volumes, favorites: valid(saved.favorites), recent: valid(saved.recent).slice(0, 4) };
   } catch {
-    /* sem preferências guardadas */
+    return {};
   }
-  return {};
 }
 
 function set(next: Partial<AmbientState>) {
   state = { ...state, ...next };
   try {
-    localStorage.setItem(STORAGE, JSON.stringify({ volume: state.volume, sound: state.sound }));
+    localStorage.setItem(
+      STORAGE,
+      JSON.stringify({ master: state.master, volumes: state.volumes, favorites: state.favorites, recent: state.recent }),
+    );
   } catch {
-    /* modo privado */
+    /* modo privado: fica só nesta visita */
   }
   listeners.forEach((l) => l());
 }
@@ -64,14 +115,14 @@ export function useAmbient(): AmbientState {
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
-let current: { stop: () => void } | null = null;
+const voices = new Map<SoundId, { gain: GainNode; stop: () => void }>();
 const buffers = new Map<string, AudioBuffer>();
 
 function audio(): { ctx: AudioContext; master: GainNode } {
   if (!ctx) {
     ctx = new AudioContext();
     master = ctx.createGain();
-    master.gain.value = 0;
+    master.gain.value = curve(state.master);
     master.connect(ctx.destination);
   }
   return { ctx, master: master as GainNode };
@@ -258,72 +309,138 @@ const BUILDERS: Record<SoundId, (out: AudioNode, bed: Bed) => void> = {
   brown(out, bed) {
     loop("brown", out, bed, 0.7);
   },
+  fan(out, bed) {
+    loop("brown", out, bed, 0.5, [filter("lowpass", 700)]);
+    const air = loop("pink", out, bed, 0.12, [filter("bandpass", 1400, 0.6)]);
+    lfo(air.gain, 0.4, 0.015, bed);
+    const { ctx } = audio();
+    const hum = ctx.createOscillator();
+    const g = ctx.createGain();
+    hum.frequency.value = 96;
+    g.gain.value = 0.012;
+    hum.connect(g).connect(out);
+    hum.start();
+    bed.nodes.push(hum, g);
+  },
 };
 
-function fadeTo(value: number, seconds: number) {
-  const { ctx, master } = audio();
-  const now = ctx.currentTime;
-  master.gain.cancelScheduledValues(now);
-  master.gain.setValueAtTime(master.gain.value, now);
-  master.gain.linearRampToValueAtTime(value, now + seconds);
-}
-
-function teardown() {
-  current?.stop();
-  current = null;
-}
-
-export function playAmbient(id: SoundId) {
-  if (!state.supported) return;
+function ramp(param: AudioParam, value: number, seconds: number) {
   const { ctx } = audio();
-  void ctx.resume();
-  if (state.sound === id && state.status === "playing") return;
-  teardown();
+  const now = ctx.currentTime;
+  param.cancelScheduledValues(now);
+  param.setValueAtTime(param.value, now);
+  param.linearRampToValueAtTime(value, now + seconds);
+}
+
+function startVoice(id: SoundId) {
+  const { ctx, master } = audio();
   const out = ctx.createGain();
-  out.connect(audio().master);
+  out.gain.value = 0;
+  out.connect(master);
   const bed: Bed = { nodes: [out], timers: [] };
   BUILDERS[id](out, bed);
-  current = {
+  ramp(out.gain, curve(state.volumes[id]), 1.2);
+  voices.set(id, {
+    gain: out,
     stop: () => {
       bed.timers.forEach((t) => window.clearInterval(t));
-      const at = ctx.currentTime;
-      out.gain.setValueAtTime(out.gain.value, at);
-      out.gain.linearRampToValueAtTime(0, at + 0.4);
-      window.setTimeout(() => bed.nodes.forEach((n) => {
-        try {
-          (n as AudioScheduledSourceNode).stop?.();
-        } catch {
-          /* já parado */
-        }
-        n.disconnect();
-      }), 500);
+      ramp(out.gain, 0, 0.4);
+      window.setTimeout(
+        () =>
+          bed.nodes.forEach((n) => {
+            try {
+              (n as AudioScheduledSourceNode).stop?.();
+            } catch {
+              /* já parado */
+            }
+            n.disconnect();
+          }),
+        500,
+      );
     },
-  };
-  fadeTo(curve(state.volume), 1.2);
-  set({ sound: id, status: "playing" });
+  });
+}
+
+function stopVoice(id: SoundId) {
+  voices.get(id)?.stop();
+  voices.delete(id);
+}
+
+/** Retoma o contexto de áudio (precisa de um gesto do usuário). Falha vira aviso, nunca exceção. */
+async function wake(): Promise<boolean> {
+  try {
+    const { ctx } = audio();
+    if (ctx.state !== "running") await ctx.resume();
+    if (ctx.state !== "running") throw new Error("suspended");
+    return true;
+  } catch {
+    set({ error: "O navegador não deixou tocar o som agora. Tente de novo." });
+    return false;
+  }
+}
+
+function remember(id: SoundId) {
+  return [id, ...state.recent.filter((x) => x !== id)].slice(0, 4);
+}
+
+/** Liga ou desliga um som na mixagem. */
+export async function toggleSound(id: SoundId) {
+  if (!state.supported) return;
+  if (state.mix.includes(id)) return removeSound(id);
+  if (!(await wake())) return;
+  try {
+    startVoice(id);
+  } catch {
+    set({ error: "Não foi possível tocar este som. Tente de novo." });
+    return;
+  }
+  set({ mix: [...state.mix, id], status: "playing", recent: remember(id), error: null });
+}
+
+export function removeSound(id: SoundId) {
+  stopVoice(id);
+  const mix = state.mix.filter((x) => x !== id);
+  set({ mix, status: mix.length ? state.status : "stopped" });
 }
 
 export function pauseAmbient() {
   if (!ctx || state.status !== "playing") return;
-  fadeTo(0, 0.3);
-  window.setTimeout(() => void ctx?.suspend(), 320);
+  ramp(audio().master.gain, 0, 0.3);
+  window.setTimeout(() => state.status === "paused" && void ctx?.suspend(), 320);
   set({ status: "paused" });
 }
 
-export function resumeAmbient() {
-  if (!ctx || state.status !== "paused" || !state.sound) return;
-  void ctx.resume().then(() => fadeTo(curve(state.volume), 0.6));
-  set({ status: "playing" });
+export async function resumeAmbient() {
+  if (state.status !== "paused") return;
+  if (!(await wake())) return;
+  ramp(audio().master.gain, curve(state.master), 0.6);
+  set({ status: "playing", error: null });
 }
 
 export function stopAmbient() {
-  if (ctx) fadeTo(0, 0.3);
-  teardown();
-  set({ status: "stopped" });
+  for (const id of [...voices.keys()]) stopVoice(id);
+  if (ctx && master) ramp(master.gain, curve(state.master), 0.01);
+  set({ mix: [], status: "stopped" });
 }
 
-export function setAmbientVolume(volume: number) {
+export function setSoundVolume(id: SoundId, volume: number) {
   const v = Math.min(1, Math.max(0, volume));
-  if (ctx && state.status === "playing") fadeTo(curve(v), 0.15);
-  set({ volume: v });
+  const voice = voices.get(id);
+  if (voice) ramp(voice.gain.gain, curve(v), 0.15);
+  set({ volumes: { ...state.volumes, [id]: v } });
+}
+
+export function setMasterVolume(volume: number) {
+  const v = Math.min(1, Math.max(0, volume));
+  if (ctx && master && state.status !== "paused") ramp(master.gain, curve(v), 0.15);
+  set({ master: v });
+}
+
+export function toggleFavorite(id: SoundId) {
+  const on = state.favorites.includes(id);
+  set({ favorites: on ? state.favorites.filter((x) => x !== id) : [...state.favorites, id] });
+}
+
+export function clearAmbientError() {
+  set({ error: null });
 }

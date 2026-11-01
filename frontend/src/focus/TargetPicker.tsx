@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import Icon from "../components/Icon";
 import { CourseCard, CourseDetail, CourseSection, learningApi } from "../learning/api";
 
 export interface TargetValue {
@@ -16,7 +17,17 @@ function flatten(sections: CourseSection[], path: string[] = []): { key: string;
 const courseCache = new Map<string, Promise<CourseDetail>>();
 
 /** Vincula a sessão a um curso e, opcionalmente, a uma aula da biblioteca do usuário. */
-export default function TargetPicker({ value, onChange, idPrefix = "target" }: { value: TargetValue; onChange: (v: TargetValue) => void; idPrefix?: string }) {
+export default function TargetPicker({
+  value,
+  onChange,
+  idPrefix = "target",
+  labelledBy,
+}: {
+  value: TargetValue;
+  onChange: (v: TargetValue) => void;
+  idPrefix?: string;
+  labelledBy?: string;
+}) {
   const [courses, setCourses] = useState<CourseCard[] | null>(null);
   const [detail, setDetail] = useState<CourseDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,53 +62,72 @@ export default function TargetPicker({ value, onChange, idPrefix = "target" }: {
     return [...map.entries()];
   }, [lessons]);
 
-  if (error) return <p className="muted small">Não foi possível carregar seus cursos ({error}). Você pode começar sem vincular.</p>;
-  if (courses && courses.length === 0) return <p className="muted small">Colete um curso para vincular as sessões a ele.</p>;
+  if (error) return <p className="fx-hint">Não foi possível carregar seus cursos ({error}). Dá para começar sem vincular.</p>;
+  if (courses && courses.length === 0) return <p className="fx-hint">Adicione um curso para vincular suas sessões a ele.</p>;
 
   return (
-    <div className="target-picker">
-      <label className="sr-only" htmlFor={`${idPrefix}-course`}>
-        Curso
-      </label>
-      <select
+    <div className={`fx-target ${value.courseId ? "has-lesson" : ""}`} role="group" aria-labelledby={labelledBy}>
+      <Select
         id={`${idPrefix}-course`}
-        className="select"
+        label="Curso"
         value={value.courseId ?? ""}
-        onChange={(e) => onChange({ courseId: e.target.value || null, lessonKey: null })}
+        onChange={(v) => onChange({ courseId: v || null, lessonKey: null })}
         disabled={!courses}
       >
-        <option value="">{courses ? "Sem curso vinculado" : "Carregando cursos..."}</option>
+        <option value="">{courses ? "Nenhum curso" : "Carregando cursos..."}</option>
         {courses?.map((c) => (
           <option key={c.id} value={c.id}>
             {c.title}
           </option>
         ))}
-      </select>
+      </Select>
       {value.courseId && (
-        <>
-          <label className="sr-only" htmlFor={`${idPrefix}-lesson`}>
-            Aula
-          </label>
-          <select
-            id={`${idPrefix}-lesson`}
-            className="select"
-            value={value.lessonKey ?? ""}
-            onChange={(e) => onChange({ ...value, lessonKey: e.target.value || null })}
-            disabled={!detail}
-          >
-            <option value="">{detail ? "Curso inteiro (sem aula específica)" : "Carregando aulas..."}</option>
-            {groups.map(([group, items]) => (
-              <optgroup key={group} label={group}>
-                {items.map((l) => (
-                  <option key={l.key} value={l.key}>
-                    {l.title}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </>
+        <Select id={`${idPrefix}-lesson`} label="Aula" value={value.lessonKey ?? ""} onChange={(v) => onChange({ ...value, lessonKey: v || null })} disabled={!detail}>
+          <option value="">{detail ? "Curso inteiro" : "Carregando aulas..."}</option>
+          {groups.map(([group, items]) => (
+            <optgroup key={group} label={group}>
+              {items.map((l) => (
+                <option key={l.key} value={l.key}>
+                  {l.title}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </Select>
       )}
+    </div>
+  );
+}
+
+/** Seleção nativa (acessível e com a lista do sistema) no visual dos campos da plataforma. */
+export function Select({
+  id,
+  label,
+  value,
+  onChange,
+  disabled,
+  children,
+  hideLabel = true,
+  small = false,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  disabled?: boolean;
+  children: ReactNode;
+  hideLabel?: boolean;
+  small?: boolean;
+}) {
+  return (
+    <div className={`fx-select ${small ? "is-small" : ""}`}>
+      <label className={hideLabel ? "sr-only" : "fx-label"} htmlFor={id}>
+        {label}
+      </label>
+      <select id={id} className="input fx-input" value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
+        {children}
+      </select>
+      <Icon name="down" size={14} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 // Contagem derivada dos instantes do servidor. Funções puras: recebem a sessão
 // e o "agora" já no relógio do servidor (Date.now() + diferença medida).
-import { FocusSession, Stage, Technique } from "./api";
+import { FocusSession, Stage } from "./api";
 
 export interface Readout {
   /** Segundos que faltam para o fim da etapa (null no cronômetro livre e em "pronto"). */
@@ -88,10 +88,64 @@ export function duration(seconds: number) {
   return m ? `${h} h ${m} min` : `${h} h`;
 }
 
-export const TECHNIQUE_TONE: Record<Technique, string> = {
-  pomodoro: "tomato",
-  "52_17": "ocean",
-  deep_work: "night",
-  custom: "violet",
-  stopwatch: "graphite",
+export type Tone = "focus" | "rest" | "ready" | "paused";
+
+/** Tom visual da etapa: concentração (azul), descanso, pronto ou pausado (neutro). */
+export function toneOf(s: FocusSession): Tone {
+  if (isBreak(s.stage)) return "rest";
+  if (s.stage === "ready") return "ready";
+  return s.paused ? "paused" : "focus";
+}
+
+/** Rótulo curto da etapa, para espaços pequenos (widget, cabeçalhos). */
+export function shortStage(s: FocusSession) {
+  if (s.paused) return "Pausado";
+  if (s.stage === "ready") return `Pronto · ciclo ${s.cycle}`;
+  if (s.stage === "focus") return "Concentração";
+  if (s.stage === "long_break") return "Pausa longa";
+  if (s.stage === "short_break") return "Pausa";
+  return "Encerrada";
+}
+
+export const isStopwatch = (s: FocusSession) => s.plan.focus_seconds == null;
+
+/** O número em destaque: restante na contagem regressiva, decorrido no cronômetro. */
+export function displayTime(s: FocusSession, r: Readout) {
+  if (s.stage === "ready") return clock(s.plan.focus_seconds ?? 0);
+  if (isStopwatch(s) && s.stage === "focus") return clock(r.elapsed);
+  return clock(r.remaining ?? 0, { ceil: true });
+}
+
+/** "Pausa de 5 min", "Ciclo 3 · 25 min", "Fim da sessão". */
+export function nextLabel(s: FocusSession): string | null {
+  const n = s.next;
+  if (!n) return null;
+  if (n.stage === "end") return "Fim da sessão";
+  const len = n.seconds ? ` de ${duration(n.seconds)}` : "";
+  if (n.stage === "focus") return `Ciclo ${n.cycle ?? s.cycle + 1}${n.seconds ? ` · ${duration(n.seconds)}` : ""}`;
+  return `${n.stage === "long_break" ? "Pausa longa" : "Pausa"}${len}`;
+}
+
+/**
+ * Fração da sessão inteira (todas as etapas planejadas) já percorrida.
+ * null no cronômetro livre, que não tem fim definido.
+ */
+export function sessionFraction(s: FocusSession, r: Readout): number | null {
+  if (isStopwatch(s)) return null;
+  const total = s.timeline.reduce((a, t) => a + (t.seconds ?? 0), 0);
+  if (!total) return null;
+  const at = s.timeline.findIndex((t) =>
+    s.stage === "ready" ? t.stage === "focus" && t.cycle === s.cycle : t.cycle === s.cycle && (s.stage === "focus" ? t.stage === "focus" : t.stage !== "focus"),
+  );
+  if (at < 0) return null;
+  const before = s.timeline.slice(0, at).reduce((a, t) => a + (t.seconds ?? 0), 0);
+  const inside = s.stage === "ready" ? 0 : (r.fraction ?? 0) * (s.timeline[at].seconds ?? 0);
+  return clamp((before + inside) / total);
+}
+
+/** Como uma sessão terminou, nos termos da interface. */
+export const ENDED_LABEL: Record<"completed" | "stopped" | "expired", string> = {
+  completed: "Concluída",
+  stopped: "Interrompida",
+  expired: "Expirada",
 };
