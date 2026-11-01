@@ -1,0 +1,97 @@
+/* Conquistas e metas (/conquistas). Escopo em .progress-page para não vazar. */
+.progress-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--stack-gap); align-items: start; }
+.progress-side { position: sticky; top: calc(var(--topbar-h) + var(--space-4)); display: grid; gap: var(--stack-gap); }
+.progress-page .muted.small, .progress-page .small { font-size: var(--text-sm); }
+
+.progress-page .rail-block { display: grid; gap: var(--space-4); padding: var(--space-5); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-xs); }
+.progress-page .rail-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
+.progress-page .rail-title { margin: 0; font-size: var(--text-md); font-weight: var(--weight-bold); color: var(--ink); }
+
+/* metas */
+.progress-page .goals { display: grid; gap: var(--space-4); }
+.progress-page .goal { display: grid; gap: var(--space-2); }
+.progress-page .goal-empty { padding: var(--space-3); border: 1px dashed var(--line-strong); border-radius: var(--radius-md); background: none; text-align: left; color: inherit; cursor: pointer; transition: border-color var(--duration-fast), background var(--duration-fast); }
+.progress-page .goal-empty:hover { border-color: var(--brand-500); background: var(--brand-a08); }
+.progress-page .goal-empty .goal-title { display: block; margin-bottom: 2px; }
+.progress-page .goal-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.progress-page .goal-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ink-2); }
+.progress-page .goal-pct { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.progress-page .goal.is-achieved .goal-pct { color: var(--success); }
+.progress-page .goal-bar { height: 6px; border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
+.progress-page .goal-bar span { display: block; height: 100%; border-radius: inherit; background: var(--brand-500); transition: width var(--duration-slow) var(--ease-out); }
+.progress-page .goal.is-achieved .goal-bar span { background: var(--success); }
+.progress-page .goal-numbers { margin: 0; font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.progress-page .goals-form { display: grid; gap: var(--space-4); }
+.progress-page .goal-field { display: grid; gap: var(--space-2); margin: 0; padding: 0; border: 0; }
+.progress-page .goal-field legend { padding: 0; margin-bottom: 4px; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ink-2); }
+.progress-page .goal-inputs { display: flex; gap: var(--space-2); }
+.progress-page .unit-input { display: flex; align-items: center; height: 40px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface); }
+.progress-page .unit-input:focus-within { border-color: var(--brand-500); box-shadow: 0 0 0 3px var(--brand-a26); }
+.progress-page .unit-input input { flex: 1; width: 48px; min-width: 0; height: 100%; padding: 0 4px 0 12px; border: 0; background: none; outline: none; color: var(--ink); font: inherit; font-variant-numeric: tabular-nums; }
+.progress-page .unit-input span { padding-right: 12px; font-size: var(--text-xs); color: var(--ink-3); }
+.progress-page .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.progress-page .chip { height: 28px; padding: 0 10px; border: 1px solid var(--line-strong); border-radius: var(--radius-pill); background: var(--surface); color: var(--ink-2); font-size: var(--text-xs); font-weight: var(--weight-semibold); cursor: pointer; }
+.progress-page .chip:hover { background: var(--surface-hover); }
+.progress-page .chip.is-on { background: var(--brand-a14); border-color: transparent; color: var(--brand-700); }
+.progress-page .check { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; }
+.progress-page .check input { width: 16px; height: 16px; accent-color: var(--brand-700); }
+
+/* nível */
+.progress-page .progress-tab { display: grid; gap: var(--space-8); }
+.progress-page .progress-hero { display: grid; gap: var(--space-6); padding: var(--space-6); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-xs); }
+.progress-page .level { display: flex; align-items: center; gap: var(--space-4); }
+.progress-page .level-badge { display: grid; place-items: center; flex: none; width: 64px; height: 64px; border-radius: var(--radius-lg); background: var(--brand-a14); color: var(--brand-700); font-size: var(--text-h2); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+.progress-page .level-text { flex: 1; min-width: 0; display: grid; gap: 6px; }
+.progress-page .level-title { margin: 0; font-size: var(--text-md); font-weight: var(--weight-bold); color: var(--ink); }
+.progress-page .level-title .muted { font-size: var(--text-sm); font-weight: var(--weight-regular); }
+.progress-page .level-bar { height: 6px; border-radius: var(--radius-pill); background: var(--surface-sunken); overflow: hidden; }
+.progress-page .level-bar span { display: block; height: 100%; border-radius: inherit; background: var(--brand-500); transition: width var(--duration-slow) var(--ease-out); }
+.progress-page .level-numbers { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px var(--space-3); margin: 0; font-size: var(--text-xs); font-variant-numeric: tabular-nums; }
+.progress-page .ladder { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.progress-page .ladder li { position: relative; display: grid; justify-items: center; gap: 6px; text-align: center; }
+.progress-page .ladder li::before { content: ""; position: absolute; top: 5px; left: -50%; right: 50%; height: 2px; background: var(--line); }
+.progress-page .ladder li:first-child::before { display: none; }
+.progress-page .ladder li.is-reached::before { background: var(--brand-500); }
+.progress-page .ladder-dot { position: relative; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--line-strong); background: var(--surface); }
+.progress-page .ladder .is-reached .ladder-dot { border-color: var(--brand-500); background: var(--brand-500); }
+.progress-page .ladder .is-current .ladder-dot { box-shadow: 0 0 0 4px var(--brand-a26); }
+.progress-page .ladder-name { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--ink-3); }
+.progress-page .ladder .is-reached .ladder-name { color: var(--ink-2); }
+.progress-page .ladder-level { font-size: 0.6875rem; color: var(--ink-4); }
+
+/* conquistas */
+.progress-page .section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: var(--space-3); margin-bottom: var(--space-4); }
+.progress-page .section-head h2 { margin: 0 0 2px; font-size: var(--text-lg); font-weight: var(--weight-bold); }
+.progress-page .section-head p { margin: 0; }
+.progress-page .fseg { display: inline-flex; gap: 2px; padding: 4px; border-radius: var(--radius-pill); background: var(--surface); }
+.progress-page .fseg button { height: 30px; padding: 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: none; color: var(--ink-3); font-size: var(--text-sm); font-weight: var(--weight-semibold); cursor: pointer; }
+.progress-page .fseg button.is-on { background: var(--brand-a14); color: var(--brand-700); }
+.progress-page .fseg button:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.progress-page .achievements { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--space-3); }
+.progress-page .achievement { --r: var(--ink-3); position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4); padding: var(--space-4); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-xs); }
+.progress-page .achievement.rarity-uncommon { --r: var(--rest-700); }
+.progress-page .achievement.rarity-rare { --r: var(--brand-700); }
+.progress-page .achievement.rarity-epic { --r: #6b4fc2; }
+.progress-page .achievement.rarity-legendary { --r: var(--warning); }
+.progress-page .achievement-medal { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-sunken); color: var(--ink-4); }
+.progress-page .achievement.is-unlocked .achievement-medal { background: color-mix(in srgb, var(--r) 12%, var(--surface)); color: var(--r); }
+.progress-page .achievement-text { min-width: 0; display: grid; gap: 4px; padding-right: 64px; }
+.progress-page .achievement-name { margin: 0; font-size: var(--text-base); font-weight: var(--weight-bold); color: var(--ink); }
+.progress-page .achievement:not(.is-unlocked) .achievement-name { color: var(--ink-3); }
+.progress-page .achievement-desc { margin: 0; font-size: var(--text-sm); color: var(--ink-3); }
+.progress-page .achievement-meta { margin: 2px 0 0; font-size: var(--text-xs); color: var(--ink-3); }
+.progress-page .achievement-progress { display: flex; align-items: center; gap: var(--space-3); margin-top: 4px; font-size: var(--text-xs); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.progress-page .achievement-track { flex: 1; height: 4px; border-radius: var(--radius-pill); background: linear-gradient(90deg, var(--brand-500) var(--p), var(--surface-sunken) var(--p)); }
+.progress-page .achievement-rarity { position: absolute; top: var(--space-4); right: var(--space-4); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--r); }
+.progress-page .empty-inline { margin: 0; padding: var(--space-5); border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--ink-3); font-size: var(--text-sm); text-align: center; }
+.progress-page .rules { padding: var(--space-5) var(--space-6); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--shadow-xs); }
+.progress-page .rules h2 { margin: 0 0 var(--space-3); font-size: var(--text-md); }
+.progress-page .rules ul { display: grid; gap: var(--space-2); margin: 0; padding-left: 18px; list-style: disc; font-size: var(--text-sm); color: var(--ink-3); }
+.progress-page .rules strong { color: var(--ink-2); }
+
+@media (max-width: 1099px) {
+  .progress-layout { grid-template-columns: minmax(0, 1fr); }
+  .progress-side { position: static; order: -1; }
+  .progress-page .ladder { grid-template-columns: repeat(5, minmax(0, 1fr)); row-gap: var(--space-4); }
+  .progress-page .ladder li:nth-child(6)::before { display: none; }
+}

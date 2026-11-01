@@ -1,26 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Icon from "../components/Icon";
 import { Link, paths } from "../router";
 import { focusApi, HistoryItem, HistoryPage } from "./api";
-import { duration } from "./derive";
+import { duration, ENDED_LABEL } from "./derive";
+import { previewTimeline } from "./MethodEditor";
 import { useFocus } from "./store";
+import { Select } from "./TargetPicker";
 
-const STATUS: Record<HistoryItem["status"], string> = { completed: "Concluída", stopped: "Encerrada", expired: "Expirou" };
 const REASONS: Record<string, string> = {
   user: "encerrada por você",
   plan_done: "plano completo",
-  not_resumed: "o próximo ciclo não foi iniciado",
+  not_resumed: "o próximo ciclo não foi iniciado a tempo",
   paused_too_long: "ficou pausada tempo demais",
-  break_unlocked: "pausa final desbloqueada",
+  break_unlocked: "pausa final interrompida",
   limit: "limite do cronômetro",
 };
 const OUTCOME: Record<string, string> = {
   completed: "concluída",
   stopped: "interrompida",
   expired: "expirou",
-  unlocked: "desbloqueada antes da hora",
-  invalidated: "invalidada (pausa desbloqueada)",
+  unlocked: "interrompida antes da hora",
+  invalidated: "não validada",
 };
+const PERIODS: [string, string][] = [
+  ["", "Todo o período"],
+  ["7", "Últimos 7 dias"],
+  ["30", "Últimos 30 dias"],
+  ["90", "Últimos 90 dias"],
+];
+// Ao filtrar por período, busca páginas até cobrir o intervalo (com um teto).
+const MAX_AUTO_PAGES = 12;
 
 function dayLabel(ts: number) {
   const d = new Date(ts * 1000);
@@ -29,111 +38,170 @@ function dayLabel(ts: number) {
   yesterday.setDate(today.getDate() - 1);
   if (d.toDateString() === today.toDateString()) return "Hoje";
   if (d.toDateString() === yesterday.toDateString()) return "Ontem";
-  return d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  const s = d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: d.getFullYear() !== today.getFullYear() ? "numeric" : undefined });
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
-
 const time = (ts: number) => new Date(ts * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const titleOf = (i: HistoryItem) => i.lesson?.title ?? i.course?.title ?? i.intention ?? (i.custom_method ? i.method_name : i.technique_name);
 
-/** Histórico completo de sessões, com filtros e detalhes das etapas. */
+/** Registro cronológico das sessões encerradas, com filtros e detalhes. */
 export default function HistoryTab() {
   const { revision } = useFocus();
   const [technique, setTechnique] = useState("");
   const [course, setCourse] = useState("");
+  const [period, setPeriod] = useState("");
+  const [status, setStatus] = useState("");
+  const [query, setQuery] = useState("");
   const [page, setPage] = useState<HistoryPage | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  const courses = useRef<HistoryPage["courses"]>([]);
+  const cutoff = period ? Date.now() / 1000 - Number(period) * 86400 : null;
+
+  async function fetchFrom(base: HistoryPage | null, auto: boolean) {
+    let current = base;
+    for (let i = 0; i < (auto ? MAX_AUTO_PAGES : 1); i++) {
+      const next = await focusApi.history({ before: current?.next_before ?? null, technique: technique || null, course_id: course || null });
+      if (next.courses.length) courses.current = next.courses;
+      current = current ? { ...next, items: [...current.items, ...next.items] } : next;
+      const oldest = current.items[current.items.length - 1]?.started_at;
+      if (!auto || !current.next_before || cutoff == null || (oldest != null && oldest < cutoff)) break;
+    }
+    return current as HistoryPage;
+  }
 
   useEffect(() => {
     let active = true;
     setError(null);
-    focusApi
-      .history({ technique: technique || null, course_id: course || null })
+    setLoading(true);
+    fetchFrom(null, cutoff != null)
       .then((p) => active && setPage(p))
-      .catch((e: Error) => active && setError(e.message));
+      .catch((e: Error) => active && setError(e.message))
+      .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
-  }, [technique, course, revision]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [technique, course, period, revision]);
 
   async function more() {
     if (!page?.next_before) return;
-    setLoadingMore(true);
+    setLoading(true);
     try {
-      const next = await focusApi.history({ before: page.next_before, technique: technique || null, course_id: course || null });
-      setPage({ ...next, items: [...page.items, ...next.items], courses: page.courses });
+      setPage(await fetchFrom(page, false));
     } catch (e) {
       setError((e as Error).message);
     } finally {
-      setLoadingMore(false);
+      setLoading(false);
     }
   }
 
+  const items = useMemo(() => {
+    const q = query.trim().toLocaleLowerCase("pt-BR");
+    return (page?.items ?? []).filter(
+      (i) =>
+        (cutoff == null || i.started_at >= cutoff) &&
+        (!status || i.status === status) &&
+        (!q || [i.intention, i.course?.title, i.lesson?.title, i.method_name].some((t) => t?.toLocaleLowerCase("pt-BR").includes(q))),
+    );
+  }, [page, cutoff, status, query]);
+
   const groups: [string, HistoryItem[]][] = [];
-  for (const item of page?.items ?? []) {
+  for (const item of items) {
     const label = dayLabel(item.started_at);
     const last = groups[groups.length - 1];
     if (last && last[0] === label) last[1].push(item);
     else groups.push([label, [item]]);
   }
+  const filtered = !!(technique || course || period || status || query.trim());
+  const reachedCutoff = cutoff != null && page && (page.items[page.items.length - 1]?.started_at ?? Infinity) < cutoff;
+  const canLoadMore = !!page?.next_before && !reachedCutoff;
 
   return (
-    <div className="history">
-      <div className="section-head">
-        <div>
-          <h2>Histórico</h2>
-          <p className="muted small">Todas as sessões encerradas, da mais recente para a mais antiga.</p>
+    <div className="fx-history">
+      <div className="surface fx-filters" role="search" aria-label="Filtrar histórico">
+        <div className="fx-search">
+          <Icon name="search" size={18} />
+          <label className="sr-only" htmlFor="fx-history-q">
+            Buscar por objetivo ou conteúdo
+          </label>
+          <input id="fx-history-q" className="input fx-input" type="search" placeholder="Buscar por objetivo, curso ou aula" value={query} onChange={(e) => setQuery(e.target.value)} />
         </div>
-        <div className="history-filters">
-          <select className="select select-sm" value={technique} onChange={(e) => setTechnique(e.target.value)} aria-label="Filtrar por técnica">
-            <option value="">Todas as técnicas</option>
-            <option value="pomodoro">Pomodoro</option>
-            <option value="52_17">52/17</option>
-            <option value="deep_work">Deep Work</option>
-            <option value="custom">Personalizado e métodos</option>
-            <option value="stopwatch">Cronômetro livre</option>
-          </select>
-          {page && page.courses.length > 0 && (
-            <select className="select select-sm" value={course} onChange={(e) => setCourse(e.target.value)} aria-label="Filtrar por curso">
-              <option value="">Todos os cursos</option>
-              {page.courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title ?? c.id}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        <Select id="fx-f-period" label="Período" value={period} onChange={setPeriod} small>
+          {PERIODS.map(([v, l]) => (
+            <option key={v} value={v}>
+              {l}
+            </option>
+          ))}
+        </Select>
+        <Select id="fx-f-tech" label="Técnica" value={technique} onChange={setTechnique} small>
+          <option value="">Todas as técnicas</option>
+          <option value="pomodoro">Pomodoro</option>
+          <option value="52_17">52/17</option>
+          <option value="deep_work">Deep Work</option>
+          <option value="custom">Personalizado e métodos</option>
+          <option value="stopwatch">Cronômetro livre</option>
+        </Select>
+        <Select id="fx-f-course" label="Curso" value={course} onChange={setCourse} small disabled={!courses.current.length}>
+          <option value="">Todos os cursos</option>
+          {courses.current.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title ?? c.id}
+            </option>
+          ))}
+        </Select>
+        <Select id="fx-f-status" label="Estado" value={status} onChange={setStatus} small>
+          <option value="">Todos os estados</option>
+          <option value="completed">Concluídas</option>
+          <option value="stopped">Interrompidas</option>
+          <option value="expired">Expiradas</option>
+        </Select>
       </div>
 
-      {error && <div className="alert alert-error">Não foi possível carregar o histórico: {error}</div>}
+      {error && (
+        <div className="alert alert-error">
+          Não foi possível carregar o histórico: {error}
+        </div>
+      )}
       {!page && !error && (
-        <div className="history-list">
+        <div className="fx-history-list" aria-busy="true">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="skeleton" style={{ height: 64, borderRadius: 12, marginBottom: 8 }} />
+            <div key={i} className="surface skeleton" style={{ height: 72 }} />
           ))}
         </div>
       )}
-      {page && page.items.length === 0 && (
+      {page && items.length === 0 && !canLoadMore && (
         <div className="empty">
-          <Icon name="history" size={28} />
-          <h2>{technique || course ? "Nada com esses filtros" : "Nenhuma sessão ainda"}</h2>
-          <p>{technique || course ? "Tente outra técnica ou outro curso." : "Suas sessões aparecem aqui assim que terminarem."}</p>
+          <span className="empty-icon">
+            <Icon name="history" size={24} />
+          </span>
+          <h2>{filtered ? "Nada com esses filtros" : "Nenhuma sessão ainda"}</h2>
+          <p>{filtered ? "Ajuste ou limpe os filtros para ver outras sessões." : "Cada sessão encerrada aparece aqui, com tempo, ciclos e como terminou."}</p>
+          {!filtered && (
+            <Link className="button button-primary" to={paths.focus()}>
+              Começar uma sessão
+            </Link>
+          )}
         </div>
       )}
-      {groups.map(([label, items]) => (
-        <section key={label} className="history-day">
-          <h3>{label}</h3>
-          <ul className="history-list">
-            {items.map((item) => (
-              <HistoryRow key={item.id} item={item} open={open === item.id} onToggle={() => setOpen(open === item.id ? null : item.id)} />
-            ))}
-          </ul>
-        </section>
-      ))}
-      {page?.next_before && (
-        <button type="button" className="button history-more" onClick={more} disabled={loadingMore}>
-          {loadingMore ? "Carregando..." : "Carregar mais"}
+
+      <div className={`fx-history-days ${loading ? "is-stale" : ""}`}>
+        {groups.map(([label, list]) => (
+          <section key={label} className="fx-day" aria-label={label}>
+            <h3>{label}</h3>
+            <ul className="surface fx-history-list">
+              {list.map((item) => (
+                <HistoryRow key={item.id} item={item} open={open === item.id} onToggle={() => setOpen(open === item.id ? null : item.id)} />
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+      {page && items.length === 0 && canLoadMore && <p className="fx-empty-inline">Nenhuma sessão com esses filtros entre as carregadas.</p>}
+      {canLoadMore && (
+        <button type="button" className="button fx-more" onClick={more} disabled={loading}>
+          {loading ? "Carregando..." : "Carregar sessões mais antigas"}
         </button>
       )}
     </div>
@@ -146,94 +214,130 @@ function HistoryRow({ item, open, onToggle }: { item: HistoryItem; open: boolean
     if (open && !detail) focusApi.historyItem(item.id).then(setDetail).catch(() => undefined);
   }, [open, detail, item.id]);
   const timed = item.plan.focus_seconds != null;
+  const planned = timed ? previewTimeline({
+    focus_minutes: (item.plan.focus_seconds ?? 0) / 60,
+    short_break_minutes: item.plan.short_break_seconds / 60,
+    long_break_minutes: item.plan.long_break_seconds / 60,
+    long_break_every: item.plan.long_break_every,
+    cycles: item.cycles_total,
+  }).reduce((a, s) => a + (s.seconds ?? 0), 0) : null;
+  const method = item.custom_method ? item.method_name : item.technique_name;
+  const title = titleOf(item);
+
   return (
-    <li className={`hrow status-${item.status} ${open ? "is-open" : ""}`}>
-      <button type="button" className="hrow-main" onClick={onToggle} aria-expanded={open}>
-        <span className="hrow-time">
-          {time(item.started_at)}
-          {item.ended_at && <span className="muted"> – {time(item.ended_at)}</span>}
-        </span>
-        <span className="hrow-what">
-          <strong>{item.custom_method ? item.method_name : item.technique_name}</strong>
-          <span className="muted">
-            {item.lesson?.title ?? item.course?.title ?? item.intention ?? "Sem curso vinculado"}
+    <li className={`fx-row is-${item.status} ${open ? "is-open" : ""}`}>
+      <button type="button" className="fx-row-main" onClick={onToggle} aria-expanded={open}>
+        <span className="fx-row-time tabular">{time(item.started_at)}</span>
+        <span className="fx-row-what">
+          <strong>{title}</strong>
+          <span>
+            {method}
+            {timed && ` · ${item.cycles_completed} de ${item.cycles_total} ${item.cycles_total === 1 ? "ciclo" : "ciclos"}`}
           </span>
         </span>
-        {timed && (
-          <span className="hrow-cycles" aria-label={`${item.cycles_completed} de ${item.cycles_total} ciclos`}>
-            {Array.from({ length: item.cycles_total }, (_, i) => (
-              <i key={i} className={i < item.cycles_completed ? "is-done" : i < item.cycles_completed + item.cycles_invalidated ? "is-void" : ""} />
-            ))}
-          </span>
-        )}
-        <span className="hrow-focus">{duration(item.focus_seconds)}</span>
-        <span className={`hrow-status`}>{STATUS[item.status]}</span>
-        <span className="hrow-xp">{item.xp > 0 ? `+${item.xp} XP` : "—"}</span>
+        <span className="fx-row-focus tabular">{duration(item.focus_seconds)}</span>
+        <span className="fx-row-status">
+          {item.status === "completed" ? <Icon name="checkCircle" size={16} weight="fill" /> : <span className="fx-row-dot" aria-hidden="true" />}
+          {ENDED_LABEL[item.status]}
+        </span>
+        <Icon name="down" size={14} className="fx-row-caret" />
       </button>
-      {open && (
-        <div className="hrow-detail">
-          <dl className="hrow-facts">
-            <div>
-              <dt>Foco</dt>
-              <dd>{duration(item.focus_seconds)}</dd>
-            </div>
-            <div>
-              <dt>Pausas</dt>
-              <dd>{duration(item.break_seconds)}</dd>
-            </div>
-            <div>
-              <dt>Tempo pausado</dt>
-              <dd>{duration(item.pause_seconds)}</dd>
-            </div>
-            <div>
-              <dt>Sessão inteira</dt>
-              <dd>{duration(item.total_seconds)}</dd>
-            </div>
-            {timed && (
-              <div>
-                <dt>Ciclos</dt>
-                <dd>
-                  {item.cycles_completed} de {item.cycles_total}
-                  {item.cycles_invalidated > 0 && ` · ${item.cycles_invalidated} invalidado(s)`}
-                </dd>
-              </div>
-            )}
-            <div>
-              <dt>Resultado</dt>
-              <dd>
-                {STATUS[item.status]}
-                {item.end_reason && REASONS[item.end_reason] ? ` (${REASONS[item.end_reason]})` : ""}
-              </dd>
-            </div>
-          </dl>
-          {item.intention && <p className="hrow-intention">Objetivo: {item.intention}</p>}
-          {item.course && (
-            <p className="hrow-link">
-              {item.lesson ? (
-                <Link to={paths.lesson(item.course.id, item.lesson.key)}>
-                  {item.lesson.title} · {item.course.title}
-                </Link>
-              ) : (
-                <Link to={paths.course(item.course.id)}>{item.course.title}</Link>
+      <div className="fx-row-detail">
+        <div>
+          {open && (
+            <div className="fx-row-inner">
+              <dl className="fx-details is-grid">
+                <div>
+                  <dt>Início</dt>
+                  <dd className="tabular">{time(item.started_at)}</dd>
+                </div>
+                <div>
+                  <dt>Término</dt>
+                  <dd className="tabular">{item.ended_at ? time(item.ended_at) : "—"}</dd>
+                </div>
+                <div>
+                  <dt>Duração planejada</dt>
+                  <dd>{planned != null ? duration(planned) : "Livre"}</dd>
+                </div>
+                <div>
+                  <dt>Concentração efetiva</dt>
+                  <dd>{duration(item.focus_seconds)}</dd>
+                </div>
+                <div>
+                  <dt>Descanso</dt>
+                  <dd>{duration(item.break_seconds)}</dd>
+                </div>
+                <div>
+                  <dt>Tempo pausado</dt>
+                  <dd>{duration(item.pause_seconds)}</dd>
+                </div>
+                <div>
+                  <dt>Técnica</dt>
+                  <dd>{item.technique_name}</dd>
+                </div>
+                {item.custom_method && (
+                  <div>
+                    <dt>Método</dt>
+                    <dd>{item.method_name}</dd>
+                  </div>
+                )}
+                {timed && (
+                  <div>
+                    <dt>Ciclos concluídos</dt>
+                    <dd>
+                      {item.cycles_completed} de {item.cycles_total}
+                      {item.cycles_invalidated > 0 && ` · ${item.cycles_invalidated} não validado${item.cycles_invalidated > 1 ? "s" : ""}`}
+                    </dd>
+                  </div>
+                )}
+                <div>
+                  <dt>Estado final</dt>
+                  <dd>
+                    {ENDED_LABEL[item.status]}
+                    {item.end_reason && REASONS[item.end_reason] ? <span className="muted"> · {REASONS[item.end_reason]}</span> : null}
+                  </dd>
+                </div>
+              </dl>
+              {item.intention && (
+                <div className="fx-detail-block">
+                  <span className="fx-label">Objetivo</span>
+                  <p>{item.intention}</p>
+                </div>
               )}
-            </p>
-          )}
-          {detail?.phases && detail.phases.length > 0 && (
-            <ol className="phases">
-              {detail.phases.map((p) => (
-                <li key={p.idx} className={`phase phase-${p.stage} outcome-${p.outcome}`}>
-                  <span className="phase-name">{p.stage === "focus" ? `Foco ${p.cycle}` : p.stage === "long_break" ? "Pausa longa" : "Pausa"}</span>
-                  <span className="muted">
-                    {time(p.started_at)} · {duration(p.stage === "focus" ? p.focus_seconds : p.ended_at - p.started_at)}
-                    {p.pause_seconds > 0 && ` · ${duration(p.pause_seconds)} pausado`}
-                  </span>
-                  <span className="phase-outcome">{OUTCOME[p.outcome] ?? p.outcome}</span>
-                </li>
-              ))}
-            </ol>
+              {item.course && (
+                <div className="fx-detail-block">
+                  <span className="fx-label">{item.lesson ? "Curso e aula" : "Curso"}</span>
+                  <Link className="fx-link-row" to={item.lesson ? paths.lesson(item.course.id, item.lesson.key) : paths.course(item.course.id)}>
+                    <Icon name={item.lesson ? "play" : "courses"} size={16} />
+                    <span>
+                      <strong>{item.lesson?.title ?? item.course.title}</strong>
+                      {item.lesson && <span className="muted">{item.course.title}</span>}
+                    </span>
+                    <Icon name="chevron" size={14} />
+                  </Link>
+                </div>
+              )}
+              {detail?.phases && detail.phases.length > 0 && (
+                <div className="fx-detail-block">
+                  <span className="fx-label">Etapas</span>
+                  <ol className="fx-phases">
+                    {detail.phases.map((p) => (
+                      <li key={p.idx} className={`fx-phase is-${p.stage === "focus" ? "focus" : "break"} outcome-${p.outcome}`}>
+                        <span className="fx-phase-name">{p.stage === "focus" ? `Concentração ${p.cycle}` : p.stage === "long_break" ? "Pausa longa" : "Pausa"}</span>
+                        <span className="tabular muted">
+                          {time(p.started_at)} · {duration(p.stage === "focus" ? p.focus_seconds : p.ended_at - p.started_at)}
+                          {p.pause_seconds > 0 && ` · ${duration(p.pause_seconds)} pausado`}
+                        </span>
+                        <span className="fx-phase-outcome">{OUTCOME[p.outcome] ?? p.outcome}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </li>
   );
 }

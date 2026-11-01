@@ -2,50 +2,55 @@ import { TimelineStep } from "./api";
 import { duration } from "./derive";
 
 /**
- * Caminho da sessão em proporção: cada etapa ocupa a largura da sua duração.
- * `current`: índice da etapa em andamento (sessão ativa).
+ * Sequência da sessão em proporção: cada etapa ocupa a largura da sua duração.
+ * `current`: índice da etapa em andamento; `progress`: fração dela já feita.
  */
 export default function Timeline({
   steps,
   current,
   progress = 0,
-  compact = false,
+  legend = false,
 }: {
   steps: TimelineStep[];
   current?: number;
   progress?: number;
-  compact?: boolean;
+  legend?: boolean;
 }) {
-  if (!steps.length || steps[0].seconds == null) {
-    return (
-      <div className={`timeline is-open ${compact ? "is-compact" : ""}`} aria-label="Sem duração definida">
-        <span className="timeline-seg is-focus" style={{ flex: 1 }} />
-      </div>
-    );
-  }
+  if (!steps.length || steps[0].seconds == null) return null;
   const total = steps.reduce((a, s) => a + (s.seconds ?? 0), 0);
+  const hasLong = steps.some((s) => s.stage === "long_break");
+  const hasBreak = steps.some((s) => s.stage === "short_break");
   return (
-    <div className={`timeline ${compact ? "is-compact" : ""}`} role="list" aria-label="Etapas da sessão">
-      {steps.map((s, i) => {
-        const state = current == null ? "" : i < current ? "is-past" : i === current ? "is-now" : "";
-        const kind = s.stage === "focus" ? "is-focus" : s.stage === "long_break" ? "is-long" : "is-break";
-        const label = `${s.stage === "focus" ? `Foco ${s.cycle}` : s.stage === "long_break" ? "Pausa longa" : "Pausa"}: ${duration(s.seconds ?? 0)}`;
-        return (
-          <span
-            key={i}
-            role="listitem"
-            aria-label={label}
-            title={label}
-            className={`timeline-seg ${kind} ${state}`}
-            style={{ flex: `${(s.seconds ?? 0) / total} 1 0`, ["--p" as string]: i === current ? progress : i < (current ?? -1) ? 1 : 0 }}
-          />
-        );
-      })}
+    <div className="fx-seq">
+      <ol className="fx-timeline" aria-label="Sequência da sessão">
+        {steps.map((s, i) => {
+          const state = current == null ? "" : i < current ? "is-past" : i === Math.floor(current) && Number.isInteger(current) ? "is-now" : "";
+          const kind = s.stage === "focus" ? "is-focus" : s.stage === "long_break" ? "is-long" : "is-break";
+          const label = `${s.stage === "focus" ? `Concentração ${s.cycle}` : s.stage === "long_break" ? "Pausa longa" : "Pausa"}: ${duration(s.seconds ?? 0)}`;
+          const fill = current == null ? 0 : i < current ? 1 : i === current ? progress : 0;
+          return (
+            <li
+              key={i}
+              aria-label={label}
+              title={label}
+              className={`fx-seg-step ${kind} ${state}`}
+              style={{ flexGrow: (s.seconds ?? 0) / total, ["--p" as string]: fill }}
+            />
+          );
+        })}
+      </ol>
+      {legend && (
+        <ul className="fx-legend" aria-hidden="true">
+          <li className="is-focus">Concentração</li>
+          {hasBreak && <li className="is-break">Pausa</li>}
+          {hasLong && <li className="is-long">Pausa longa</li>}
+        </ul>
+      )}
     </div>
   );
 }
 
-/** Índice da etapa atual dentro da linha do tempo do plano. */
+/** Índice da etapa atual dentro da sequência do plano (meio índice em "pronto"). */
 export function timelineIndex(steps: TimelineStep[], stage: string, cycle: number): number | undefined {
   if (stage === "ready") return steps.findIndex((s) => s.stage === "focus" && s.cycle === cycle) - 0.5;
   const i = steps.findIndex((s) => s.cycle === cycle && (stage === "focus" ? s.stage === "focus" : s.stage !== "focus"));
@@ -53,10 +58,9 @@ export function timelineIndex(steps: TimelineStep[], stage: string, cycle: numbe
 }
 
 export function planSummary(plan: { focus_seconds: number | null; short_break_seconds: number; long_break_seconds: number; long_break_every: number | null; cycles: number }) {
-  if (plan.focus_seconds == null) return "Sem duração definida";
+  if (plan.focus_seconds == null) return "Contagem livre, sem duração";
   const parts = [`${plan.focus_seconds / 60} min de foco`];
   if (plan.short_break_seconds) parts.push(`${plan.short_break_seconds / 60} de pausa`);
-  if (plan.long_break_seconds && plan.long_break_every) parts.push(`${plan.long_break_seconds / 60} de pausa longa`);
   parts.push(`${plan.cycles} ${plan.cycles === 1 ? "ciclo" : "ciclos"}`);
   return parts.join(" · ");
 }

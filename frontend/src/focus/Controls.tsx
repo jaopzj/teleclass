@@ -3,7 +3,7 @@ import Icon from "../components/Icon";
 import { notify } from "../notifications/center";
 import { Action, FocusSession } from "./api";
 import ConfirmDialog from "./ConfirmDialog";
-import { isBreak } from "./derive";
+import { isBreak, isStopwatch } from "./derive";
 import { act, FocusActionError, useFocus } from "./store";
 
 export async function runAction(action: Action, confirm = false) {
@@ -22,43 +22,54 @@ export async function runAction(action: Action, confirm = false) {
   }
 }
 
-/** Botões da etapa atual. `compact`: só ícones (widget flutuante). */
-export default function Controls({ session, compact = false }: { session: FocusSession; compact?: boolean }) {
+/** O que acontece ao encerrar agora, dito antes da confirmação. */
+export function stopMessage(session: FocusSession) {
+  if (isStopwatch(session)) return "O tempo contado até aqui fica registrado no histórico.";
+  return session.stage === "focus"
+    ? "O ciclo atual não será concluído. O tempo de concentração já feito e os ciclos anteriores continuam registrados."
+    : "Os ciclos que faltam não serão feitos. Tudo o que você já concluiu continua registrado.";
+}
+
+/** A ação principal da etapa: começar o ciclo, pausar ou retomar. */
+export function primaryAction(session: FocusSession): { action: Action; label: string; icon: "play" | "pause" } | null {
+  if (isBreak(session.stage)) return null;
+  if (session.stage === "ready") return { action: "start_next", label: `Começar ciclo ${session.cycle}`, icon: "play" };
+  if (session.paused) return { action: "resume", label: "Retomar", icon: "play" };
+  return { action: "pause", label: "Pausar", icon: "pause" };
+}
+
+/** Botões da sessão na página Foco: ação principal em destaque e "Encerrar" ao lado. */
+export default function Controls({ session }: { session: FocusSession }) {
   const { busy } = useFocus();
   const [confirmStop, setConfirmStop] = useState(false);
-  if (isBreak(session.stage)) return null;
-  const stopwatch = session.plan.focus_seconds == null;
-
-  const primary =
-    session.stage === "ready" ? (
-      <button type="button" className="focus-btn focus-btn-primary" onClick={() => runAction("start_next")} disabled={!!busy}>
-        <Icon name="play" size={compact ? 14 : 16} />
-        {!compact && <span>Começar ciclo {session.cycle}</span>}
-        {compact && <span className="sr-only">Começar ciclo {session.cycle}</span>}
-      </button>
-    ) : session.paused ? (
-      <button type="button" className="focus-btn focus-btn-primary" onClick={() => runAction("resume")} disabled={!!busy}>
-        <Icon name="play" size={compact ? 14 : 16} />
-        <span className={compact ? "sr-only" : undefined}>Retomar</span>
-      </button>
-    ) : (
-      <button type="button" className="focus-btn" onClick={() => runAction("pause")} disabled={!!busy}>
-        <Icon name="pause" size={compact ? 14 : 16} />
-        <span className={compact ? "sr-only" : undefined}>Pausar</span>
-      </button>
-    );
+  const primary = primaryAction(session);
+  const stopwatch = isStopwatch(session);
+  // Cronômetro rodando: encerrar é o fim natural, sem perda; não pede confirmação.
+  const needsConfirm = !(stopwatch && session.stage === "focus");
 
   return (
-    <div className={`focus-controls ${compact ? "is-compact" : ""}`}>
-      {primary}
+    <div className="fx-controls">
+      {primary && (
+        <button
+          type="button"
+          className={`button button-lg ${primary.action === "pause" ? "button-soft" : "button-primary"} fx-primary`}
+          onClick={() => runAction(primary.action)}
+          disabled={!!busy}
+          aria-busy={busy === primary.action}
+        >
+          <Icon name={primary.icon} size={18} weight="fill" />
+          {primary.label}
+        </button>
+      )}
       <button
         type="button"
-        className="focus-btn focus-btn-quiet"
-        onClick={() => (stopwatch && session.stage === "focus" ? runAction("stop") : setConfirmStop(true))}
+        className="button button-lg fx-stop"
+        onClick={() => (needsConfirm ? setConfirmStop(true) : runAction("stop"))}
         disabled={!!busy}
+        aria-busy={busy === "stop"}
       >
-        <Icon name="stop" size={compact ? 14 : 15} />
-        <span className={compact ? "sr-only" : undefined}>{stopwatch ? "Concluir" : "Encerrar"}</span>
+        <Icon name="stop" size={18} />
+        {stopwatch ? "Concluir" : "Encerrar"}
       </button>
       {confirmStop && (
         <ConfirmDialog
@@ -71,11 +82,7 @@ export default function Controls({ session, compact = false }: { session: FocusS
             if (await runAction("stop")) setConfirmStop(false);
           }}
         >
-          <p>
-            {session.stage === "focus"
-              ? "O ciclo atual não será concluído. O tempo de foco que você já fez continua registrado, assim como os ciclos anteriores e o XP conquistado."
-              : "Os ciclos que faltam não serão feitos. Tudo o que você já concluiu continua registrado."}
-          </p>
+          <p>{stopMessage(session)}</p>
         </ConfirmDialog>
       )}
     </div>

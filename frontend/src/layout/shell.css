@@ -188,9 +188,3 @@
   .search-input { height: 44px; }
 }
 
-/* ---- Focus Mode: só o conteúdo ----------------------------------------------------------------- */
-
-body.is-focus-mode { --topbar-h: 0px; }
-body.is-focus-mode .sidebar,
-body.is-focus-mode .topbar,
-body.is-focus-mode .mobile-header { display: none; }

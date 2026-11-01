@@ -73,6 +73,8 @@ export const paths = {
   /** Tela "Adicionar curso"; com `snapshot`, abre a inspeção daquele canal. */
   indexing: (snapshot?: string) => (snapshot ? `/indexacao?curso=${encodeURIComponent(snapshot)}` : "/indexacao"),
   focus: (tab?: string) => (tab ? `/foco/${tab}` : "/foco"),
+  settings: () => "/configuracoes",
+  progress: () => "/conquistas",
   notebook: (params?: Record<string, string | undefined>) => {
     const search = new URLSearchParams();
     for (const [k, v] of Object.entries(params ?? {})) if (v) search.set(k, v);

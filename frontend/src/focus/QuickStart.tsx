@@ -73,7 +73,7 @@ export default function QuickStart({ courseId, lessonKey }: { courseId: string; 
       {open && (
         <div className="quick-panel" role="dialog" aria-label="Iniciar sessão nesta aula">
           <p className="quick-title">Sessão vinculada a esta aula</p>
-          {!data && <div className="skeleton" style={{ height: 120, borderRadius: 10 }} />}
+          {!data && <div className="skeleton quick-skeleton" />}
           {options.map((o) => (
             <button key={o.key} type="button" className="quick-option" onClick={() => go(o.input)} disabled={busy === "start"}>
               <strong>{o.label}</strong>
