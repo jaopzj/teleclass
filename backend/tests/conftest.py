@@ -25,3 +25,41 @@ def snapshot(*messages: SourceMessage, title: str = "Teste") -> ChannelSnapshot:
 @pytest.fixture
 def example_snapshot() -> ChannelSnapshot:
     return load_snapshot(FIXTURES / "curso_exemplo.json")
+
+
+# --- aplicação com usuário logado ------------------------------------------------
+
+PASSWORD = "estudar-muito-42"
+
+
+@pytest.fixture
+def make_app(tmp_path, monkeypatch):
+    """Cria a aplicação com dados em tmp_path e o curso de exemplo."""
+    import shutil
+
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    monkeypatch.setenv("TELEAULA_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("TG_API_ID", "")
+    monkeypatch.setenv("TG_API_HASH", "")
+    (tmp_path / "snapshots").mkdir(exist_ok=True)
+    shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / "curso_exemplo.json")
+    clients = []
+
+    def make() -> TestClient:
+        client = TestClient(create_app(), base_url="http://127.0.0.1")
+        client.__enter__()
+        clients.append(client)
+        return client
+
+    yield make
+    for client in clients:
+        client.__exit__(None, None, None)
+
+
+def register(client, username: str = "joao", password: str = PASSWORD):
+    response = client.post("/api/auth/register", json={"username": username, "password": password})
+    assert response.status_code == 201, response.text
+    return response.json()

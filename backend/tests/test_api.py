@@ -1,26 +1,18 @@
-import shutil
-
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import create_app
-
-from .conftest import FIXTURES
+from .conftest import register
 
 
 @pytest.fixture
-def client(tmp_path, monkeypatch):
-    monkeypatch.setenv("TELEAULA_DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("TG_API_ID", "")
-    monkeypatch.setenv("TG_API_HASH", "")
-    (tmp_path / "snapshots").mkdir()
-    shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / "curso_exemplo.json")
-    with TestClient(create_app()) as c:
-        yield c
+def client(make_app):
+    client = make_app()
+    register(client)
+    return client
 
 
 def test_status_without_telegram(client):
-    assert client.get("/api/telegram/status").json() == {"configured": False, "authorized": False}
+    data = client.get("/api/telegram/status").json()
+    assert (data["configured"], data["linked"]) == (False, False)
 
 
 def test_list_and_index(client):
@@ -35,5 +27,10 @@ def test_snapshot_name_cannot_escape_folder(client):
     assert client.get("/api/snapshots/..%2F..%2Fetc/index").status_code == 404
 
 
-def test_collect_requires_telegram(client):
-    assert client.post("/api/snapshots", json={"link": "https://t.me/x"}).status_code == 401
+def test_collect_requires_linked_telegram(client):
+    response = client.post("/api/snapshots", json={"link": "https://t.me/x"})
+    assert response.status_code == 503 and response.json()["code"] == "telegram_not_configured"
+
+
+def test_snapshots_require_login(make_app):
+    assert make_app().get("/api/snapshots").status_code == 401

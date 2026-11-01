@@ -1,0 +1,46 @@
+/* Tela de indexação (inspeção do resultado do scraper). Tudo sob .indexing.
+   Os nomes evitam as classes globais (.sidebar do shell, .section-title e .stats). */
+.indexing { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: var(--space-6); align-items: start; padding-top: var(--space-2); }
+.indexing h1 { font-size: var(--text-lg); margin: 0 0 4px; }
+.indexing h2 { font-size: 1.05rem; margin: 16px 0 8px; }
+.indexing h3 { font-size: 0.9rem; margin: 0 0 6px; }
+.indexing .indexing-side { position: sticky; top: calc(var(--topbar-h) + var(--space-2)); max-height: calc(100vh - var(--topbar-h) - var(--space-8)); overflow-y: auto; background: var(--panel); border-radius: var(--radius-lg); padding: var(--space-5); }
+.indexing .indexing-main { padding: var(--space-4) 0; min-width: 0; }
+.indexing .content { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+.indexing .collect { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.indexing input, .indexing button { font: inherit; font-size: var(--text-sm); min-height: 36px; padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--panel); color: var(--text); }
+.indexing button { cursor: pointer; }
+.indexing button:disabled { opacity: 0.5; cursor: default; }
+.indexing .snapshots button { width: 100%; text-align: left; display: flex; flex-direction: column; margin-bottom: 6px; padding: 8px 12px; }
+.indexing .snapshots button.active { border-color: var(--accent); }
+.indexing .snapshots span { font-size: 0.8rem; }
+.indexing .tree .tree { margin-left: 18px; }
+.indexing .section { margin: 10px 0; }
+.indexing .tree-section-title { font-weight: 600; }
+.indexing .level-1 > .tree-section-title { font-size: 1.05rem; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+.indexing .lessons { margin: 4px 0 0 8px; }
+.indexing .lesson summary { cursor: pointer; padding: 3px 0; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.indexing .lesson .pos { color: var(--muted); min-width: 2ch; text-align: right; }
+.indexing .lesson .ref { font-family: ui-monospace, monospace; font-size: 0.8rem; color: var(--accent); }
+.indexing .lesson.unresolved summary { color: var(--danger); }
+.indexing .lesson-body { margin: 4px 0 8px 32px; }
+.indexing .materials li { font-size: 0.85rem; padding: 2px 0; }
+.indexing .description { white-space: pre-wrap; font-family: inherit; font-size: 0.85rem; background: var(--bg); padding: 8px; border-radius: 6px; margin: 4px 0; }
+.indexing .tag { font-size: 0.75rem; color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; }
+.indexing .badge { font-size: 0.7rem; background: var(--danger-bg); color: var(--danger); border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+.indexing .report { background: var(--panel); border-radius: var(--radius-lg); padding: var(--space-4) var(--space-5); position: sticky; top: calc(var(--topbar-h) + var(--space-2)); }
+.indexing .report h2 { margin-top: 0; }
+.indexing .report-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; margin: 0 0 12px; }
+.indexing .report-stats dt { font-size: 0.75rem; color: var(--muted); }
+.indexing .report-stats dd { margin: 0; font-weight: 600; }
+.indexing .report-block { margin-top: 12px; }
+.indexing .report-block li { font-size: 0.82rem; padding: 2px 0; word-break: break-word; }
+.indexing .count { color: var(--muted); font-weight: normal; }
+.indexing .error { background: var(--danger-bg); color: var(--danger); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px; }
+
+@media (max-width: 900px) {
+  .indexing { grid-template-columns: 1fr; gap: var(--space-4); }
+  .indexing .indexing-side { position: static; max-height: none; }
+  .indexing .content { grid-template-columns: 1fr; }
+  .indexing .report { position: static; }
+}

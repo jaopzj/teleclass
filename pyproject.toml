@@ -6,8 +6,11 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "telethon>=1.36,<2",
+    "cryptg>=0.4",  # criptografia do Telegram em C; sem ela o streaming fica ~100x mais lento
     "fastapi>=0.115",
     "uvicorn>=0.30",
+    "tzdata>=2024.1",  # fusos horários no Windows (que não traz a base IANA)
+    "python-multipart>=0.0.9",  # envio de imagens e anexos do Caderno
 ]
 
 [project.optional-dependencies]

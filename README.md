@@ -3,10 +3,18 @@
 Plataforma pessoal para assistir cursos publicados em canais do Telegram com
 experiência de área de membros. O plano completo está em [PLANO.md](PLANO.md).
 
-**Estado atual:** piloto da indexação (PLANO.md, seção 6). O app lê um canal,
-encontra o sumário, monta módulos, subtópicos e aulas e mostra um relatório de
-inspeção. Player, progresso e banco de dados ainda não existem.
-Arquitetura e decisões: [docs/indexacao.md](docs/indexacao.md).
+**Estado atual:** indexação + área de membros. O app lê um canal, monta
+módulos, subtópicos e aulas, e permite assistir às aulas com streaming direto do
+Telegram, retomada de onde parou, progresso por curso, um Caderno Digital (notas rápidas na aula com marca de
+tempo, documentos com pastas, busca, referências a aulas e histórico) e
+métricas de estudo (tempo real de reprodução, sequência, média diária) e um
+temporizador de estudos (Pomodoro, 52/17, Deep Work, métodos próprios, metas,
+XP e conquistas).
+Arquitetura: [docs/indexacao.md](docs/indexacao.md),
+[docs/area-de-membros.md](docs/area-de-membros.md),
+[docs/metricas-de-estudo.md](docs/metricas-de-estudo.md),
+[docs/temporizador.md](docs/temporizador.md) e
+[docs/caderno.md](docs/caderno.md).
 
 ## Requisitos
 
@@ -22,20 +30,28 @@ python -m venv .venv
 pip install -e ".[dev]"
 copy .env.example .env            # preencha TG_API_ID e TG_API_HASH
 
-# 1. Entrar na conta do Telegram (uma vez; pede telefone, código e senha 2FA)
-python -m app.cli login
+uvicorn app.main:app --app-dir backend        # http://127.0.0.1:8000
+```
 
-# 2. Coletar um canal (gera data/snapshots/<canal>.json)
-python -m app.cli collect https://t.me/nomedocanal
+Abra o app, clique em **Criar conta** e siga as etapas: usuário e senha,
+telefone do Telegram, código (e senha de duas etapas, se houver). Nada disso
+usa o terminal. Detalhes e contrato da API em
+[docs/autenticacao.md](docs/autenticacao.md).
 
-# 3. Ver a estrutura e o relatório no terminal
-python -m app.cli index nomedocanal --json data/resultado.json
+Opcional, pelo terminal:
+
+```bash
+# Coletar um canal para a biblioteca de um usuário (gera data/snapshots/<id do usuário>/<canal>.json)
+python -m app.cli collect https://t.me/nomedocanal --user seu_usuario
+
+# Ver a estrutura e o relatório
+python -m app.cli index nomedocanal --user seu_usuario --json data/resultado.json
 ```
 
 Rode os comandos na raiz do projeto (a pasta `data/` é criada ali).
 `teleaula-index` é um atalho para `python -m app.cli`.
 
-### Interface web (mínima, para testes)
+### Interface web
 
 ```bash
 # backend (na raiz do projeto)
@@ -46,9 +62,32 @@ cd frontend && npm install && npm run dev     # http://127.0.0.1:5173
 ```
 
 Com `npm run build`, o backend passa a servir o frontend em
-http://127.0.0.1:8000. A tela lista os snapshots, coleta novos canais (quando a
-conta já está conectada pelo `login`) e mostra a árvore do curso com a origem
-de cada material e o relatório de inspeção.
+http://127.0.0.1:8000.
+
+- **Meus cursos** (`/`): painel "Seu estudo" (tempo hoje e na semana,
+  sequência, média diária, aulas concluídas, progresso geral) e um card por
+  snapshot coletado, com progresso.
+- **Curso** (`/cursos/<snapshot>`): módulos, subtópicos e aulas, percentual,
+  última aula assistida e "Continuar de onde parei".
+- **Aula**: player, notas rápidas com marca de tempo clicável, marcar como
+  concluída, aula anterior e próxima.
+- **Caderno** (`/caderno`): documentos com editor completo (tabelas, imagens,
+  anexos, código, fórmulas), pastas, favoritas, fixadas, etiquetas, lixeira,
+  busca, referências `@` a cursos e aulas, histórico de versões e resolução de
+  conflitos entre aparelhos.
+- **Foco** (`/foco`): temporizador de estudos com técnicas prontas e métodos
+  próprios, Focus Mode com sons ambientes, pausas guiadas, metas, níveis,
+  conquistas, histórico e estatísticas. Um widget flutuante acompanha a sessão
+  em todas as páginas, e a aula tem um atalho para estudar com o temporizador.
+- **Indexação** (`/indexacao`): coleta canais e mostra a árvore e o relatório.
+
+Cada usuário tem a própria biblioteca, progresso e anotações; ninguém vê os
+cursos de outra pessoa. Os vídeos tocam pela conta do Telegram de cada usuário. Depois de atualizar o projeto, rode `pip install -e .` de novo:
+o pacote `cryptg` é o que deixa o streaming rápido. Trechos já assistidos ficam
+em `data/cache/` (até 4 GB, configurável no `.env`). Progresso, anotações e
+tempo de estudo ficam em `data/teleaula.db`, e imagens e anexos do Caderno em
+`data/notebook/` (o pacote `tzdata` traz os fusos
+horários no Windows).
 
 Sem credenciais, dá para testar com o canal de exemplo:
 `python -m app.cli index backend/tests/fixtures/curso_exemplo.json`.
@@ -56,11 +95,15 @@ Sem credenciais, dá para testar com o canal de exemplo:
 ## Testes
 
 ```bash
-pytest
+pytest                          # backend
+cd frontend && npm test         # player, fila de envio e marcas de tempo (vitest)
 ```
 
 ## Segurança
 
-O arquivo `data/teleaula.session` dá acesso total à sua conta do Telegram.
-Ele fica em `data/`, que está no `.gitignore`. Nunca compartilhe essa pasta.
+Os arquivos em `data/sessions/` dão acesso total às contas do Telegram
+vinculadas, e `data/secret.key` protege os telefones gravados. Tudo fica em
+`data/`, que está no `.gitignore`. Nunca compartilhe essa pasta. O antigo
+`data/teleaula.session` (login pelo terminal) não é mais usado e pode ser
+apagado.
 A API escuta só em `127.0.0.1` e é somente leitura no Telegram.

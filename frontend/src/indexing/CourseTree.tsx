@@ -1,4 +1,4 @@
-import { Lesson, Material, Section } from "./api";
+import { Lesson, Material, Section } from "../api";
 
 const REASONS: Record<Material["reason"], string> = {
   tag: "identificador na legenda",
@@ -67,7 +67,7 @@ export default function CourseTree({ sections }: { sections: Section[] }) {
     <ul className="tree">
       {sections.map((section, i) => (
         <li key={i} className={`section level-${section.level}`}>
-          <div className="section-title">
+          <div className="tree-section-title">
             {section.title}
             {section.implicit && <span className="badge">implícita</span>}
           </div>

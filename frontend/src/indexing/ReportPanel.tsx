@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Report } from "./api";
+import { Report } from "../api";
 
 const STAT_LABELS: Record<string, string> = {
   messages: "Mensagens",
@@ -31,7 +31,7 @@ export default function ReportPanel({ report }: { report: Report }) {
   return (
     <aside className="report">
       <h2>Inspeção</h2>
-      <dl className="stats">
+      <dl className="report-stats">
         {Object.entries(report.stats).map(([key, value]) => (
           <div key={key}>
             <dt>{STAT_LABELS[key] ?? key}</dt>
