@@ -96,6 +96,17 @@ import warningCircleFill from "@phosphor-icons/core/fill/warning-circle-fill.svg
 import treeStructureRegular from "@phosphor-icons/core/regular/tree-structure.svg?raw";
 import arrowsClockwiseRegular from "@phosphor-icons/core/regular/arrows-clockwise.svg?raw";
 
+import pushPinRegular from "@phosphor-icons/core/regular/push-pin.svg?raw";
+import pushPinFill from "@phosphor-icons/core/fill/push-pin-fill.svg?raw";
+import dotsThreeBold from "@phosphor-icons/core/bold/dots-three-bold.svg?raw";
+import folderSimpleRegular from "@phosphor-icons/core/regular/folder-simple.svg?raw";
+import folderSimpleFill from "@phosphor-icons/core/fill/folder-simple-fill.svg?raw";
+import tagSimpleRegular from "@phosphor-icons/core/regular/tag-simple.svg?raw";
+import archiveRegular from "@phosphor-icons/core/regular/archive.svg?raw";
+import sidebarSimpleRegular from "@phosphor-icons/core/regular/sidebar-simple.svg?raw";
+import noteBlankRegular from "@phosphor-icons/core/regular/note-blank.svg?raw";
+import filesRegular from "@phosphor-icons/core/regular/files.svg?raw";
+
 type Weight = "regular" | "fill" | "bold";
 
 const ICONS = {
@@ -186,6 +197,14 @@ const ICONS = {
   warningCircle: { regular: warningCircleRegular, fill: warningCircleFill },
   structure: { regular: treeStructureRegular },
   refresh: { regular: arrowsClockwiseRegular },
+  pin: { regular: pushPinRegular, fill: pushPinFill },
+  dots: { regular: dotsThreeBold },
+  folder: { regular: folderSimpleRegular, fill: folderSimpleFill },
+  tag: { regular: tagSimpleRegular },
+  archive: { regular: archiveRegular },
+  sidebar: { regular: sidebarSimpleRegular },
+  page: { regular: noteBlankRegular },
+  files: { regular: filesRegular },
 } satisfies Record<string, Partial<Record<Weight, string>> & { regular: string }>;
 
 export type IconName = keyof typeof ICONS;

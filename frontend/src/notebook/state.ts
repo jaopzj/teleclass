@@ -71,3 +71,20 @@ export function subtreeIds(folders: Folder[], id: string): Set<string> {
 
 export const NOTE_DRAG = "application/x-teleaula-note";
 export const FOLDER_DRAG = "application/x-teleaula-folder";
+
+/** Fecha um menu ao clicar fora dele ou apertar Esc. */
+export function useDismiss(open: boolean, close: () => void) {
+  const [node, setNode] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => node && !node.contains(e.target as Node) && close();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, node, close]);
+  return setNode;
+}

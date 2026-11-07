@@ -177,15 +177,15 @@
 /* barra contextual (seleção) e barra fixa compacta */
 .ne-bubble {
   display: flex; align-items: center; gap: 1px; padding: 4px; z-index: 30;
-  border: 1px solid var(--border); border-radius: 11px; background: var(--panel); box-shadow: var(--shadow-md);
-  animation: ne-pop 0.12s ease;
+  border: 0; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-pop);
+  animation: ne-pop var(--duration-base) var(--ease-out);
 }
 @keyframes ne-pop { from { opacity: 0; transform: translateY(3px) scale(0.98); } }
 .ne-tool {
   display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 7px;
   border: 0; border-radius: 7px; background: none; color: var(--text); font-size: 0.86rem; cursor: pointer;
 }
-.ne-tool:hover { background: var(--panel-2); }
+.ne-tool:hover { background: var(--brand-a08); }
 .ne-tool.is-active { background: var(--accent-soft); color: var(--accent); }
 .ne-tool code { border: 0; background: none; padding: 0; font-size: 0.78rem; }
 .ne-tool:disabled { opacity: 0.4; cursor: default; }
@@ -220,15 +220,16 @@
 /* menus "/" e "@" */
 .ne-popup { position: fixed; z-index: 60; }
 .ne-menu {
-  width: 300px; max-height: min(360px, 60vh); overflow-y: auto; padding: 5px;
-  border: 1px solid var(--border); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow-md);
-  animation: ne-pop 0.12s ease;
+  width: 300px; max-height: min(360px, 60vh); overflow-y: auto; padding: 6px;
+  border: 0; border-radius: var(--radius-md); background: var(--surface); box-shadow: var(--shadow-pop);
+  animation: ne-pop var(--duration-base) var(--ease-out);
 }
 .ne-menu-wide { width: 380px; }
 .ne-menu-empty { padding: 12px; color: var(--muted); font-size: 0.85rem; }
-.ne-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; border: 0; border-radius: 8px; background: none; color: var(--text); text-align: left; cursor: pointer; }
-.ne-menu-item.is-active { background: var(--panel-2); }
-.ne-menu-icon { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+.ne-menu-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 8px; border: 0; border-radius: var(--radius-sm); background: none; color: var(--text); text-align: left; cursor: pointer; }
+.ne-menu-item.is-active { background: var(--brand-a08); }
+.ne-menu-icon { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: var(--radius-sm); background: var(--surface-sunken); font-size: 0.8rem; font-weight: 700; color: var(--ink-3); }
+.ne-menu-item.is-active .ne-menu-icon { background: var(--surface); color: var(--brand-700); }
 .ne-menu-text { display: grid; min-width: 0; flex: 1; }
 .ne-menu-text strong { font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ne-menu-text small { font-size: 0.74rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

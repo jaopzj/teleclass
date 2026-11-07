@@ -8,7 +8,7 @@ import { Link, navigate, paths } from "../router";
 import { ListParams, notebookApi, NOTEBOOK_EVENT, NoteSummary, Overview, SearchResult, View } from "./api";
 import { MoveDialog, NameDialog } from "./dialogs";
 import type { Location } from "./Sidebar";
-import { folderPath, NOTE_DRAG } from "./state";
+import { folderPath, NOTE_DRAG, useDismiss } from "./state";
 import { formatStamp } from "./time";
 
 const VIEW_TITLE: Record<View, string> = {
@@ -86,6 +86,7 @@ function locationLabel(n: NoteSummary) {
 
 export function NoteRow({ note, folders, highlightTitle, snippet, query, showLesson = true }: { note: NoteSummary; folders: Overview["folders"]; highlightTitle?: string; snippet?: string; query?: string; showLesson?: boolean }) {
   const [menu, setMenu] = useState(false);
+  const menuRef = useDismiss(menu, () => setMenu(false));
   const [dialog, setDialog] = useState<ReactNode>(null);
   const trashed = !!note.deleted_at;
   const title = note.title || (note.kind === "quick" ? note.excerpt.slice(0, 80) || "Nota rápida" : "Sem título");
@@ -112,13 +113,12 @@ export function NoteRow({ note, folders, highlightTitle, snippet, query, showLes
     >
       <Link to={trashed ? "#" : paths.note(note.id, query)} className="nb-row-main" onClick={(e) => trashed && e.preventDefault()}>
         <span className={`nb-row-kind ${note.kind === "quick" ? "is-quick" : ""}`} aria-hidden="true">
-          {note.kind === "quick" ? (note.timestamp_seconds != null ? formatStamp(note.timestamp_seconds) : "▶") : <Icon name="file" size={15} />}
+          <Icon name={note.kind === "quick" ? "play" : "page"} size={18} />
         </span>
         <span className="nb-row-text">
           <span className="nb-row-title">
-            {highlightTitle ? <Highlighted text={highlightTitle} /> : title}
-            {note.pinned && <span className="nb-flag" title="Fixada">●</span>}
-            {note.favorite && <span className="nb-star" title="Favorita">★</span>}
+            <span className="nb-row-title-text">{highlightTitle ? <Highlighted text={highlightTitle} /> : title}</span>
+            {note.pinned && <span className="nb-row-flag" title="Fixada"><Icon name="pin" size={14} weight="fill" /></span>}
           </span>
           {snippet ? (
             <span className="nb-row-excerpt"><Highlighted text={snippet} /></span>
@@ -126,6 +126,7 @@ export function NoteRow({ note, folders, highlightTitle, snippet, query, showLes
             note.excerpt && note.title && <span className="nb-row-excerpt">{note.excerpt}</span>
           )}
           <span className="nb-row-meta">
+            {note.kind === "quick" && note.timestamp_seconds != null && <span className="nb-stamp"><Icon name="play" size={10} />{formatStamp(note.timestamp_seconds)}</span>}
             {showLesson && locationLabel(note) && <span className="nb-row-where">{locationLabel(note)}</span>}
             {note.tags.map((t) => (
               <span key={t.id} className="nb-tag is-small" data-color={t.color}>{t.name}</span>
@@ -134,33 +135,33 @@ export function NoteRow({ note, folders, highlightTitle, snippet, query, showLes
           </span>
         </span>
       </Link>
-      <div className="nb-row-actions">
+      <div className={`nb-row-actions ${menu ? "is-open" : ""}`} ref={menuRef}>
         {!trashed && (
-          <button type="button" className={`nb-icon-button nb-fav ${note.favorite ? "is-on" : ""}`} onClick={() => void act(() => notebookApi.update(note.id, { favorite: !note.favorite }))} aria-label={note.favorite ? "Tirar dos favoritos" : "Favoritar"} title={note.favorite ? "Tirar dos favoritos" : "Favoritar"}>
-            {note.favorite ? "★" : "☆"}
+          <button type="button" className={`nb-icon-button nb-fav ${note.favorite ? "is-on" : ""}`} onClick={() => void act(() => notebookApi.update(note.id, { favorite: !note.favorite }))} aria-label={note.favorite ? "Tirar dos favoritos" : "Favoritar"} title={note.favorite ? "Tirar dos favoritos" : "Favoritar"} aria-pressed={note.favorite}>
+            <Icon name="star" size={18} weight={note.favorite ? "fill" : "regular"} />
           </button>
         )}
-        <button type="button" className="nb-icon-button" onClick={() => setMenu((m) => !m)} aria-label="Mais ações" aria-expanded={menu}>⋯</button>
+        <button type="button" className="nb-icon-button" onClick={() => setMenu((m) => !m)} aria-label="Mais ações" aria-expanded={menu}><Icon name="dots" size={18} /></button>
         {menu && (
-          <div className="nb-menu" role="menu" onMouseLeave={() => setMenu(false)}>
+          <div className="nb-menu" role="menu">
             {trashed ? (
               <>
-                <button role="menuitem" onClick={() => void act(() => notebookApi.restore(note.id), "Anotação restaurada")}>Restaurar</button>
+                <button role="menuitem" onClick={() => void act(() => notebookApi.restore(note.id), "Anotação restaurada")}><Icon name="rotate" size={16} />Restaurar</button>
                 <button role="menuitem" className="is-danger" onClick={() => { setMenu(false); setDialog(
                   <ConfirmDialog title="Excluir de vez?" confirmLabel="Excluir definitivamente" danger onCancel={close} onConfirm={() => { close(); void act(() => notebookApi.destroy(note.id), "Anotação excluída definitivamente"); }}>
                     <p>“{title}” e as imagens e anexos que só ela usa serão apagados. Isso não pode ser desfeito.</p>
-                  </ConfirmDialog>); }}>Excluir de vez</button>
+                  </ConfirmDialog>); }}><Icon name="trash" size={16} />Excluir de vez</button>
               </>
             ) : (
               <>
-                <button role="menuitem" onClick={() => void act(() => notebookApi.update(note.id, { pinned: !note.pinned }))}>{note.pinned ? "Desafixar" : "Fixar no início"}</button>
-                <button role="menuitem" onClick={() => { setMenu(false); setDialog(<MoveDialog title="Mover para…" folders={folders} current={note.folder_id} onClose={close} onMove={async (f) => { await notebookApi.update(note.id, { folder_id: f }); }} />); }}>Mover para…</button>
+                <button role="menuitem" onClick={() => void act(() => notebookApi.update(note.id, { pinned: !note.pinned }))}><Icon name="pin" size={16} />{note.pinned ? "Desafixar" : "Fixar no início"}</button>
+                <button role="menuitem" onClick={() => { setMenu(false); setDialog(<MoveDialog title="Mover para…" folders={folders} current={note.folder_id} onClose={close} onMove={async (f) => { await notebookApi.update(note.id, { folder_id: f }); }} />); }}><Icon name="folder" size={16} />Mover para…</button>
                 {note.kind === "page" && (
-                  <button role="menuitem" onClick={() => { setMenu(false); setDialog(<NameDialog title="Renomear" initial={note.title} confirmLabel="Salvar" onClose={close} onSubmit={async (name) => { await notebookApi.update(note.id, { title: name }); }} />); }}>Renomear</button>
+                  <button role="menuitem" onClick={() => { setMenu(false); setDialog(<NameDialog title="Renomear" initial={note.title} confirmLabel="Salvar" onClose={close} onSubmit={async (name) => { await notebookApi.update(note.id, { title: name }); }} />); }}><Icon name="edit" size={16} />Renomear</button>
                 )}
-                <button role="menuitem" onClick={() => void act(async () => { const copy = await notebookApi.duplicate(note.id); navigate(paths.note(copy.id)); })}>Duplicar</button>
-                <button role="menuitem" onClick={() => void act(() => notebookApi.update(note.id, { archived: !note.archived }), note.archived ? "Anotação desarquivada" : "Anotação arquivada", () => notebookApi.update(note.id, { archived: note.archived }))}>{note.archived ? "Desarquivar" : "Arquivar"}</button>
-                <button role="menuitem" className="is-danger" onClick={() => void act(() => notebookApi.trash(note.id), "Movida para a lixeira", () => notebookApi.restore(note.id))}>Mover para a lixeira</button>
+                <button role="menuitem" onClick={() => void act(async () => { const copy = await notebookApi.duplicate(note.id); navigate(paths.note(copy.id)); })}><Icon name="files" size={16} />Duplicar</button>
+                <button role="menuitem" onClick={() => void act(() => notebookApi.update(note.id, { archived: !note.archived }), note.archived ? "Anotação desarquivada" : "Anotação arquivada", () => notebookApi.update(note.id, { archived: note.archived }))}><Icon name="archive" size={16} />{note.archived ? "Desarquivar" : "Arquivar"}</button>
+                <button role="menuitem" className="is-danger" onClick={() => void act(() => notebookApi.trash(note.id), "Movida para a lixeira", () => notebookApi.restore(note.id))}><Icon name="trash" size={16} />Mover para a lixeira</button>
               </>
             )}
           </div>
@@ -184,10 +185,27 @@ export function Highlighted({ text }: { text: string }) {
 function Empty({ icon, title, children }: { icon: React.ComponentProps<typeof Icon>["name"]; title: string; children?: ReactNode }) {
   return (
     <div className="nb-empty">
-      <span className="nb-empty-icon"><Icon name={icon} size={22} /></span>
+      <span className="nb-empty-icon"><Icon name={icon} size={26} /></span>
       <h3>{title}</h3>
       {children}
     </div>
+  );
+}
+
+/** Cabeçalho da folha: alternar navegação, local, título, contagem e ações. */
+export function PaneHead({ toolbar, crumbs, title, count, actions }: { toolbar: ReactNode; crumbs?: ReactNode; title: ReactNode; count?: string | null; actions?: ReactNode }) {
+  return (
+    <header className="nb-pane-head">
+      {toolbar}
+      <div className="nb-pane-title">
+        {crumbs}
+        <h2>
+          <span className="nb-pane-name">{title}</span>
+          {count && <span className="nb-pane-count">{count}</span>}
+        </h2>
+      </div>
+      {actions && <div className="nb-pane-actions">{actions}</div>}
+    </header>
   );
 }
 
@@ -203,7 +221,7 @@ function ListSkeleton() {
 
 export function Collection({ location, overview, toolbar }: { location: Location; overview: Overview | null; toolbar: ReactNode }) {
   const [sort, setSort] = useState<ListParams["sort"]>("updated");
-  const view = location.view === "home" || location.view === "search" ? "all" : location.view;
+  const view = location.view === "home" || location.view === "search" || location.view === "note" ? "all" : location.view;
   const params: ListParams = {
     view: location.folder || location.course || location.tag ? "all" : view,
     folder: location.folder,
@@ -235,7 +253,7 @@ export function Collection({ location, overview, toolbar }: { location: Location
     ) : null;
   } else if (location.course) {
     title = course?.title ?? "Curso removido";
-    crumbs = <nav className="nb-crumbs"><span>Curso</span>{location.lesson && <Link to={paths.notebook({ curso: location.course })}>todas as aulas</Link>}</nav>;
+    crumbs = <nav className="nb-crumbs"><span>Curso</span>{location.lesson && <Link to={paths.notebook({ curso: location.course })}>Todas as aulas</Link>}</nav>;
   } else if (tag) {
     title = tag.name;
     crumbs = <nav className="nb-crumbs"><span>Etiqueta</span></nav>;
@@ -268,40 +286,33 @@ export function Collection({ location, overview, toolbar }: { location: Location
 
   return (
     <div className="nb-collection">
-      <header className="nb-head">
-        {toolbar}
-        <div className="nb-head-text">
-          {crumbs}
-          <h1>{title}</h1>
-          {notes && <p className="nb-head-sub">{plural(notes.length, "anotação", "anotações")}</p>}
-        </div>
-        <div className="nb-head-actions">
-          {params.view === "trash" ? (
-            notes && notes.length > 0 && <button className="button button-sm" onClick={() => setConfirmEmpty(true)}>Esvaziar lixeira</button>
-          ) : (
-            <>
-              <select className="nb-sort" value={sort} onChange={(e) => setSort(e.target.value as ListParams["sort"])} aria-label="Ordenar">
-                <option value="updated">Editadas recentemente</option>
-                <option value="created">Criadas recentemente</option>
-                <option value="title">Título (A–Z)</option>
-              </select>
-              {!missing && params.view !== "archived" && (
-                <button className="button button-sm button-primary" onClick={() => void createNote(location, overview)}>
-                  <Icon name="plus" size={14} /> Nova anotação
-                </button>
-              )}
-            </>
-          )}
-        </div>
-      </header>
+      <PaneHead
+        toolbar={toolbar}
+        crumbs={crumbs}
+        title={title}
+        count={notes && !missing ? plural(notes.length, "anotação", "anotações") : null}
+        actions={missing ? null : params.view === "trash" ? (
+          notes && notes.length > 0 && <button className="button button-sm" onClick={() => setConfirmEmpty(true)}><Icon name="trash" size={16} />Esvaziar lixeira</button>
+        ) : (
+          <label className="nb-sort">
+            <span className="sr-only">Ordenar</span>
+            <select value={sort} onChange={(e) => setSort(e.target.value as ListParams["sort"])}>
+              <option value="updated">Editadas recentemente</option>
+              <option value="created">Criadas recentemente</option>
+              <option value="title">Título (A–Z)</option>
+            </select>
+            <Icon name="down" size={14} />
+          </label>
+        )}
+      />
 
       {subfolders.length > 0 && (
         <ul className="nb-subfolders">
           {subfolders.map((f) => (
             <li key={f.id}>
               <Link to={paths.notebook({ pasta: f.id })} className="nb-subfolder">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4.2l2 2.2h8.8A1.5 1.5 0 0 1 21 8.7v9.8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18.5z" /></svg>
-                {f.name}
+                <Icon name="folder" size={18} />
+                <span>{f.name}</span>
                 {f.notes > 0 && <small>{f.notes}</small>}
               </Link>
             </li>
@@ -358,46 +369,46 @@ export function Home({ overview, toolbar }: { overview: Overview | null; toolbar
   const folders = overview?.folders ?? [];
   const total = overview?.counts.all ?? 0;
   const loading = !overview || !recent.notes;
+  // As fixadas já aparecem nos cartões: as listas abaixo não as repetem.
+  const pinnedIds = new Set((pinned.notes ?? []).map((n) => n.id));
+  const recentRows = (recent.notes ?? []).filter((n) => !pinnedIds.has(n.id));
+  const favoriteRows = (favorites.notes ?? []).filter((n) => !pinnedIds.has(n.id) && !recentRows.slice(0, 6).some((r) => r.id === n.id));
 
   return (
     <div className="nb-collection nb-home">
-      <header className="nb-head">
-        {toolbar}
-        <div className="nb-head-text">
-          <h1>Caderno</h1>
-          <p className="nb-head-sub">{overview ? (total ? plural(total, "anotação", "anotações") : "Seu espaço de conhecimento") : " "}</p>
-        </div>
-        <div className="nb-head-actions">
-          <button className="button button-sm button-primary" onClick={() => void createNote({ view: "home" }, overview)}>
-            <Icon name="plus" size={14} /> Nova anotação
-          </button>
-        </div>
-      </header>
+      <PaneHead toolbar={toolbar} title="Início" />
 
       {loading ? (
         <ListSkeleton />
       ) : total === 0 && overview.counts.archived === 0 ? (
         <div className="nb-welcome">
-          <h2>Comece seu caderno</h2>
-          <p>Tudo o que você anota nas aulas chega aqui organizado por curso. Crie também anotações livres, organize em pastas e conecte ideias de cursos diferentes.</p>
+          <span className="nb-welcome-icon"><Icon name="note" size={32} /></span>
+          <h3>Seu caderno está em branco</h3>
+          <p>As notas que você escreve nas aulas chegam aqui organizadas por curso. Crie também anotações livres e organize em pastas.</p>
           <ul className="nb-tips">
-            <li><kbd>/</kbd> insere títulos, listas, tabelas, código, fórmulas, imagens e anexos</li>
-            <li><kbd>@</kbd> cita um curso, módulo ou aula, inclusive um momento do vídeo</li>
-            <li><kbd>$x^2$</kbd> vira fórmula; selecione um trecho para formatar</li>
+            <li><kbd>/</kbd><span>Títulos, listas, tabelas, código, fórmulas e imagens</span></li>
+            <li><kbd>@</kbd><span>Cite um curso, módulo ou aula, até um momento do vídeo</span></li>
+            <li><kbd>$x^2$</kbd><span>Vira fórmula; selecione um trecho para formatar</span></li>
           </ul>
-          <button className="button button-primary" onClick={() => void createNote({ view: "home" }, overview)}>Criar a primeira anotação</button>
+          <button className="button button-primary button-lg" onClick={() => void createNote({ view: "home" }, overview)}>
+            <Icon name="plus" size={18} weight="bold" />Criar a primeira anotação
+          </button>
         </div>
       ) : (
         <>
           {pinned.notes && pinned.notes.length > 0 && (
-            <section className="nb-section">
-              <h2 className="nb-section-title">Fixadas</h2>
+            <section className="nb-section" aria-labelledby="nb-home-pinned">
+              <h3 className="nb-section-title" id="nb-home-pinned">Fixadas</h3>
               <ul className="nb-cards">
                 {pinned.notes.map((n) => (
                   <li key={n.id}>
                     <Link to={paths.note(n.id)} className="nb-card" draggable onDragStart={(e) => e.dataTransfer.setData(NOTE_DRAG, n.id)}>
-                      <strong>{n.title || n.excerpt.slice(0, 60) || "Sem título"}</strong>
-                      <p>{n.title ? n.excerpt : ""}</p>
+                      <span className="nb-card-top">
+                        <span className={`nb-card-kind ${n.kind === "quick" ? "is-quick" : ""}`} aria-hidden="true"><Icon name={n.kind === "quick" ? "play" : "page"} size={16} /></span>
+                        {n.favorite && <Icon name="star" size={16} weight="fill" className="nb-card-star" />}
+                      </span>
+                      <strong>{n.title || n.excerpt.slice(0, 80) || "Sem título"}</strong>
+                      {n.title && n.excerpt && <p>{n.excerpt}</p>}
                       <small>{locationLabel(n) || formatRelative(n.content_updated_at)}</small>
                     </Link>
                   </li>
@@ -405,20 +416,24 @@ export function Home({ overview, toolbar }: { overview: Overview | null; toolbar
               </ul>
             </section>
           )}
-          <section className="nb-section">
-            <h2 className="nb-section-title">Recentes</h2>
-            {recent.notes && recent.notes.length > 0 ? (
-              <ul className="nb-rows">{recent.notes.slice(0, 8).map((n) => <NoteRow key={n.id} note={n} folders={folders} />)}</ul>
+          <section className="nb-section" aria-labelledby="nb-home-recent">
+            <div className="nb-section-head">
+              <h3 className="nb-section-title" id="nb-home-recent">Recentes</h3>
+              {recentRows.length > 6 && <Link to={paths.notebook({ v: "recentes" })} className="section-link">Ver todas</Link>}
+            </div>
+            {recentRows.length > 0 ? (
+              <ul className="nb-rows">{recentRows.slice(0, 6).map((n) => <NoteRow key={n.id} note={n} folders={folders} />)}</ul>
             ) : (
-              <p className="muted small">Nada recente.</p>
+              <p className="nb-section-empty">As anotações que você abrir ou editar aparecem aqui.</p>
             )}
-            {(recent.notes?.length ?? 0) > 8 && <Link to={paths.notebook({ v: "recentes" })} className="nb-more">Ver todas as recentes</Link>}
           </section>
-          {favorites.notes && favorites.notes.length > 0 && (
-            <section className="nb-section">
-              <h2 className="nb-section-title">Favoritas</h2>
-              <ul className="nb-rows">{favorites.notes.slice(0, 6).map((n) => <NoteRow key={n.id} note={n} folders={folders} />)}</ul>
-              {favorites.notes.length > 6 && <Link to={paths.notebook({ v: "favoritas" })} className="nb-more">Ver todas as favoritas</Link>}
+          {favoriteRows.length > 0 && (
+            <section className="nb-section" aria-labelledby="nb-home-fav">
+              <div className="nb-section-head">
+                <h3 className="nb-section-title" id="nb-home-fav">Favoritas</h3>
+                {favoriteRows.length > 4 && <Link to={paths.notebook({ v: "favoritas" })} className="section-link">Ver todas</Link>}
+              </div>
+              <ul className="nb-rows">{favoriteRows.slice(0, 4).map((n) => <NoteRow key={n.id} note={n} folders={folders} />)}</ul>
             </section>
           )}
         </>
@@ -455,19 +470,12 @@ export function SearchView({ location, overview, toolbar }: { location: Location
   const scope = (params: Record<string, string | undefined>) => paths.notebook({ q, ...params });
   return (
     <div className="nb-collection">
-      <header className="nb-head">
-        {toolbar}
-        <div className="nb-head-text">
-          <nav className="nb-crumbs"><span>Busca</span></nav>
-          <h1>“{q}”</h1>
-          <p className="nb-head-sub">{result ? plural(result.total, "resultado", "resultados") : " "}</p>
-        </div>
-      </header>
+      <PaneHead toolbar={toolbar} crumbs={<nav className="nb-crumbs"><span>Busca</span></nav>} title={`“${q}”`} count={result ? plural(result.total, "resultado", "resultados") : null} />
       <div className="nb-scopes" role="group" aria-label="Onde buscar">
         <Link to={scope({})} className={`nb-scope ${!folder && !course && !tag ? "is-active" : ""}`}>Todas as anotações</Link>
-        {folder && <span className="nb-scope is-active">Em “{folder.name}” e subpastas <Link to={scope({})} aria-label="Remover filtro">✕</Link></span>}
-        {course && <span className="nb-scope is-active">No curso “{course.title ?? "removido"}” <Link to={scope({ pasta: location.folder, etiqueta: location.tag })} aria-label="Remover filtro">✕</Link></span>}
-        {tag && <span className="nb-scope is-active">Etiqueta “{tag.name}” <Link to={scope({ pasta: location.folder, curso: location.course })} aria-label="Remover filtro">✕</Link></span>}
+        {folder && <span className="nb-scope is-active">Em “{folder.name}” e subpastas <Link to={scope({})} aria-label="Remover filtro"><Icon name="close" size={14} /></Link></span>}
+        {course && <span className="nb-scope is-active">No curso “{course.title ?? "removido"}” <Link to={scope({ pasta: location.folder, etiqueta: location.tag })} aria-label="Remover filtro"><Icon name="close" size={14} /></Link></span>}
+        {tag && <span className="nb-scope is-active">Etiqueta “{tag.name}” <Link to={scope({ pasta: location.folder, curso: location.course })} aria-label="Remover filtro"><Icon name="close" size={14} /></Link></span>}
         <label className="nb-scope-check">
           <input type="checkbox" checked={archived} onChange={(e) => setArchived(e.target.checked)} /> Incluir arquivadas
         </label>
