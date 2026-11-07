@@ -16,7 +16,6 @@ import { formatStamp } from "./time";
 import { SYNC_LABEL, useNoteSync } from "./useNoteSync";
 import "./notebook.css";
 
-const MOBILE = "(max-width: 1023px)";
 const EMPTY: JSONContent = { type: "doc", content: [{ type: "paragraph" }] };
 
 const isEmpty = (doc: JSONContent) => !JSON.stringify(doc).includes('"text"') && !JSON.stringify(doc).includes('"timestamp"');
@@ -26,12 +25,14 @@ interface Props {
   lessonKey: string;
   lessonTitle: string;
   duration: number | null;
+  /** Quantas notas e páginas a aula tem (a aba "Anotações" mostra o número). */
+  onCount?: (count: number) => void;
 }
 
-export default function LessonNotes({ courseId, lessonKey, lessonTitle, duration }: Props) {
+/** Conteúdo da aba "Anotações" no painel da aula. */
+export default function LessonNotes({ courseId, lessonKey, lessonTitle, duration, onCount }: Props) {
   const [data, setData] = useState<LessonNotesData | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState(() => window.matchMedia(MOBILE).matches);
   const [composerKey, setComposerKey] = useState(0);
   const [composerId, setComposerId] = useState<string | null>(null);
 
@@ -60,23 +61,11 @@ export default function LessonNotes({ courseId, lessonKey, lessonTitle, duration
 
   const quick = (data?.quick ?? []).filter((n) => n.id !== composerId);
   const count = (data?.quick.length ?? 0) + (data?.pages.length ?? 0);
+  useEffect(() => onCount?.(count), [count, onCount]);
 
   return (
-    <aside className={`notes lesson-notes ${collapsed ? "is-collapsed" : ""}`} aria-label="Anotações da aula">
-      <header className="notes-head">
-        <button className="notes-toggle" onClick={() => setCollapsed((c) => !c)} aria-expanded={!collapsed}>
-          <Icon name="notes" size={17} />
-          <span>Anotações</span>
-          {count > 0 && <span className="pill">{count}</span>}
-          <Icon name="chevron" size={16} className="notes-chevron" />
-        </button>
-        <Link to={paths.notebook({ curso: courseId, aula: lessonKey })} className="ln-open" title="Ver as anotações desta aula no Caderno">
-          Caderno <Icon name="arrow" size={13} />
-        </Link>
-      </header>
-
-      {!collapsed && (
-        <div className="ln-body">
+    <div className="ln">
+      <div className="ln-body">
           <QuickNoteCard
             key={`composer-${composerKey}`}
             note={null}
@@ -135,9 +124,13 @@ export default function LessonNotes({ courseId, lessonKey, lessonTitle, duration
               </ul>
             </section>
           )}
-        </div>
-      )}
-    </aside>
+      </div>
+      <footer className="ln-foot">
+        <Link to={paths.notebook({ curso: courseId, aula: lessonKey })} className="ln-open">
+          <Icon name="book" size={15} /> Abrir no Caderno
+        </Link>
+      </footer>
+    </div>
   );
 }
 

@@ -5,6 +5,7 @@ export interface ShortcutHandlers {
   seekBy(seconds: number): void;
   toggleMute(): void;
   toggleFullscreen(): void;
+  toggleTheater?(): void;
 }
 
 const EDITABLE = new Set(["INPUT", "TEXTAREA", "SELECT"]);
@@ -68,6 +69,12 @@ export function useShortcuts(container: RefObject<HTMLElement>, handlers: Shortc
         case "F":
           if (event.repeat) break;
           h.toggleFullscreen();
+          break;
+        case "t":
+        case "T":
+          if (!h.toggleTheater) return;
+          if (event.repeat) break;
+          h.toggleTheater();
           break;
         default:
           return;

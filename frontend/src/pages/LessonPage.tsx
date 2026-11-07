@@ -1,18 +1,18 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import Icon from "../components/Icon";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Icon, { IconName } from "../components/Icon";
 import RichText from "../components/RichText";
 import Player from "../player/Player";
-import { formatSize } from "../format";
+import { formatClock, formatSize } from "../format";
 import { useResource } from "../hooks/useResource";
-import { learningApi, LessonDetail, LessonProgress, mediaUrl, thumbUrl } from "../learning/api";
+import { CourseDetail, learningApi, LessonDetail, LessonProgress, MaterialInfo, mediaUrl, thumbUrl } from "../learning/api";
 import { Link, paths, useSearchParam } from "../router";
 import { getPlayer } from "../player/controller";
 import { api } from "../api";
 import { useAuth } from "../auth/AuthProvider";
 import QuickStart from "../focus/QuickStart";
-
-// O editor das anotações carrega à parte, sem atrasar o vídeo.
-const LessonNotes = lazy(() => import("../notebook/LessonNotes"));
+import { notify } from "../notifications/center";
+import LessonPanel from "../lesson/LessonPanel";
+import "../lesson/lesson.css";
 
 // Consultado uma vez por sessão: sem o cryptg, o download do Telegram fica muito lento.
 let slowCryptoCheck: Promise<boolean> | null = null;
@@ -28,10 +28,29 @@ function useSlowCrypto() {
   return slow;
 }
 
+const THEATER_KEY = "teleclass:lesson-theater";
+function loadTheater() {
+  try {
+    return localStorage.getItem(THEATER_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export default function LessonPage({ courseId, lessonKey }: { courseId: string; lessonKey: string }) {
   const { data, error, loading } = useResource(`lesson:${courseId}:${lessonKey}`, () =>
     learningApi.lesson(courseId, lessonKey),
   );
+  // O sumário do curso fica carregado entre uma aula e outra; é relido ao trocar de aula
+  // (a anterior pode ter avançado ou sido concluída) e depois de marcar uma conclusão.
+  const outline = useResource(`course:${courseId}`, () => learningApi.course(courseId));
+  const reloadOutline = outline.reload;
+  const firstLesson = useRef(lessonKey);
+  useEffect(() => {
+    if (firstLesson.current === lessonKey) return;
+    firstLesson.current = "";
+    reloadOutline();
+  }, [lessonKey, reloadOutline]);
 
   if (error && !loading) {
     return (
@@ -46,28 +65,48 @@ export default function LessonPage({ courseId, lessonKey }: { courseId: string; 
     );
   }
   if (!data || data.course.id !== courseId) return <LessonSkeleton />;
+  const course = outline.data?.id === courseId ? outline.data : null;
   // A chave remonta player e anotações a cada aula: cada uma tem seu próprio estado.
-  return <LessonView key={data.lesson.key} detail={data} switching={loading} />;
+  return <LessonView key={data.lesson.key} detail={data} course={course} onCompletionChange={reloadOutline} switching={loading} />;
 }
 
 function LessonSkeleton() {
   return (
-    <div className="page page-wide">
-      <div className="lesson-layout">
-        <div className="lesson-main">
-          <div className="pp skeleton" style={{ aspectRatio: "16 / 9" }} />
+    <div className="page page-wide lv">
+      <div className="lv-grid">
+        <div className="lv-top">
+          <span className="skeleton lv-skel-line" />
         </div>
-        <div className="notes skeleton" />
+        <div className="lv-stage">
+          <div className="lv-skel-stage skeleton" />
+        </div>
+        <div className="lv-info lv-skel-info">
+          <span className="skeleton lv-skel-line" />
+          <span className="skeleton lv-skel-title" />
+        </div>
+        <div className="lv-panel lv-skel-panel skeleton" />
       </div>
     </div>
   );
 }
 
-function LessonView({ detail, switching }: { detail: LessonDetail; switching: boolean }) {
+function LessonView({
+  detail,
+  course: outline,
+  onCompletionChange,
+  switching,
+}: {
+  detail: LessonDetail;
+  course: CourseDetail | null;
+  onCompletionChange: () => void;
+  switching: boolean;
+}) {
   const { course, lesson, previous, next } = detail;
   const [progress, setProgress] = useState<LessonProgress | null>(lesson.progress);
   const [completing, setCompleting] = useState(false);
-  const [notice, setNotice] = useState<string>();
+  const [justCompleted, setJustCompleted] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [theater, setTheater] = useState(loadTheater);
   const completed = !!progress?.completed;
   const video = lesson.video;
   const slowCrypto = useSlowCrypto();
@@ -106,42 +145,49 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
   async function toggleCompleted() {
     const target = !completed;
     setCompleting(true);
+    setJustCompleted(target);
     setProgress((p) => ({ ...(p ?? emptyProgress), completed: target }));
     try {
       const result = await learningApi.setCompleted(course.id, lesson.key, target);
       setProgress(result.progress);
-      setNotice(target ? `Aula concluída · ${result.course.completed} de ${result.course.total} no curso` : undefined);
+      onCompletionChange();
     } catch (e) {
+      setJustCompleted(false);
       setProgress((p) => ({ ...(p ?? emptyProgress), completed: !target }));
-      setNotice(`Não foi possível atualizar: ${(e as Error).message}`);
+      notify({ title: "Não foi possível atualizar a aula", body: (e as Error).message, tone: "neutral", essential: true });
     } finally {
       setCompleting(false);
     }
   }
 
-  useEffect(() => {
-    if (!notice) return;
-    const t = window.setTimeout(() => setNotice(undefined), 4000);
-    return () => window.clearTimeout(t);
-  }, [notice]);
+  const toggleTheater = useCallback(() => {
+    setTheater((value) => {
+      try {
+        localStorage.setItem(THEATER_KEY, value ? "0" : "1");
+      } catch {
+        /* só uma preferência */
+      }
+      return !value;
+    });
+  }, []);
+
+  const module = lesson.path[lesson.path.length - 1];
+  const materials = video ? lesson.materials : []; // sem vídeo, os arquivos já aparecem no lugar do player
+  const hasBody = !!lesson.description || materials.length > 0;
 
   return (
-    <div className={`page page-wide lesson-page ${switching ? "is-switching" : ""}`}>
-      <nav className="breadcrumb" aria-label="Você está em">
-        <Link to={paths.library()}>Meus cursos</Link>
-        <span>›</span>
-        <Link to={paths.course(course.id)}>{course.title}</Link>
-        {lesson.path.map((part, i) => (
-          <span key={i} className="breadcrumb-part">
-            <span>›</span> {part}
-          </span>
-        ))}
-      </nav>
+    <div className={`page page-wide lv ${theater ? "is-theater" : ""} ${switching ? "is-switching" : ""}`}>
+      <div className="lv-grid">
+        <nav className="lv-top" aria-label="Você está em">
+          <Link to={paths.course(course.id)} className="lv-back">
+            <Icon name="left" size={16} />
+            <span>{course.title}</span>
+          </Link>
+        </nav>
 
-      <div className="lesson-layout">
-        <div className="lesson-main">
+        <div className="lv-stage">
           {video && slowCrypto && (
-            <div className="alert alert-warning">
+            <div className="alert alert-warning lv-alert">
               O vídeo vai carregar devagar: falta o pacote <code>cryptg</code>, que acelera a criptografia do
               Telegram. Rode <code>pip install -e .</code> na pasta do projeto e reinicie o servidor.
             </div>
@@ -169,82 +215,96 @@ function LessonView({ detail, switching }: { detail: LessonDetail; switching: bo
               study={study}
               lesson={playerLesson}
               startAt={startAt}
+              theater={theater}
+              onToggleTheater={toggleTheater}
+              onPlayingChange={setPlaying}
             />
           ) : (
             <NoVideo detail={detail} />
           )}
-
-          <div className="lesson-controls">
-            {previous ? (
-              <Link to={paths.lesson(course.id, previous.key)} className="nav-button nav-prev" title={previous.title}>
-                <Icon name="left" size={18} />
-                <span>
-                  <small>Aula anterior</small>
-                  <span className="nav-title">{previous.title}</span>
-                </span>
-              </Link>
-            ) : (
-              <span className="nav-button nav-prev is-disabled">
-                <Icon name="left" size={18} />
-                <span>
-                  <small>Aula anterior</small>
-                  <span className="nav-title">Esta é a primeira aula</span>
-                </span>
-              </span>
-            )}
-
-            <button
-              className={`button complete-button ${completed ? "is-done" : ""}`}
-              onClick={toggleCompleted}
-              disabled={completing}
-              aria-pressed={completed}
-            >
-              <span className="complete-check">
-                <Icon name="check" size={14} />
-              </span>
-              {completed ? "Concluída" : "Marcar como concluída"}
-            </button>
-
-            {next ? (
-              <Link to={paths.lesson(course.id, next.key)} className="nav-button nav-next" title={next.title}>
-                <span>
-                  <small>Próxima aula</small>
-                  <span className="nav-title">{next.title}</span>
-                </span>
-                <Icon name="right" size={18} />
-              </Link>
-            ) : (
-              <Link to={paths.course(course.id)} className="nav-button nav-next">
-                <span>
-                  <small>Fim do curso</small>
-                  <span className="nav-title">Voltar ao conteúdo</span>
-                </span>
-                <Icon name="right" size={18} />
-              </Link>
-            )}
-          </div>
-          {notice && (
-            <p className="lesson-notice" role="status">
-              {notice}
-            </p>
-          )}
-
-          <header className="lesson-info">
-            <p className="eyebrow">
-              Aula {lesson.number} de {course.total}
-              {lesson.path.length > 0 && ` · ${lesson.path[lesson.path.length - 1]}`}
-            </p>
-            <div className="lesson-title-row">
-              <h1>{lesson.title}</h1>
-              <QuickStart courseId={course.id} lessonKey={lesson.key} />
-            </div>
-          </header>
-          {lesson.description && <RichText text={lesson.description} />}
         </div>
 
-        <Suspense fallback={<div className="notes skeleton" />}>
-          <LessonNotes courseId={course.id} lessonKey={lesson.key} lessonTitle={lesson.title} duration={lesson.duration} />
-        </Suspense>
+        <section className="lv-info" aria-labelledby="lv-title">
+          <header className="lv-head">
+            <div className="lv-heading">
+              <p className="lv-meta">
+                {module && <span>{module}</span>}
+                <span>
+                  Aula {lesson.number} de {course.total}
+                </span>
+                {lesson.duration ? <span>{formatClock(lesson.duration)}</span> : null}
+              </p>
+              <h1 id="lv-title">{lesson.title}</h1>
+            </div>
+
+            <div className="lv-actions">
+              <QuickStart courseId={course.id} lessonKey={lesson.key} compact />
+              {previous ? (
+                <Link
+                  to={paths.lesson(course.id, previous.key)}
+                  className="icon-button lv-step"
+                  aria-label={`Aula anterior: ${previous.title}`}
+                  data-tip="Aula anterior"
+                >
+                  <Icon name="left" size={18} />
+                </Link>
+              ) : (
+                <button type="button" className="icon-button lv-step" disabled aria-label="Esta é a primeira aula">
+                  <Icon name="left" size={18} />
+                </button>
+              )}
+              <button
+                type="button"
+                className={`button lv-complete ${completed ? "is-done" : ""} ${justCompleted && completed ? "is-celebrating" : ""}`}
+                onClick={toggleCompleted}
+                disabled={completing}
+                aria-pressed={completed}
+              >
+                <span className="lv-complete-check" aria-hidden="true">
+                  <Icon name="check" size={13} weight="bold" />
+                </span>
+                {completed ? "Concluída" : "Concluir aula"}
+              </button>
+              {next ? (
+                <Link to={paths.lesson(course.id, next.key)} className="button button-primary lv-next" title={next.title}>
+                  Próxima aula
+                  <Icon name="right" size={16} />
+                </Link>
+              ) : (
+                <Link to={paths.course(course.id)} className="button button-primary lv-next">
+                  Voltar ao curso
+                </Link>
+              )}
+            </div>
+          </header>
+
+          {hasBody && (
+            <div className={`lv-body ${lesson.description && materials.length ? "has-both" : ""}`}>
+              {lesson.description && (
+                <div className="lv-about">
+                  <h2>Sobre esta aula</h2>
+                  <RichText text={lesson.description} />
+                </div>
+              )}
+              {materials.length > 0 && (
+                <div className="lv-files">
+                  <h2>Materiais</h2>
+                  <Materials courseId={course.id} materials={materials} />
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        <LessonPanel
+          course={outline}
+          courseId={course.id}
+          lessonKey={lesson.key}
+          lessonTitle={lesson.title}
+          duration={lesson.duration}
+          completed={completed}
+          playing={playing}
+        />
       </div>
     </div>
   );
@@ -258,32 +318,62 @@ const emptyProgress: LessonProgress = {
   last_watched_at: null,
 };
 
+function fileIcon(m: MaterialInfo): IconName {
+  const type = m.mime_type ?? "";
+  if (type.startsWith("image/")) return "image";
+  if (type.startsWith("video/")) return "video";
+  if (type.startsWith("audio/")) return "audio";
+  return "file";
+}
+
+function fileType(m: MaterialInfo) {
+  const ext = m.file_name?.match(/\.([a-z0-9]{1,5})$/i)?.[1];
+  return ext ? ext.toUpperCase() : null;
+}
+
+function Materials({ courseId, materials }: { courseId: string; materials: MaterialInfo[] }) {
+  return (
+    <ul className="lv-file-list">
+      {materials.map((m) => {
+        const type = fileType(m);
+        return (
+          <li key={m.message_id}>
+            <a className="lv-file" href={`${mediaUrl(courseId, m.message_id)}?download=true`} download>
+              <span className="lv-file-icon">
+                <Icon name={fileIcon(m)} size={18} />
+              </span>
+              <span className="lv-file-text">
+                <span className="lv-file-name">{m.file_name ?? `Arquivo da mensagem ${m.message_id}`}</span>
+                <span className="lv-file-meta">{[type, m.size ? formatSize(m.size) : null].filter(Boolean).join(" · ")}</span>
+              </span>
+              <span className="lv-file-action" aria-hidden="true">
+                <Icon name="download" size={17} />
+              </span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 function NoVideo({ detail }: { detail: LessonDetail }) {
   const { lesson, course } = detail;
   const unavailable = lesson.kind === "unavailable";
+  const files = lesson.materials.length > 0;
+  const [title, text] = unavailable
+    ? ["Aula indisponível", "O sumário cita esta aula, mas nenhuma mensagem do canal foi encontrada para ela."]
+    : files
+      ? ["Esta aula é um material para baixar", "Não há vídeo aqui. Baixe os arquivos e marque a aula como concluída quando terminar."]
+      : ["Esta aula não tem vídeo", "O conteúdo está no texto logo abaixo."];
   return (
-    <div className="no-video">
-      <Icon name={unavailable ? "alert" : "file"} size={32} />
-      <h2>{unavailable ? "Aula indisponível" : "Esta aula não tem vídeo"}</h2>
-      <p className="muted">
-        {unavailable
-          ? "O sumário cita esta aula, mas nenhuma mensagem do canal foi encontrada para ela."
-          : "O conteúdo desta aula está nos arquivos abaixo."}
-      </p>
-      {lesson.materials.length > 0 && (
-        <ul className="file-list">
-          {lesson.materials.map((m) => (
-            <li key={m.message_id}>
-              <Icon name="file" size={16} />
-              <span className="file-name">{m.file_name ?? `Arquivo da mensagem ${m.message_id}`}</span>
-              <span className="muted small">{formatSize(m.size)}</span>
-              <a className="button button-sm" href={`${mediaUrl(course.id, m.message_id)}?download=true`} download>
-                <Icon name="download" size={14} /> Baixar
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className={`lv-doc ${unavailable ? "is-unavailable" : ""}`}>
+      <span className="lv-doc-icon">
+        <Icon name={unavailable ? "alert" : files ? "file" : "text"} size={26} />
+      </span>
+      <h2>{title}</h2>
+      <p>{text}</p>
+      {files && <Materials courseId={course.id} materials={lesson.materials} />}
     </div>
   );
 }

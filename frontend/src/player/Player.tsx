@@ -7,7 +7,7 @@ import { useStudyTracking } from "../study/useStudyTracking";
 import { registerPlayer } from "./controller";
 import ControlButton from "./ControlButton";
 import { diagnose, PlaybackError } from "./errors";
-import { FullscreenIcon, PauseIcon, PlayIcon, SkipIcon } from "./icons";
+import { FullscreenIcon, PauseIcon, PlayIcon, SkipIcon, TheaterIcon } from "./icons";
 import { EndOverlay, ErrorOverlay, FeedbackLayer, Loader, NextLesson, StartOverlay } from "./Overlays";
 import { loadPreferences, savePreferences } from "./preferences";
 import ProgressBar from "./ProgressBar";
@@ -40,6 +40,11 @@ export interface PlayerProps {
   lesson?: { courseId: string; lessonKey: string };
   /** Instante pedido na URL (`?t=194`, vindo de uma anotação). Tem prioridade sobre a retomada. */
   startAt?: number | null;
+  /** Modo cinema (a página decide o layout; o player só mostra o botão e o atalho T). */
+  theater?: boolean;
+  onToggleTheater?: () => void;
+  /** Avisa quando o vídeo começa ou para de tocar (o sumário da aula acompanha). */
+  onPlayingChange?: (playing: boolean) => void;
 }
 
 /**
@@ -53,7 +58,7 @@ export interface PlayerProps {
  * - useStudyTracking: mede o tempo de reprodução efetiva (métricas de estudo).
  */
 export default function Player(props: PlayerProps) {
-  const { src, poster, title, mimeType, width, height, initialPosition, onSavePosition, next, study, lesson, startAt } = props;
+  const { src, poster, title, mimeType, width, height, initialPosition, onSavePosition, next, study, lesson, startAt, theater, onToggleTheater, onPlayingChange } = props;
   const root = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const { state, store } = useMedia(video);
@@ -72,6 +77,7 @@ export default function Player(props: PlayerProps) {
 
   const { status } = state;
   const playing = status === "playing" || status === "buffering";
+  useEffect(() => onPlayingChange?.(status === "playing"), [status, onPlayingChange]);
   const { idle, wake } = useIdle(root, playing && !menuOpen && !scrubbing && !overControls);
 
   // --- posição salva ----------------------------------------------------------
@@ -213,6 +219,7 @@ export default function Player(props: PlayerProps) {
       wake();
     },
     toggleFullscreen: () => void fullscreen.toggle(),
+    toggleTheater: onToggleTheater && !fullscreen.active ? onToggleTheater : undefined,
   });
 
   // --- clique no vídeo -------------------------------------------------------------
@@ -272,7 +279,7 @@ export default function Player(props: PlayerProps) {
       {status === "ended" && <EndOverlay next={next} onReplay={togglePlay} />}
       {status === "error" && error && <ErrorOverlay title={error.title} message={error.message} onRetry={error.canRetry ? retry : undefined} />}
 
-      {resumedAt !== null && state.started && (
+      {resumedAt !== null && state.started && status !== "ended" && (
         <div className="pp-toast">
           Retomando de {formatClock(resumedAt)}
           <button type="button" onClick={() => { actions.seekTo(0); setResumedAt(null); }}>Começar do início</button>
@@ -325,6 +332,17 @@ export default function Player(props: PlayerProps) {
           </span>
           <span className="pp-spacer" />
           <SpeedMenu rate={state.rate} onRate={setRate} onOpenChange={pinControls} />
+          {onToggleTheater && !fullscreen.active && (
+            <ControlButton
+              label={theater ? "Sair do modo cinema" : "Modo cinema"}
+              shortcut="T"
+              className="pp-btn-theater"
+              aria-pressed={!!theater}
+              onClick={onToggleTheater}
+            >
+              <TheaterIcon active={!!theater} />
+            </ControlButton>
+          )}
           <ControlButton
             label={fullscreen.active ? "Sair da tela cheia" : "Tela cheia"}
             shortcut="F"

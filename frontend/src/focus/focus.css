@@ -213,7 +213,6 @@ body.is-resting { overflow: hidden; }
 }
 
 /* ---- início rápido na página da aula ----------------------------------------------- */
-.lesson-title-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px 16px; }
 .quick { position: relative; }
 .quick-panel {
   position: absolute; z-index: 30; right: 0; top: calc(100% + 8px); width: 300px; display: grid; gap: 2px; padding: var(--space-2);
