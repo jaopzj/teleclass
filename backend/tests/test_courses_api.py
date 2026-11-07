@@ -146,3 +146,50 @@ def test_thumbnail_is_cached(client, media, tmp_path):
     user_id = client.get("/api/auth/session").json()["user"]["id"]
     assert (tmp_path / "thumbs" / user_id / "1234567890" / "10.jpg").is_file()
     assert client.get(f"{COURSE}/media/15/thumb").status_code == 404
+
+
+def test_delete_course_removes_it_from_the_account(make_app, tmp_path):
+    import shutil
+
+    from .conftest import FIXTURES
+
+    client = make_app()
+    register(client)
+    user_id = client.get("/api/auth/session").json()["user"]["id"]
+    client.put(f"{COURSE}/lessons/A001/completion", json={"completed": True})
+    thumbs = tmp_path / "thumbs" / user_id / "1234567890"
+    thumbs.mkdir(parents=True)
+    (thumbs / "channel.jpg").write_bytes(b"jpeg")
+    note = client.post("/api/notebook/notes", json={"kind": "quick", "link": {"course_id": "curso_exemplo", "lesson_key": "A001"}})
+    assert note.status_code in (200, 201), note.text
+
+    # Outro usuário com o mesmo curso não é afetado.
+    other = make_app()
+    register(other, "maria")
+    other_id = other.get("/api/auth/session").json()["user"]["id"]
+    (tmp_path / "snapshots" / other_id).mkdir(parents=True, exist_ok=True)
+    shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / other_id / "curso_exemplo.json")
+    other.put(f"{COURSE}/lessons/A001/completion", json={"completed": True})
+
+    assert client.delete(COURSE).status_code == 204
+    assert client.get("/api/courses").json() == []
+    assert client.get(COURSE).status_code == 404
+    assert not (tmp_path / "snapshots" / user_id / "curso_exemplo.json").exists()
+    assert not thumbs.exists()
+    assert client.delete(COURSE).status_code == 404
+
+    # As anotações continuam no Caderno.
+    assert client.get(f"/api/notebook/notes/{note.json()['id']}").status_code == 200
+
+    (course,) = other.get("/api/courses").json()
+    assert course["progress"]["completed"] == 1
+
+    # Coletar o canal de novo começa do zero.
+    shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / user_id / "curso_exemplo.json")
+    (course,) = client.get("/api/courses").json()
+    assert course["progress"]["completed"] == 0
+
+
+def test_delete_course_rejects_bad_names(client):
+    assert client.delete("/api/courses/..%2Fx").status_code == 404
+    assert client.delete("/api/courses/naoexiste").status_code == 404

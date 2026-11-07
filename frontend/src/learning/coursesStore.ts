@@ -47,6 +47,11 @@ export function invalidateCourses() {
   stale = true;
 }
 
+/** Tira da lista um curso já excluído no servidor, sem recarregar. */
+export function forgetCourse(id: string) {
+  if (state.data) set({ data: state.data.filter((c) => c.id !== id) });
+}
+
 export function resetCourses() {
   state = { data: null, error: null, loading: false };
   stale = true;

@@ -53,6 +53,13 @@ class ProgressStore:
             ).fetchall()
         return {row["lesson_key"]: _row(row) for row in rows}
 
+    def delete_course(self, user_id: str, course_id: str) -> int:
+        with self.db.connect() as conn:
+            cursor = conn.execute(
+                "DELETE FROM lesson_progress WHERE user_id = ? AND course_id = ?", (user_id, course_id)
+            )
+        return cursor.rowcount
+
     def get(self, user_id: str, course_id: str, lesson_key: str) -> LessonProgress:
         with self.db.connect() as conn:
             row = conn.execute(

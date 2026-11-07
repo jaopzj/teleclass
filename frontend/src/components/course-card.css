@@ -53,3 +53,39 @@
   .ccard-progress-foot span:first-child { display: none; }
   .ccard-progress-foot { justify-content: flex-end; }
 }
+
+/* ---- "Meus cursos": excluir o curso -------------------------------------------- */
+/* O X fica fora do link (botão dentro de <a> não é válido), sobre a capa. */
+.ccard-slot { position: relative; }
+.ccard-slot:hover .ccard { transform: translateY(-3px); box-shadow: var(--shadow-card-hover); }
+.ccard-slot:has(.ccard-remove:hover) .ccard-action { transform: none; background: var(--surface); color: var(--brand-500); }
+
+.ccard-slot .ccard-remove { /* vence o position: relative de [data-tip] */
+  position: absolute; top: var(--space-3); right: var(--space-3); z-index: 2;
+  display: grid; place-items: center; width: 28px; height: 28px; padding: 0;
+  border: 0; border-radius: 50%; cursor: pointer;
+  background: rgb(255 255 255 / 0.92); color: var(--ink-2); box-shadow: var(--shadow-xs);
+  opacity: 0; transform: scale(0.8);
+  transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-base) var(--ease-spring),
+    background var(--duration-fast), color var(--duration-fast);
+}
+.ccard-slot:hover .ccard-remove,
+.ccard-slot:focus-within .ccard-remove,
+.ccard-slot.is-pending .ccard-remove { opacity: 1; transform: translateY(-3px) scale(1); }
+.ccard-slot:focus-within:not(:hover) .ccard-remove { transform: scale(1); }
+.ccard-remove:hover, .ccard-slot.is-pending .ccard-remove { background: var(--danger); color: #fff; }
+.ccard-remove:active { transform: translateY(-3px) scale(0.92); }
+.ccard-remove:focus-visible { outline: none; box-shadow: var(--shadow-xs), var(--focus-ring); }
+
+/* Telas de toque não têm hover: o X fica sempre à vista. */
+@media (hover: none) {
+  .ccard-slot .ccard-remove { opacity: 1; transform: none; }
+}
+
+.ccard-slot.is-leaving { pointer-events: none; animation: ccard-leave 260ms var(--ease-out) forwards; }
+@keyframes ccard-leave {
+  to { opacity: 0; transform: scale(0.94); filter: saturate(0.4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ccard-slot .ccard-remove { transition: none; }
+}

@@ -52,6 +52,13 @@ class SnapshotStore:
             raise SnapshotNotFound(name)
         return load_snapshot(path)
 
+    def delete(self, name: str) -> None:
+        path = self._path(name)
+        try:
+            path.unlink()
+        except FileNotFoundError as exc:
+            raise SnapshotNotFound(name) from exc
+
     def names(self) -> list[str]:
         if not self.directory.is_dir():
             return []

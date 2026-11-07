@@ -8,7 +8,9 @@ FastAPI as executa em threads, sem travar o streaming dos vídeos.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+import shutil
+
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from ..courses import Course, CourseLesson, CourseNotFound
@@ -150,6 +152,30 @@ def get_course(
         "progress": _progress(summarize(course, progress), progress),
         "sections": [_node(node, progress) for node in course.sections],
     }
+
+
+@router.delete("/{course_id}", status_code=204)
+def delete_course(
+    course_id: str, state: AppState = Depends(get_state), user: str = Depends(get_user_id)
+) -> Response:
+    """Tira o curso da conta do usuário: o snapshot, o progresso e as capas em cache.
+
+    Cada usuário tem a própria cópia do curso, então os outros não são afetados.
+    As anotações continuam no Caderno (aparecem como curso removido) e o tempo
+    de estudo já registrado continua nas métricas.
+    """
+    catalog = state.libraries.catalog(user)
+    course = _course(state, user, course_id)
+    try:
+        catalog.remove(course.id)
+    except CourseNotFound as exc:  # apagado por outra aba no meio do caminho
+        raise HTTPException(404, "Curso não encontrado") from exc
+    state.progress.delete_course(user, course.id)
+    # Capa e miniaturas ficam por canal; só saem se nenhum outro curso usa o mesmo canal.
+    folder = str(course.channel_id or course.id)
+    if not any(str(c.channel_id or c.id) == folder for c in catalog.all()):
+        shutil.rmtree(state.settings.thumbs_dir / user / folder, ignore_errors=True)
+    return Response(status_code=204)
 
 
 @router.get("/{course_id}/lessons/{key}")

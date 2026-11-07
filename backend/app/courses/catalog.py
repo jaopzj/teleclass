@@ -200,6 +200,16 @@ class CourseCatalog:
             self._cache[course_id] = (mtime, course)
         return course
 
+    def remove(self, course_id: str) -> None:
+        """Apaga o snapshot do curso (a biblioteca é do usuário, nada é compartilhado)."""
+        try:
+            self.store.delete(course_id)
+        except SnapshotNotFound as exc:
+            raise CourseNotFound(course_id) from exc
+        finally:
+            with self._lock:
+                self._cache.pop(course_id, None)
+
     def all(self) -> list[Course]:
         courses = []
         for course_id in self.ids():
