@@ -40,6 +40,7 @@ import signOutRegular from "@phosphor-icons/core/regular/sign-out.svg?raw";
 import arrowRightRegular from "@phosphor-icons/core/regular/arrow-right.svg?raw";
 import arrowRightBold from "@phosphor-icons/core/bold/arrow-right-bold.svg?raw";
 import xRegular from "@phosphor-icons/core/regular/x.svg?raw";
+import xBold from "@phosphor-icons/core/bold/x-bold.svg?raw";
 import flameRegular from "@phosphor-icons/core/regular/flame.svg?raw";
 import calendarBlankRegular from "@phosphor-icons/core/regular/calendar-blank.svg?raw";
 import targetRegular from "@phosphor-icons/core/regular/target.svg?raw";
@@ -137,7 +138,7 @@ const ICONS = {
   send: { regular: paperPlaneTiltRegular },
   logout: { regular: signOutRegular },
   arrow: { regular: arrowRightRegular, bold: arrowRightBold },
-  close: { regular: xRegular },
+  close: { regular: xRegular, bold: xBold },
   flame: { regular: flameRegular },
   calendar: { regular: calendarBlankRegular },
   target: { regular: targetRegular },

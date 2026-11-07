@@ -104,6 +104,8 @@ export const learningApi = {
   courses: () => request<CourseCard[]>("/api/courses"),
   course: (id: string) => request<CourseDetail>(base(id)),
   lesson: (id: string, key: string) => request<LessonDetail>(lessonBase(id, key)),
+  /** Tira o curso da conta: some da biblioteca e o progresso é apagado. */
+  removeCourse: (id: string) => request<void>(base(id), { method: "DELETE" }).then(() => invalidateStudyMetrics()),
 
   /** `keepalive` deixa a requisição terminar mesmo se a página for fechada. */
   savePosition: (id: string, key: string, position: number, duration: number | null, keepalive = false) => {
