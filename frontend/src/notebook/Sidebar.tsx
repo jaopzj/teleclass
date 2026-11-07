@@ -1,14 +1,15 @@
-import { DragEvent, FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
+import { DragEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import ConfirmDialog from "../focus/ConfirmDialog";
 import Icon, { IconName } from "../components/Icon";
+import { plural } from "../format";
 import { notify } from "../notifications/center";
 import { Link, navigate, paths } from "../router";
 import { notebookApi, Overview, View } from "./api";
-import { FolderGlyph, MoveDialog, NameDialog } from "./dialogs";
-import { FOLDER_DRAG, folderTree, FolderNode, NOTE_DRAG } from "./state";
+import { MoveDialog, NameDialog } from "./dialogs";
+import { FOLDER_DRAG, folderTree, FolderNode, NOTE_DRAG, useDismiss } from "./state";
 
 export interface Location {
-  view: View | "home" | "search";
+  view: View | "home" | "search" | "note";
   folder?: string;
   course?: string;
   lesson?: string;
@@ -17,12 +18,12 @@ export interface Location {
 }
 
 const VIEWS: { view: View | "home"; label: string; icon: IconName; param?: string }[] = [
-  { view: "home", label: "Início", icon: "library" },
+  { view: "home", label: "Início", icon: "home" },
   { view: "recent", label: "Recentes", icon: "history", param: "recentes" },
-  { view: "favorites", label: "Favoritas", icon: "spark", param: "favoritas" },
-  { view: "pinned", label: "Fixadas", icon: "target", param: "fixadas" },
+  { view: "favorites", label: "Favoritas", icon: "star", param: "favoritas" },
+  { view: "pinned", label: "Fixadas", icon: "pin", param: "fixadas" },
   { view: "quick", label: "Notas das aulas", icon: "play", param: "aulas" },
-  { view: "all", label: "Todas", icon: "layers", param: "todas" },
+  { view: "all", label: "Todas", icon: "files", param: "todas" },
 ];
 
 export const VIEW_PARAM: Record<string, View> = {
@@ -97,11 +98,12 @@ function FolderRow(props: RowProps) {
   const open = expanded.has(node.id);
   const active = activeFolder === node.id;
   const [menu, setMenu] = useState(false);
+  const menuRef = useDismiss(menu, () => setMenu(false));
   return (
     <li>
       <div
-        className={`nb-side-row nb-folder ${active ? "is-active" : ""} ${over === node.id ? "is-drop" : ""}`}
-        style={{ paddingLeft: 8 + node.depth * 14 }}
+        className={`nb-side-row nb-folder ${active ? "is-active" : ""} ${over === node.id ? "is-drop" : ""} ${menu ? "has-menu" : ""}`}
+        style={{ paddingLeft: node.depth * 16 }}
         draggable
         onDragStart={(e) => {
           e.dataTransfer.setData(FOLDER_DRAG, node.id);
@@ -109,30 +111,30 @@ function FolderRow(props: RowProps) {
         }}
         {...dropProps(node.id, setOver)}
       >
-        <button type="button" className={`nb-twisty ${open ? "is-open" : ""} ${node.children.length ? "" : "is-leaf"}`} onClick={() => toggle(node.id)} aria-label={open ? "Recolher" : "Expandir"} tabIndex={node.children.length ? 0 : -1}>
+        <button type="button" className={`nb-twisty ${open ? "is-open" : ""} ${node.children.length ? "" : "is-leaf"}`} onClick={() => toggle(node.id)} aria-label={open ? `Recolher ${node.name}` : `Expandir ${node.name}`} aria-expanded={node.children.length ? open : undefined} tabIndex={node.children.length ? 0 : -1}>
           <Icon name="chevron" size={12} />
         </button>
-        <Link to={paths.notebook({ pasta: node.id })} className="nb-side-link" onClick={go}>
-          <FolderGlyph />
+        <Link to={paths.notebook({ pasta: node.id })} className="nb-side-link" onClick={go} aria-current={active ? "page" : undefined}>
+          <Icon name="folder" size={18} weight={active ? "fill" : "regular"} />
           <span className="nb-side-label">{node.name}</span>
           {node.notes > 0 && <span className="nb-count">{node.notes}</span>}
         </Link>
-        <div className="nb-row-actions">
+        <div className="nb-row-actions" ref={menuRef}>
           <button type="button" className="nb-icon-button" onClick={() => setMenu((m) => !m)} aria-label={`Ações da pasta ${node.name}`} aria-expanded={menu}>
-            ⋯
+            <Icon name="dots" size={16} />
           </button>
           {menu && (
-            <div className="nb-menu" role="menu" onMouseLeave={() => setMenu(false)}>
-              <button role="menuitem" onClick={() => { setMenu(false); folderMenu(node, "sub"); }}>Nova subpasta</button>
-              <button role="menuitem" onClick={() => { setMenu(false); folderMenu(node, "rename"); }}>Renomear</button>
-              <button role="menuitem" onClick={() => { setMenu(false); folderMenu(node, "move"); }}>Mover para…</button>
-              <button role="menuitem" className="is-danger" onClick={() => { setMenu(false); folderMenu(node, "delete"); }}>Excluir</button>
+            <div className="nb-menu" role="menu">
+              <button role="menuitem" onClick={() => { setMenu(false); folderMenu(node, "sub"); }}><Icon name="folderPlus" size={16} />Nova subpasta</button>
+              <button role="menuitem" onClick={() => { setMenu(false); folderMenu(node, "rename"); }}><Icon name="edit" size={16} />Renomear</button>
+              <button role="menuitem" onClick={() => { setMenu(false); folderMenu(node, "move"); }}><Icon name="arrow" size={16} />Mover para…</button>
+              <button role="menuitem" className="is-danger" onClick={() => { setMenu(false); folderMenu(node, "delete"); }}><Icon name="trash" size={16} />Excluir</button>
             </div>
           )}
         </div>
       </div>
       {open && node.children.length > 0 && (
-        <ul>
+        <ul className="nb-tree-children">
           {node.children.map((child) => (
             <FolderRow key={child.id} {...props} node={child} />
           ))}
@@ -144,7 +146,6 @@ function FolderRow(props: RowProps) {
 
 
 export default function Sidebar({ overview, location, onNavigate }: { overview: Overview | null; location: Location; onNavigate?: () => void }) {
-  const [query, setQuery] = useState(location.q ?? "");
   const [expanded, setExpanded] = useState<Set<string>>(() => {
     try {
       return new Set(JSON.parse(localStorage.getItem("teleaula:notebook:open-folders") ?? "[]"));
@@ -156,7 +157,6 @@ export default function Sidebar({ overview, location, onNavigate }: { overview: 
   const [over, setOver] = useState<string | null | undefined>(undefined);
   const [showAllCourses, setShowAllCourses] = useState(false);
 
-  useEffect(() => setQuery(location.q ?? ""), [location.q]);
   useEffect(() => {
     try {
       localStorage.setItem("teleaula:notebook:open-folders", JSON.stringify([...expanded]));
@@ -180,14 +180,6 @@ export default function Sidebar({ overview, location, onNavigate }: { overview: 
     }
     if (add.some((id) => !expanded.has(id))) setExpanded((s) => new Set([...s, ...add]));
   }, [location.folder, overview]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function search(e: FormEvent) {
-    e.preventDefault();
-    const q = query.trim();
-    if (!q) return;
-    navigate(paths.notebook({ q, pasta: location.folder, curso: location.course, etiqueta: location.tag }));
-    onNavigate?.();
-  }
 
   function toggle(id: string) {
     setExpanded((s) => {
@@ -251,39 +243,35 @@ export default function Sidebar({ overview, location, onNavigate }: { overview: 
   const courses = (overview?.courses ?? []).filter((c) => showAllCourses || c.notes > 0);
   const hiddenCourses = (overview?.courses ?? []).filter((c) => c.notes === 0).length;
 
-  return (
-    <nav className="nb-side" aria-label="Navegação do Caderno">
-      <form className="nb-search" onSubmit={search} role="search">
-        <Icon name="eye2" size={15} />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={location.folder || location.course ? "Buscar aqui…" : "Buscar nas anotações"} aria-label="Buscar nas anotações" />
-        <kbd>Enter</kbd>
-      </form>
+  const viewLink = (to: string, active: boolean, icon: IconName, label: string, count?: number | null, subtle?: boolean) => (
+    <Link to={to} className={`nb-side-row nb-side-link ${active ? "is-active" : ""} ${subtle ? "nb-subtle" : ""}`} onClick={go} aria-current={active ? "page" : undefined}>
+      <Icon name={icon} size={18} weight={active && (icon === "star" || icon === "pin" || icon === "folder") ? "fill" : "regular"} />
+      <span className="nb-side-label">{label}</span>
+      {!!count && <span className="nb-count">{count}</span>}
+    </Link>
+  );
 
+  return (
+    <nav className="nb-side" aria-label="Navegação das anotações">
       <ul className="nb-side-group">
-        {VIEWS.map((v) => {
-          const count = v.view === "home" ? null : counts?.[v.view as View];
-          return (
-            <li key={v.view}>
-              <Link to={v.view === "home" ? paths.notebook() : paths.notebook({ v: v.param })} className={`nb-side-row nb-side-link ${isView(v.view) ? "is-active" : ""}`} onClick={go}>
-                <Icon name={v.icon} size={15} />
-                <span className="nb-side-label">{v.label}</span>
-                {!!count && <span className="nb-count">{count}</span>}
-              </Link>
-            </li>
-          );
-        })}
+        {VIEWS.map((v) => (
+          <li key={v.view}>
+            {viewLink(v.view === "home" ? paths.notebook() : paths.notebook({ v: v.param }), isView(v.view), v.icon, v.label, v.view === "home" ? null : counts?.[v.view as View])}
+          </li>
+        ))}
       </ul>
 
-      <div className="nb-side-section">
+      <section className="nb-side-section" aria-labelledby="nb-side-folders">
         <div className={`nb-side-title ${over === null ? "is-drop" : ""}`} {...dropProps(null, setOver)}>
-          <span>Pastas</span>
+          <h2 id="nb-side-folders">Pastas</h2>
           <button type="button" className="nb-icon-button" onClick={() => newFolder(null)} aria-label="Nova pasta" title="Nova pasta">
-            <Icon name="plus" size={14} />
+            <Icon name="plus" size={16} />
           </button>
         </div>
         {tree.length === 0 ? (
           <button type="button" className="nb-side-empty" onClick={() => newFolder(null)}>
-            Crie pastas para organizar do seu jeito
+            <Icon name="folderPlus" size={18} />
+            <span>Criar uma pasta</span>
           </button>
         ) : (
           <ul className="nb-tree">
@@ -292,23 +280,19 @@ export default function Sidebar({ overview, location, onNavigate }: { overview: 
             ))}
           </ul>
         )}
-        <Link to={paths.notebook({ v: "sem-pasta" })} className={`nb-side-row nb-side-link nb-subtle ${isView("unfiled") ? "is-active" : ""}`} onClick={go}>
-          <Icon name="file" size={14} />
-          <span className="nb-side-label">Sem pasta</span>
-          {!!counts?.unfiled && <span className="nb-count">{counts.unfiled}</span>}
-        </Link>
-      </div>
+        {viewLink(paths.notebook({ v: "sem-pasta" }), isView("unfiled"), "file", "Sem pasta", counts?.unfiled, true)}
+      </section>
 
-      <div className="nb-side-section">
+      <section className="nb-side-section" aria-labelledby="nb-side-courses">
         <div className="nb-side-title">
-          <span>Cursos</span>
+          <h2 id="nb-side-courses">Cursos</h2>
         </div>
-        {overview && overview.courses.length === 0 && <p className="nb-side-empty is-static">Seus cursos aparecem aqui.</p>}
-        <ul>
+        {overview && overview.courses.length === 0 && <p className="nb-side-note">Seus cursos aparecem aqui.</p>}
+        <ul className="nb-side-group">
           {courses.map((c) => (
             <li key={c.id}>
               <Link to={paths.notebook({ curso: c.id })} className={`nb-side-row nb-side-link ${location.course === c.id && !location.lesson ? "is-active" : ""} ${c.notes === 0 ? "nb-subtle" : ""}`} onClick={go} title={c.title ?? "Curso removido da biblioteca"}>
-                <Icon name="play" size={11} />
+                <Icon name="courses" size={18} />
                 <span className="nb-side-label">{c.title ?? "Curso removido"}</span>
                 {c.notes > 0 && <span className="nb-count">{c.notes}</span>}
               </Link>
@@ -317,44 +301,32 @@ export default function Sidebar({ overview, location, onNavigate }: { overview: 
         </ul>
         {hiddenCourses > 0 && (
           <button type="button" className="nb-side-more" onClick={() => setShowAllCourses((s) => !s)}>
-            {showAllCourses ? "Mostrar só cursos com anotações" : `Mais ${hiddenCourses} curso(s) sem anotações`}
+            {showAllCourses ? "Mostrar só cursos com anotações" : `Ver mais ${plural(hiddenCourses, "curso", "cursos")} sem anotações`}
           </button>
         )}
-      </div>
+      </section>
 
       {(overview?.tags.length ?? 0) > 0 && (
-        <div className="nb-side-section">
+        <section className="nb-side-section" aria-labelledby="nb-side-tags">
           <div className="nb-side-title">
-            <span>Etiquetas</span>
+            <h2 id="nb-side-tags">Etiquetas</h2>
           </div>
           <ul className="nb-tag-cloud">
             {overview!.tags.map((t) => (
               <li key={t.id}>
-                <Link to={paths.notebook({ etiqueta: t.id })} className={`nb-tag ${location.tag === t.id ? "is-active" : ""}`} data-color={t.color} onClick={go}>
+                <Link to={paths.notebook({ etiqueta: t.id })} className={`nb-tag ${location.tag === t.id ? "is-active" : ""}`} data-color={t.color} onClick={go} aria-current={location.tag === t.id ? "page" : undefined}>
                   {t.name}
                   {!!t.notes && <small>{t.notes}</small>}
                 </Link>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
 
       <ul className="nb-side-group nb-side-bottom">
-        <li>
-          <Link to={paths.notebook({ v: "arquivadas" })} className={`nb-side-row nb-side-link nb-subtle ${isView("archived") ? "is-active" : ""}`} onClick={go}>
-            <Icon name="download" size={14} />
-            <span className="nb-side-label">Arquivadas</span>
-            {!!counts?.archived && <span className="nb-count">{counts.archived}</span>}
-          </Link>
-        </li>
-        <li>
-          <Link to={paths.notebook({ v: "lixeira" })} className={`nb-side-row nb-side-link nb-subtle ${isView("trash") ? "is-active" : ""}`} onClick={go}>
-            <Icon name="trash" size={14} />
-            <span className="nb-side-label">Lixeira</span>
-            {!!counts?.trash && <span className="nb-count">{counts.trash}</span>}
-          </Link>
-        </li>
+        <li>{viewLink(paths.notebook({ v: "arquivadas" }), isView("archived"), "archive", "Arquivadas", counts?.archived, true)}</li>
+        <li>{viewLink(paths.notebook({ v: "lixeira" }), isView("trash"), "trash", "Lixeira", counts?.trash, true)}</li>
       </ul>
       {dialog}
     </nav>

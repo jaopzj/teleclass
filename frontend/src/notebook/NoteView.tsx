@@ -11,6 +11,7 @@ import { EditorEnv } from "./editor/env";
 import { openTarget } from "./editor/navigation";
 import NoteEditor from "./editor/NoteEditor";
 import { LinkDialog, MoveDialog, TagPicker } from "./dialogs";
+import { useDismiss } from "./state";
 import { formatStamp } from "./time";
 import { SYNC_LABEL, useNoteSync } from "./useNoteSync";
 
@@ -32,7 +33,7 @@ export default function NoteView({ noteId, query, overview, toolbar }: { noteId:
   if (error) {
     return (
       <div className="nb-collection">
-        <header className="nb-head">{toolbar}</header>
+        <header className="nb-pane-head">{toolbar}</header>
         <div className="nb-empty">
           <span className="nb-empty-icon"><Icon name="alert" size={22} /></span>
           <h3>{error.status === 404 ? "Anotação não encontrada" : "Não foi possível abrir a anotação"}</h3>
@@ -49,10 +50,13 @@ export default function NoteView({ noteId, query, overview, toolbar }: { noteId:
     return (
       <div className="nb-doc-wrap">
         <header className="nb-doc-bar">{toolbar}</header>
-        <div className="nb-doc" aria-busy="true">
-          <div className="skeleton nb-skel-title" />
-          <div className="skeleton nb-skel-line" />
-          <div className="skeleton nb-skel-line is-short" />
+        <div className="nb-doc-scroll">
+          <div className="nb-doc" aria-busy="true">
+            <div className="skeleton skeleton-line nb-skel-title" />
+            <div className="skeleton skeleton-line nb-skel-line" />
+            <div className="skeleton skeleton-line nb-skel-line" />
+            <div className="skeleton skeleton-line nb-skel-line is-short" />
+          </div>
         </div>
       </div>
     );
@@ -72,6 +76,7 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
   const [refs, setRefs] = useState<ResolvedRef[]>(initial.refs);
   const [words, setWords] = useState(initial.words);
   const [menu, setMenu] = useState(false);
+  const menuRef = useDismiss(menu, () => setMenu(false));
   const [dialog, setDialog] = useState<ReactNode>(null);
   const [tagsOpen, setTagsOpen] = useState(false);
   const [history, setHistory] = useState(false);
@@ -163,7 +168,7 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
       <header className="nb-doc-bar">
         {toolbar}
         <nav className="nb-doc-crumbs" aria-label="Local da anotação">
-          <Link to={paths.notebook()}>Caderno</Link>
+          <Link to={paths.notebook()}>Anotações</Link>
           {note.folder_path.map((f) => (
             <Link key={f.id} to={paths.notebook({ pasta: f.id })}>{f.name}</Link>
           ))}
@@ -176,25 +181,25 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
         {!trashed && (
           <div className="nb-doc-actions">
             <button type="button" className={`nb-icon-button nb-fav ${note.favorite ? "is-on" : ""}`} onClick={() => void update({ favorite: !note.favorite })} aria-label={note.favorite ? "Tirar dos favoritos" : "Favoritar"} title={note.favorite ? "Tirar dos favoritos" : "Favoritar"} aria-pressed={note.favorite}>
-              {note.favorite ? "★" : "☆"}
+              <Icon name="star" size={20} weight={note.favorite ? "fill" : "regular"} />
             </button>
             <button type="button" className={`nb-icon-button ${note.pinned ? "is-on" : ""}`} onClick={() => void update({ pinned: !note.pinned })} aria-label={note.pinned ? "Desafixar" : "Fixar no início"} title={note.pinned ? "Desafixar" : "Fixar no início"} aria-pressed={note.pinned}>
-              <Icon name="target" size={15} />
+              <Icon name="pin" size={20} weight={note.pinned ? "fill" : "regular"} />
             </button>
             <button type="button" className="nb-icon-button" onClick={() => setHistory((h) => !h)} aria-label="Histórico de versões" title="Histórico de versões" aria-pressed={history}>
-              <Icon name="history" size={15} />
+              <Icon name="history" size={20} />
             </button>
-            <div className="nb-menu-wrap">
-              <button type="button" className="nb-icon-button" onClick={() => setMenu((m) => !m)} aria-label="Mais ações" aria-expanded={menu}>⋯</button>
+            <div className="nb-menu-wrap" ref={menuRef}>
+              <button type="button" className="nb-icon-button" onClick={() => setMenu((m) => !m)} aria-label="Mais ações" aria-expanded={menu}><Icon name="dots" size={20} /></button>
               {menu && (
-                <div className="nb-menu is-right" role="menu" onMouseLeave={() => setMenu(false)}>
-                  <button role="menuitem" onClick={() => { setMenu(false); setDialog(<MoveDialog title="Mover para…" folders={overview?.folders ?? []} current={note.folder_id} onClose={close} onMove={async (f) => { await update({ folder_id: f }); }} />); }}>Mover para…</button>
+                <div className="nb-menu is-right" role="menu">
+                  <button role="menuitem" onClick={() => { setMenu(false); setDialog(<MoveDialog title="Mover para…" folders={overview?.folders ?? []} current={note.folder_id} onClose={close} onMove={async (f) => { await update({ folder_id: f }); }} />); }}><Icon name="folder" size={16} />Mover para…</button>
                   {!quick && (
-                    <button role="menuitem" onClick={() => { setMenu(false); setDialog(<LinkDialog initial={{ course_id: note.course_id, section_id: note.section_id, lesson_key: note.lesson_key, label: linkLabel }} initialSeconds={note.timestamp_seconds} onClose={close} onSave={async (link, seconds) => { const next = await notebookApi.update(note.id, link ? { link, timestamp_seconds: seconds } : { link: null }); setNote((n) => ({ ...n, ...next, doc: n.doc })); }} />); }}>{note.course_id ? "Mudar vínculo com curso" : "Vincular a curso ou aula"}</button>
+                    <button role="menuitem" onClick={() => { setMenu(false); setDialog(<LinkDialog initial={{ course_id: note.course_id, section_id: note.section_id, lesson_key: note.lesson_key, label: linkLabel }} initialSeconds={note.timestamp_seconds} onClose={close} onSave={async (link, seconds) => { const next = await notebookApi.update(note.id, link ? { link, timestamp_seconds: seconds } : { link: null }); setNote((n) => ({ ...n, ...next, doc: n.doc })); }} />); }}><Icon name="link" size={16} />{note.course_id ? "Mudar vínculo com curso" : "Vincular a curso ou aula"}</button>
                   )}
-                  {quick && <button role="menuitem" onClick={() => { setMenu(false); void convert(); }}>Transformar em anotação completa</button>}
-                  <button role="menuitem" onClick={async () => { setMenu(false); await sync.saveNow(); const copy = await notebookApi.duplicate(note.id); navigate(paths.note(copy.id)); }}>Duplicar</button>
-                  <button role="menuitem" onClick={() => { setMenu(false); void update({ archived: !note.archived }, note.archived ? "Anotação desarquivada" : "Anotação arquivada"); }}>{note.archived ? "Desarquivar" : "Arquivar"}</button>
+                  {quick && <button role="menuitem" onClick={() => { setMenu(false); void convert(); }}><Icon name="page" size={16} />Transformar em anotação completa</button>}
+                  <button role="menuitem" onClick={async () => { setMenu(false); await sync.saveNow(); const copy = await notebookApi.duplicate(note.id); navigate(paths.note(copy.id)); }}><Icon name="files" size={16} />Duplicar</button>
+                  <button role="menuitem" onClick={() => { setMenu(false); void update({ archived: !note.archived }, note.archived ? "Anotação desarquivada" : "Anotação arquivada"); }}><Icon name="archive" size={16} />{note.archived ? "Desarquivar" : "Arquivar"}</button>
                   <button role="menuitem" className="is-danger" onClick={() => { setMenu(false); setDialog(
                     <ConfirmDialog title="Mover para a lixeira?" confirmLabel="Mover para a lixeira" danger onCancel={close} onConfirm={async () => {
                       close();
@@ -204,7 +209,7 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
                       navigate(paths.notebook());
                     }}>
                       <p>Você pode restaurá-la pela Lixeira enquanto não a excluir definitivamente.</p>
-                    </ConfirmDialog>); }}>Mover para a lixeira</button>
+                    </ConfirmDialog>); }}><Icon name="trash" size={16} />Mover para a lixeira</button>
                 </div>
               )}
             </div>
@@ -213,18 +218,21 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
       </header>
 
       <div className={`nb-doc-layout ${history ? "has-panel" : ""}`}>
+        <div className="nb-doc-scroll">
         <article className="nb-doc">
           {trashed && (
             <div className="nb-banner is-warning">
-              Esta anotação está na lixeira.
+              <Icon name="trash" size={18} />
+              <span>Esta anotação está na lixeira.</span>
               <button className="button button-sm" onClick={async () => { await notebookApi.restore(note.id); onReload(); }}>Restaurar</button>
             </div>
           )}
           {note.archived && !trashed && (
-            <div className="nb-banner">Arquivada: fora das listas, mas continua aqui. <button className="link-button" onClick={() => void update({ archived: false })}>Desarquivar</button></div>
+            <div className="nb-banner"><Icon name="archive" size={18} /><span>Arquivada: fora das listas, mas continua aqui.</span> <button className="link-button" onClick={() => void update({ archived: false })}>Desarquivar</button></div>
           )}
           {quick && !trashed && (
             <div className="nb-banner is-quick">
+              <Icon name="play" size={18} />
               <span>Nota rápida da aula. Transforme em anotação completa para usar tabelas, fórmulas, código, imagens, anexos e citações com @.</span>
               <button className="button button-sm" onClick={() => void convert()}>Transformar</button>
             </div>
@@ -283,8 +291,8 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
                 onClick={(e) => ctx?.status === "ok" && openTarget({ courseId: note.course_id!, kind: note.lesson_key ? "lesson" : note.section_id ? "section" : "course", lessonKey: note.lesson_key, sectionId: note.section_id, seconds: note.timestamp_seconds }, e.ctrlKey || e.metaKey)}
                 title={ctx?.status === "ok" ? "Abrir no curso" : "O conteúdo vinculado não existe mais"}
               >
-                <Icon name={note.lesson_key ? "play" : "layers"} size={12} />
-                {linkLabel}
+                <Icon name={note.lesson_key ? "play" : "courses"} size={14} />
+                <span className="nb-chip-label">{linkLabel}</span>
                 {note.timestamp_seconds != null && <span className="nb-chip-time">{formatStamp(note.timestamp_seconds)}</span>}
               </button>
             )}
@@ -297,14 +305,14 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
             {!trashed && (
               <span className="nb-tag-add-wrap">
                 <button type="button" className="nb-chip is-ghost" onClick={() => setTagsOpen((o) => !o)}>
-                  <Icon name="plus" size={12} /> Etiqueta
+                  <Icon name="tag" size={14} /> Etiqueta
                 </button>
                 {tagsOpen && <TagPicker all={overview?.tags ?? []} selected={note.tags} onClose={() => setTagsOpen(false)} onChange={async (ids) => { await update({ tag_ids: ids }); }} />}
               </span>
             )}
             {!note.course_id && !quick && !trashed && (
               <button type="button" className="nb-chip is-ghost" onClick={() => setDialog(<LinkDialog initial={{ course_id: null, section_id: null, lesson_key: null }} initialSeconds={null} onClose={close} onSave={async (link, seconds) => { const next = await notebookApi.update(note.id, link ? { link, timestamp_seconds: seconds } : { link: null }); setNote((n) => ({ ...n, ...next, doc: n.doc })); }} />)}>
-                <Icon name="link" size={12} /> Vincular a uma aula
+                <Icon name="link" size={14} /> Vincular a uma aula
               </button>
             )}
           </div>
@@ -326,10 +334,11 @@ function Document({ initial, query, overview, toolbar, onReload }: { initial: No
           <footer className="nb-doc-foot">
             <span>{plural(words, "palavra", "palavras")}</span>
             <span>Criada {formatRelative(note.created_at)}</span>
-            {status === "error" && <button className="link-button" onClick={() => void sync.saveNow()}>Falha ao salvar · tentar de novo</button>}
+            {status === "error" && <button className="link-button" onClick={() => void sync.saveNow()}>Falha ao salvar. Tentar de novo</button>}
             {status === "offline" && <span>Sem conexão: as alterações estão guardadas neste aparelho e serão enviadas quando a rede voltar.</span>}
           </footer>
         </article>
+        </div>
 
         {history && (
           <HistoryPanel
@@ -370,7 +379,7 @@ function HistoryPanel({ note, env, onClose, onRestore }: { note: Note; env: Edit
     <aside className="nb-panel" aria-label="Histórico de versões">
       <header className="nb-panel-head">
         <h2>Histórico</h2>
-        <button type="button" className="nb-icon-button" onClick={onClose} aria-label="Fechar histórico"><Icon name="close" size={15} /></button>
+        <button type="button" className="nb-icon-button" onClick={onClose} aria-label="Fechar histórico"><Icon name="close" size={18} /></button>
       </header>
       <p className="nb-panel-hint">Versões são guardadas automaticamente a cada ~10 minutos de edição e antes de resolver conflitos.</p>
       {error && <div className="alert alert-error">{error}</div>}
@@ -378,7 +387,7 @@ function HistoryPanel({ note, env, onClose, onRestore }: { note: Note; env: Edit
       {items?.length === 0 && <p className="muted small">Ainda não há versões anteriores desta anotação.</p>}
       {preview ? (
         <div className="nb-preview">
-          <button type="button" className="link-button" onClick={() => setPreview(null)}>← Todas as versões</button>
+          <button type="button" className="link-button" onClick={() => setPreview(null)}><Icon name="back" size={14} />Todas as versões</button>
           <h3>{preview.title || "Sem título"}</h3>
           <p className="muted small">{new Date(preview.created_at).toLocaleString("pt-BR")} · {plural(preview.words, "palavra", "palavras")}</p>
           <div className="nb-preview-doc">
