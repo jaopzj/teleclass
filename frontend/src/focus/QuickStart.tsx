@@ -8,7 +8,7 @@ import { duration, stageLabel } from "./derive";
 import { FocusActionError, startSession, useFocus } from "./store";
 
 /** Começar uma sessão vinculada à aula sem sair dela. */
-export default function QuickStart({ courseId, lessonKey }: { courseId: string; lessonKey: string }) {
+export default function QuickStart({ courseId, lessonKey, compact = false }: { courseId: string; lessonKey: string; compact?: boolean }) {
   const { session, busy } = useFocus();
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -31,7 +31,8 @@ export default function QuickStart({ courseId, lessonKey }: { courseId: string; 
     const here = session.course?.id === courseId && session.lesson?.key === lessonKey;
     return (
       <Link to={paths.focus()} className="quick-chip">
-        <span className="quick-dot" /> {here ? "Sessão desta aula em andamento" : `Sessão em andamento · ${stageLabel(session.stage, session.paused)}`}
+        <span className="quick-dot" />{" "}
+        {compact ? stageLabel(session.stage, session.paused) : here ? "Sessão desta aula em andamento" : `Sessão em andamento · ${stageLabel(session.stage, session.paused)}`}
       </Link>
     );
   }
@@ -67,9 +68,22 @@ export default function QuickStart({ courseId, lessonKey }: { courseId: string; 
 
   return (
     <div className="quick" ref={root}>
-      <button type="button" className="button button-sm" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <Icon name="timer" size={15} /> Estudar com temporizador
-      </button>
+      {compact ? (
+        <button
+          type="button"
+          className="icon-button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          aria-label="Estudar com temporizador"
+          data-tip={open ? undefined : "Estudar com temporizador"}
+        >
+          <Icon name="timer" size={20} />
+        </button>
+      ) : (
+        <button type="button" className="button button-sm" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+          <Icon name="timer" size={15} /> Estudar com temporizador
+        </button>
+      )}
       {open && (
         <div className="quick-panel" role="dialog" aria-label="Iniciar sessão nesta aula">
           <p className="quick-title">Sessão vinculada a esta aula</p>

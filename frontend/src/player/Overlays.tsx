@@ -1,9 +1,9 @@
 // Camadas sobre o vídeo: carregamento, feedback de ações, início, fim e erro.
-import { MouseEvent, useState } from "react";
+import { MouseEvent, useEffect, useState } from "react";
 import { formatClock } from "../format";
 import { Link, navigate } from "../router";
 import { Feedback } from "./useFeedback";
-import { AlertIcon, NextIcon, PauseIcon, PlayIcon, ReplayIcon, VolumeIcon } from "./icons";
+import { AlertIcon, CheckIcon, NextIcon, PauseIcon, PlayIcon, ReplayIcon, VolumeIcon } from "./icons";
 import { formatRate } from "./SpeedMenu";
 
 /** Marca do TeleClass (o "play" arredondado) com um brilho que a percorre. */
@@ -74,13 +74,25 @@ export function FeedbackLayer({ feedback }: { feedback: Feedback | null }) {
 }
 
 export function StartOverlay({ resumeAt, duration, onStart }: { resumeAt: number; duration: number; onStart(): void }) {
+  const resuming = resumeAt > 0;
   return (
     <div className="pp-start">
-      <button type="button" className="pp-start-button" onClick={onStart} aria-label={resumeAt ? "Continuar assistindo" : "Assistir"}>
-        <PlayIcon size={34} />
+      <button type="button" className="pp-start-button" onClick={onStart} aria-label={resuming ? "Continuar assistindo" : "Assistir"}>
+        <PlayIcon size={30} />
       </button>
       <span className="pp-start-label">
-        {resumeAt > 0 ? `Continuar de ${formatClock(resumeAt)}` : duration > 0 ? `Assistir · ${formatClock(duration)}` : "Assistir"}
+        {resuming ? (
+          <>
+            Continuar de <strong>{formatClock(resumeAt)}</strong>
+            {duration > 0 && <span className="pp-start-of"> de {formatClock(duration)}</span>}
+          </>
+        ) : duration > 0 ? (
+          <>
+            Assistir <span className="pp-start-of">{formatClock(duration)}</span>
+          </>
+        ) : (
+          "Assistir"
+        )}
       </span>
     </div>
   );
@@ -93,39 +105,85 @@ export interface NextLesson {
   beforeNavigate?: () => Promise<unknown>;
 }
 
+/** Segundos até seguir sozinho para a próxima aula. */
+const AUTO_NEXT_SECONDS = 8;
+
 export function EndOverlay({ next, onReplay }: { next?: NextLesson; onReplay(): void }) {
   const [leaving, setLeaving] = useState(false);
+  // Contagem para seguir sozinho; para com "Cancelar", com "Assistir de novo" ou com a aba oculta.
+  const [left, setLeft] = useState<number | null>(next ? AUTO_NEXT_SECONDS : null);
 
-  async function goNext(event: MouseEvent<HTMLAnchorElement>) {
-    if (!next?.beforeNavigate || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    if (leaving) return;
+  async function go() {
+    if (!next || leaving) return;
     setLeaving(true);
+    setLeft(null);
     try {
-      await next.beforeNavigate();
+      await next.beforeNavigate?.();
     } catch {
       /* a navegação segue mesmo se a gravação falhar */
     }
     navigate(next.href);
   }
 
+  useEffect(() => {
+    if (left === null) return;
+    if (left <= 0) {
+      void go();
+      return;
+    }
+    const id = window.setTimeout(() => !document.hidden && setLeft((s) => (s === null ? null : s - 0.1)), 100);
+    return () => window.clearTimeout(id);
+  }, [left]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function onNextClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    void go();
+  }
+
+  const counting = left !== null && left > 0;
   return (
     <div className="pp-panel pp-end">
-      <p className="pp-panel-eyebrow">Aula finalizada</p>
-      <div className="pp-end-actions">
-        <button type="button" className="pp-action" onClick={onReplay}>
-          <ReplayIcon size={18} /> Assistir de novo
-        </button>
-        {next && (
-          <Link to={next.href} className="pp-action pp-action-primary" onClick={goNext} aria-busy={leaving || undefined}>
-            <NextIcon size={18} />
-            <span>
-              <small>{next.beforeNavigate ? "Concluir e ir para a próxima" : "Próxima aula"}</small>
-              <span className="pp-action-title">{next.title}</span>
-            </span>
-          </Link>
-        )}
-      </div>
+      <span className="pp-end-check" aria-hidden="true">
+        <CheckIcon size={22} />
+      </span>
+      <p className="pp-panel-title">Aula finalizada</p>
+      {next ? (
+        <div className="pp-next">
+          <span className="pp-next-label">
+            {counting ? `A seguir em ${Math.ceil(left)} s` : "A seguir"}
+            {counting && (
+              <button type="button" className="pp-next-cancel" onClick={() => setLeft(null)}>
+                Cancelar
+              </button>
+            )}
+          </span>
+          <span className="pp-next-title">{next.title}</span>
+          <div className="pp-end-actions">
+            <Link to={next.href} className="pp-action pp-action-primary" onClick={onNextClick} aria-busy={leaving || undefined}>
+              {counting && (
+                <svg className="pp-countdown" viewBox="0 0 20 20" aria-hidden="true">
+                  <circle cx="10" cy="10" r="8" pathLength={1} style={{ strokeDashoffset: 1 - left / AUTO_NEXT_SECONDS }} />
+                </svg>
+              )}
+              {!counting && <NextIcon size={16} />}
+              {next.beforeNavigate ? "Concluir e continuar" : "Próxima aula"}
+            </Link>
+            <button type="button" className="pp-action" onClick={onReplay}>
+              <ReplayIcon size={16} /> Assistir de novo
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <p className="pp-panel-text">Esta é a última aula do curso.</p>
+          <div className="pp-end-actions">
+            <button type="button" className="pp-action" onClick={onReplay}>
+              <ReplayIcon size={16} /> Assistir de novo
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

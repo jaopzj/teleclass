@@ -95,9 +95,17 @@ export function SkipIcon({ seconds, direction, size = 24 }: { seconds: number; d
         <path d="M5.9 2.9v3.9h3.9" />
       </g>
       <text x="12" y="12.4" textAnchor="middle" dominantBaseline="central" fill="currentColor" fontSize="7.4" fontWeight="700"
-        fontFamily="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+        fontFamily="inherit">
         {seconds}
       </text>
     </svg>
   );
 }
+
+/** Modo cinema: o vídeo ocupa a largura toda da página. */
+export const TheaterIcon = ({ active, ...p }: P & { active: boolean }) => (
+  <Svg {...p}>
+    <rect x="3" y="6" width="18" height="12" rx="2.2" />
+    {active ? <path d="M8.5 10.5L6.5 12l2 1.5M15.5 10.5l2 1.5-2 1.5" /> : <path d="M6.5 10.5L8.5 12l-2 1.5M17.5 10.5l-2 1.5 2 1.5" />}
+  </Svg>
+);
