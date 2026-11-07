@@ -144,7 +144,8 @@
 .calendar-day.is-future { color: var(--ink-4); opacity: 0.7; }
 .calendar-day.is-active { background: var(--brand-a26); color: var(--brand-800); font-weight: var(--weight-semibold); }
 .calendar-day.is-active:hover { background: var(--brand-a30); }
-.calendar-day.is-studied::after {
+/* ::before, porque o ::after é a dica (data-tip) ao passar o mouse. */
+.calendar-day.is-studied::before {
   content: ""; position: absolute; bottom: 3px; left: 50%; width: 4px; height: 4px; margin-left: -2px;
   border-radius: 50%; background: var(--brand-300);
 }
