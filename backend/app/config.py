@@ -32,6 +32,8 @@ class Settings:
     # Trechos de vídeo já baixados: memória e disco (data/cache), em MB. 0 desliga.
     stream_cache_mb: int = 256
     disk_cache_mb: int = 4096
+    # Se definido, criar conta exige este código (servidor aberto na internet).
+    invite_code: str | None = None
 
     @property
     def sessions_dir(self) -> Path:
@@ -86,4 +88,5 @@ def get_settings() -> Settings:
         data_dir=Path(os.environ.get("TELEAULA_DATA_DIR", "./data")).resolve(),
         stream_cache_mb=_int(os.environ.get("TELEAULA_STREAM_CACHE_MB"), 256),
         disk_cache_mb=_int(os.environ.get("TELEAULA_DISK_CACHE_MB"), 4096),
+        invite_code=os.environ.get("TELEAULA_INVITE_CODE", "").strip() or None,
     )

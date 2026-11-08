@@ -43,6 +43,9 @@ contêiner. A porta só abre no próprio PC; para usar outra, defina
 | Atualizar depois de um `git pull` | `docker compose up -d --build` |
 | Usar a CLI | `docker compose exec teleclass python -m app.cli collect https://t.me/canal --user seu_usuario` |
 
+Para colocar na internet, de graça e com HTTPS, para amigos usarem, siga
+[docs/deploy-oracle.md](docs/deploy-oracle.md) (Oracle Cloud Always Free).
+
 ## Como rodar sem Docker
 
 ```bash

@@ -37,6 +37,7 @@ Todas as rotas respondem erros como:
 | `invalid_credentials` | 401 | Usuário ou senha errados (mesma resposta nos dois casos) |
 | `invalid_username`, `weak_password` | 422 | Regras de cadastro |
 | `username_taken` | 409 | Nome em uso |
+| `invite_required` / `invite_invalid` | 403 | Cadastro com `TELEAULA_INVITE_CODE` definido, sem o código ou com o código errado (`field: "invite"`) |
 | `rate_limited` | 429 | Muitas tentativas (`retry_after` em segundos) |
 | `invalid_phone` | 422 | Formato inválido ou recusado pelo Telegram |
 | `phone_in_use` | 409 | Telefone já vinculado a outro usuário |
@@ -62,9 +63,9 @@ Todas as rotas respondem erros como:
 
 | Método | Rota | Corpo | Resposta |
 |---|---|---|---|
-| GET | `/api/auth/session` | | `{user, telegram}` (ambos `null` sem login) |
+| GET | `/api/auth/session` | | `{user, telegram}` (ambos `null` sem login, com `invite_required`) |
 | GET | `/api/auth/username-availability?username=` | | `{username, available, reason}` |
-| POST | `/api/auth/register` | `{username, password}` | 201 `{user, telegram}` + cookie |
+| POST | `/api/auth/register` | `{username, password, invite?}` | 201 `{user, telegram}` + cookie |
 | POST | `/api/auth/login` | `{username, password}` | `{user, telegram}` + cookie novo |
 | POST | `/api/auth/logout` | | 204, apaga a sessão e o cookie |
 | GET | `/api/auth/me` | | `{user, telegram}` (401 sem login) |
@@ -94,6 +95,8 @@ LinkFlow = { step: "code" | "password", phone /* mascarado */, delivery: {method
 - **Senhas** em scrypt (N=2^14, r=8, p=1, sal de 16 bytes); login com usuário inexistente gasta o mesmo tempo (hash fictício) e responde a mesma mensagem.
 - **Sessão** em cookie `HttpOnly`, `SameSite=Strict` (`Secure` sob HTTPS). O banco guarda só o SHA-256 do token. Login gera um token novo; logout o apaga.
 - **CSRF**: além do `SameSite`, pedidos que alteram dados com `Origin` de outro site recebem 403.
+- **Convite**: com `TELEAULA_INVITE_CODE` no `.env`, criar conta exige esse código (comparação em tempo constante; as tentativas contam no limite de cadastro). Login não muda.
+- **Atrás de proxy** (Caddy, Cloudflare Tunnel): o Docker define `FORWARDED_ALLOW_IPS=*`, então o IP e o `https` vêm do proxy; a porta 8000 só aceita conexões locais. Ver `docs/deploy-oracle.md`.
 - **Limites**: login (8 falhas por usuário+IP e 30 por IP em 15 min), cadastro (5 por IP por hora), disponibilidade de nome (60/min), pedidos de código (5 por usuário em 15 min), 5 códigos ou senhas 2FA erradas por fluxo, reenvio só depois do prazo do Telegram, desvincular (5 senhas erradas em 15 min).
 - **Fluxo do Telegram** preso ao usuário logado (um usuário não enxerga nem conclui o fluxo de outro), em memória (`StringSession`) até concluir, com expiração de 10 min sem atividade. O `phone_code_hash`, o código e a senha 2FA nunca voltam ao navegador nem vão para logs.
 - **Telefone** guardado só como HMAC-SHA256 (chave em `data/secret.key`, criada na primeira execução) e em versão mascarada.

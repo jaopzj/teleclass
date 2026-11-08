@@ -1,0 +1,16 @@
+# HTTPS automático (Let's Encrypt) na frente do TeleClass.
+# Usado por `docker compose --profile https up -d` (ver docs/deploy-oracle.md).
+# TELEAULA_DOMAIN vem do .env, ex.: meuteleclass.duckdns.org
+{$TELEAULA_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy teleclass:8000 {
+		# Vídeo em streaming: repassa os bytes assim que chegam.
+		flush_interval -1
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		-Server
+	}
+}

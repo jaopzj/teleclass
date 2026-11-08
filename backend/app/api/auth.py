@@ -6,6 +6,8 @@ Contrato em docs/autenticacao.md. A conta do Telegram é tratada à parte, em
 
 from __future__ import annotations
 
+import hmac
+
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, Field
 
@@ -26,6 +28,21 @@ AVAILABILITY_LIMIT, AVAILABILITY_WINDOW = 60, 60
 class Credentials(BaseModel):
     username: str = Field(max_length=64)
     password: str = Field(max_length=256)
+
+
+class Registration(Credentials):
+    invite: str = Field(default="", max_length=128)
+
+
+def _check_invite(state: AppState, invite: str) -> None:
+    """Com TELEAULA_INVITE_CODE definido, só cria conta quem tem o código."""
+    expected = state.settings.invite_code
+    if expected is None:
+        return
+    if not invite.strip():
+        raise AppError(403, "invite_required", "Informe o código de convite.", field="invite")
+    if not hmac.compare_digest(invite.strip().encode(), expected.encode()):
+        raise AppError(403, "invite_invalid", "Código de convite incorreto.", field="invite")
 
 
 def _set_cookie(response: Response, request: Request, token: str) -> None:
@@ -51,7 +68,7 @@ def session(request: Request, state: AppState = Depends(get_state)) -> dict:
     user_id = state.sessions.resolve(request.cookies.get(SESSION_COOKIE))
     user = state.users.get(user_id) if user_id else None
     if user is None:
-        return {"user": None, "telegram": None}
+        return {"user": None, "telegram": None, "invite_required": state.settings.invite_code is not None}
     return _session_payload(state, user)
 
 
@@ -63,13 +80,14 @@ def username_availability(username: str, request: Request, state: AppState = Dep
 
 
 @router.post("/register", status_code=201)
-def register(body: Credentials, request: Request, response: Response, state: AppState = Depends(get_state)) -> dict:
+def register(body: Registration, request: Request, response: Response, state: AppState = Depends(get_state)) -> dict:
     state.limiter.hit(
         f"register:{client_ip(request)}",
         REGISTER_LIMIT,
         REGISTER_WINDOW,
         "Muitas contas criadas a partir deste dispositivo. Tente de novo mais tarde.",
     )
+    _check_invite(state, body.invite)
     user = state.users.create(body.username, body.password)
     if state.users.count() == 1:
         # Primeira conta: herda os cursos coletados antes de existir login.

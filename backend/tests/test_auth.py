@@ -154,3 +154,20 @@ def test_rate_limiter_window():
     assert limiter.retry_after("k", 3, 60) == 60
     now[0] = 61
     assert limiter.retry_after("k", 3, 60) == 0
+
+
+def test_invite_code_required_when_configured(make_app, monkeypatch):
+    monkeypatch.setenv("TELEAULA_INVITE_CODE", "amigos-2026")
+    client = make_app()
+    assert client.get("/api/auth/session").json()["invite_required"] is True
+    missing = client.post("/api/auth/register", json={"username": "ana", "password": PASSWORD})
+    assert missing.status_code == 403 and missing.json()["code"] == "invite_required"
+    wrong = client.post("/api/auth/register", json={"username": "ana", "password": PASSWORD, "invite": "errado"})
+    assert wrong.status_code == 403 and wrong.json()["field"] == "invite"
+    ok = client.post("/api/auth/register", json={"username": "ana", "password": PASSWORD, "invite": " amigos-2026 "})
+    assert ok.status_code == 201
+
+
+def test_invite_not_required_by_default(client):
+    assert client.get("/api/auth/session").json()["invite_required"] is False
+    assert client.post("/api/auth/register", json={"username": "ana", "password": PASSWORD}).status_code == 201

@@ -1,6 +1,6 @@
 // Etapa 1 do cadastro: nome de usuário e senha. Cria a conta e já entra; a
 // próxima etapa (Telegram) acontece logada, para o vínculo ficar preso a ela.
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { ApiError } from "../api";
 import Icon from "../components/Icon";
 import { AuthenticatedSession, authApi } from "./api";
@@ -16,7 +16,7 @@ interface Props {
   onCreated: (session: AuthenticatedSession) => void;
 }
 
-type Errors = Partial<Record<"username" | "password" | "confirm" | "form", string>>;
+type Errors = Partial<Record<"username" | "password" | "confirm" | "invite" | "form", string>>;
 
 export default function AccountForm({ onCreated }: Props) {
   const [username, setUsername] = useState("");
@@ -25,15 +25,28 @@ export default function AccountForm({ onCreated }: Props) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [serverErrors, setServerErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
-  const refs = { username: useRef<HTMLInputElement>(null), password: useRef<HTMLInputElement>(null), confirm: useRef<HTMLInputElement>(null) };
+  // Servidor aberto na internet pode exigir um código de convite para criar conta.
+  const [inviteRequired, setInviteRequired] = useState(false);
+  const [invite, setInvite] = useState("");
+  const refs = {
+    username: useRef<HTMLInputElement>(null),
+    password: useRef<HTMLInputElement>(null),
+    confirm: useRef<HTMLInputElement>(null),
+    invite: useRef<HTMLInputElement>(null),
+  };
   const availability = useUsernameAvailability(username);
+
+  useEffect(() => {
+    authApi.session().then((s) => setInviteRequired(Boolean(s.invite_required)), () => {});
+  }, []);
 
   const localErrors: Errors = {
     username: usernameProblem(username) ?? undefined,
     password: passwordProblem(password, username) ?? undefined,
     confirm: !confirm ? "Repita a senha." : confirm !== password ? "As senhas não são iguais." : undefined,
+    invite: inviteRequired && !invite.trim() ? "Informe o código de convite." : undefined,
   };
-  const shown = (key: "username" | "password" | "confirm") =>
+  const shown = (key: "username" | "password" | "confirm" | "invite") =>
     serverErrors[key] ?? (touched[key] ? localErrors[key] : undefined) ?? undefined;
 
   const usernameError =
@@ -41,7 +54,7 @@ export default function AccountForm({ onCreated }: Props) {
   const usernameStatus: FieldStatus =
     availability.state === "checking" ? "validating" : availability.state === "available" && !serverErrors.username ? "valid" : "idle";
 
-  function edit(key: "username" | "password" | "confirm", setter: (v: string) => void) {
+  function edit(key: "username" | "password" | "confirm" | "invite", setter: (v: string) => void) {
     return (value: string) => {
       setter(value);
       if (serverErrors[key] || serverErrors.form) setServerErrors((e) => ({ ...e, [key]: undefined, form: undefined }));
@@ -51,17 +64,19 @@ export default function AccountForm({ onCreated }: Props) {
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
-    setTouched({ username: true, password: true, confirm: true });
-    const first = (["username", "password", "confirm"] as const).find((k) => localErrors[k]);
+    setTouched({ username: true, password: true, confirm: true, invite: true });
+    const first = (["username", "password", "confirm", "invite"] as const).find((k) => localErrors[k]);
     if (first) return refs[first].current?.focus();
     if (availability.state === "taken") return refs.username.current?.focus();
     setBusy(true);
     setServerErrors({});
     try {
-      onCreated(await authApi.register(normalizeUsername(username), password));
+      onCreated(await authApi.register(normalizeUsername(username), password, invite.trim()));
     } catch (e) {
       const error = e as ApiError;
-      const field = error.field === "username" || error.field === "password" ? error.field : "form";
+      if (error.field === "invite") setInviteRequired(true);
+      const field =
+        error.field === "username" || error.field === "password" || error.field === "invite" ? error.field : "form";
       setServerErrors({ [field]: error.message });
       if (field !== "form") refs[field].current?.focus();
       setBusy(false);
@@ -140,6 +155,27 @@ export default function AccountForm({ onCreated }: Props) {
           aria-describedby="signup-confirm-message"
         />
       </Field>
+
+      {inviteRequired && (
+        <Field id="signup-invite" label="Código de convite" error={shown("invite")} hint="Peça a quem te chamou para o TeleClass.">
+          <input
+            ref={refs.invite}
+            id="signup-invite"
+            className="input"
+            value={invite}
+            maxLength={128}
+            onChange={(e) => edit("invite", setInvite)(e.target.value)}
+            onBlur={() => invite && setTouched((t) => ({ ...t, invite: true }))}
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            disabled={busy}
+            aria-invalid={Boolean(shown("invite")) || undefined}
+            aria-describedby="signup-invite-message"
+          />
+        </Field>
+      )}
 
       {serverErrors.form && <FormAlert error={{ message: serverErrors.form }} />}
 

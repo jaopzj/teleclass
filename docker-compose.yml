@@ -1,6 +1,10 @@
-# Uso: copie .env.example para .env, preencha TG_API_ID e TG_API_HASH e rode
+# Uso no PC: copie .env.example para .env, preencha TG_API_ID e TG_API_HASH e rode
 #   docker compose up -d --build
 # O app abre em http://127.0.0.1:8000
+#
+# Num servidor na internet (ex.: Oracle Cloud), com HTTPS pelo Caddy:
+#   docker compose --profile https up -d --build
+# Passo a passo em docs/deploy-oracle.md.
 services:
   teleclass:
     build: .
@@ -11,11 +15,39 @@ services:
     environment:
       # Dentro do contêiner os dados ficam sempre em /app/data (a pasta data/ do projeto).
       TELEAULA_DATA_DIR: /app/data
+      # Confia no X-Forwarded-For/Proto do proxy (Caddy ou Cloudflare Tunnel), para o
+      # cookie sair como Secure e os limites de tentativas valerem por pessoa. É seguro
+      # porque a porta abaixo só aceita conexões do próprio computador.
+      FORWARDED_ALLOW_IPS: "*"
     ports:
-      # Só no próprio PC: a sessão do Telegram dá acesso total à conta.
+      # Só no próprio computador: a sessão do Telegram dá acesso total à conta.
+      # Na internet, quem atende é o Caddy (ou o Cloudflare Tunnel), nunca esta porta.
       - "127.0.0.1:${TELEAULA_PORT:-8000}:8000"
     volumes:
       # Banco, sessões do Telegram, cache de vídeo e anexos do Caderno.
       # É a mesma pasta data/ de quem já rodava sem Docker.
       - ./data:/app/data
     stop_grace_period: 15s
+
+  # Só sobe com `--profile https`. Pede o certificado e atende nas portas 80 e 443.
+  caddy:
+    image: caddy:2
+    container_name: teleclass-caddy
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on: [teleclass]
+    environment:
+      # Ex.: meuteleclass.duckdns.org (definido no .env).
+      TELEAULA_DOMAIN: ${TELEAULA_DOMAIN:-}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
