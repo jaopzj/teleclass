@@ -44,6 +44,7 @@ def make_app(tmp_path, monkeypatch):
     monkeypatch.setenv("TELEAULA_DATA_DIR", str(tmp_path))
     monkeypatch.setenv("TG_API_ID", "")
     monkeypatch.setenv("TG_API_HASH", "")
+    monkeypatch.setenv("TELEAULA_INVITE_CODE", "")
     (tmp_path / "snapshots").mkdir(exist_ok=True)
     shutil.copy(FIXTURES / "curso_exemplo.json", tmp_path / "snapshots" / "curso_exemplo.json")
     clients = []

@@ -88,7 +88,7 @@ export default function AuthScreen({ mode }: { mode: AuthMode }) {
 
   return (
     <AuthShell
-      footer={<span className="muted">Seus dados ficam no servidor do TeleClass, neste computador.</span>}
+      footer={<span className="muted">Seus dados ficam no servidor do TeleClass.</span>}
     >
       <header className="auth-head">
         <h1>{mode === "login" ? "Bem-vindo de volta" : "Crie sua conta"}</h1>

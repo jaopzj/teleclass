@@ -50,6 +50,8 @@ export interface TelegramStatus {
 export interface Session {
   user: User | null;
   telegram: TelegramStatus | null;
+  /** Só vem sem login: criar conta exige código de convite (TELEAULA_INVITE_CODE). */
+  invite_required?: boolean;
 }
 
 export interface AuthenticatedSession {
@@ -67,8 +69,8 @@ export const authApi = {
     request<{ username: string; available: boolean; reason: string | null }>(
       `/api/auth/username-availability?username=${encodeURIComponent(username)}`,
     ),
-  register: (username: string, password: string) =>
-    request<AuthenticatedSession>("/api/auth/register", json({ username, password })),
+  register: (username: string, password: string, invite = "") =>
+    request<AuthenticatedSession>("/api/auth/register", json({ username, password, invite })),
   login: (username: string, password: string) =>
     request<AuthenticatedSession>("/api/auth/login", json({ username, password })),
   logout: () => request<void>("/api/auth/logout", { method: "POST" }),
