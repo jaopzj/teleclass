@@ -10,12 +10,14 @@ interface Props {
   busy: boolean;
   error: LinkError | null;
   onSubmit: (phone: string) => void;
+  onUseQr: () => void;
+  qrBusy: boolean;
   /** O número continua preenchido se a pessoa voltar a esta etapa. */
   draft: { country: Country; national: string };
   onDraft: (draft: { country: Country; national: string }) => void;
 }
 
-export default function PhoneStep({ busy, error, onSubmit, draft, onDraft }: Props) {
+export default function PhoneStep({ busy, error, onSubmit, onUseQr, qrBusy, draft, onDraft }: Props) {
   const [touched, setTouched] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const problem = nationalProblem(draft.national, draft.country);
@@ -57,17 +59,23 @@ export default function PhoneStep({ busy, error, onSubmit, draft, onDraft }: Pro
           country={draft.country}
           national={draft.national}
           onChange={(country, national) => onDraft({ country, national })}
-          disabled={busy}
+          disabled={busy || qrBusy}
           invalid={Boolean((touched && problem) || error?.field === "phone")}
         />
       </Field>
 
       {generalError && <FormAlert error={generalError} />}
 
-      <SubmitButton loading={busy} loadingLabel="Pedindo o código ao Telegram...">
+      <SubmitButton loading={busy} loadingLabel="Pedindo o código ao Telegram..." disabled={qrBusy}>
         Enviar código
         <Icon name="arrow" size={16} />
       </SubmitButton>
+
+      <div className="auth-or" aria-hidden="true">ou</div>
+      <button type="button" className="button qr-button" onClick={onUseQr} disabled={busy || qrBusy}>
+        {qrBusy ? <span className="mini-spinner" /> : <Icon name="qr" size={16} />}
+        Entrar com QR code
+      </button>
 
       <p className="auth-footnote">
         <Icon name="shield" size={14} />

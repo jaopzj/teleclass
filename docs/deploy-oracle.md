@@ -265,7 +265,18 @@ Os contêineres têm `restart: unless-stopped`, então voltam sozinhos se a VM r
 | Caddy reclama de "challenge failed" / "timeout" | Mesma coisa, ou o DuckDNS aponta para outro IP (passo 5) |
 | Caddy diz que o Caddyfile é inválido | `TELEAULA_DOMAIN` vazio no `.env` |
 | "Origem não permitida" ao entrar | Você está abrindo por IP ou por outro endereço; use o domínio do `.env` |
+| O código do Telegram não chega (no PC chegava) | O Telegram costuma não entregar códigos para logins vindos de datacenter. Use **Entrar com QR code** na tela de vínculo (ver abaixo) |
 | Vídeos não tocam, mas o resto funciona | Veja `docker compose logs -f teleclass`; geralmente é o Telegram pedindo para vincular de novo |
+
+### Vincular o Telegram por QR code
+
+No servidor, o Telegram muitas vezes diz que enviou o código mas não entrega,
+porque o login vem de um IP de datacenter. Na etapa do telefone, clique em
+**Entrar com QR code**. No celular, abra o Telegram, vá em **Configurações ›
+Dispositivos › Conectar dispositivo** e aponte a câmera para o QR. Se a conta
+tiver verificação em duas etapas, a tela pede a senha em seguida. O QR se
+renova sozinho a cada 30 segundos. Quem estiver no próprio celular pode tocar
+em *Abrir no app do Telegram*.
 
 ## 9. Atualizar depois
 

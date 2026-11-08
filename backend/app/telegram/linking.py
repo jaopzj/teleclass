@@ -14,6 +14,14 @@ memória, preso ao usuário logado que o iniciou:
 5. no sucesso, a sessão é gravada em `data/sessions/<usuário>.session` e o
    vínculo em `telegram_accounts`.
 
+Alternativa sem código: `start_qr()` mostra um QR code (`auth.exportLoginToken`)
+que a pessoa aprova no celular (Configurações > Dispositivos > Conectar
+dispositivo). Serve quando o Telegram não entrega o código, o que acontece com
+logins vindos de IPs de datacenter (servidor na nuvem). Uma tarefa em segundo
+plano espera a aprovação e renova o QR quando ele expira; a tela consulta
+`qr_state()`. Se a conta tem senha de duas etapas, o fluxo cai na etapa
+`password` e segue igual ao do código.
+
 Durante o fluxo a sessão fica só em memória (`StringSession`): um fluxo
 abandonado não deixa arquivo nenhum. Fluxos expiram após `FLOW_TTL` sem uso.
 Nada daqui registra telefone, código ou senha em log.
@@ -22,6 +30,7 @@ Nada daqui registra telefone, código ou senha em log.
 from __future__ import annotations
 
 import asyncio
+import datetime
 import logging
 import time
 from dataclasses import dataclass, field
@@ -45,6 +54,7 @@ REQUEST_TIMEOUT = 25  # cada chamada ao Telegram
 MAX_CODE_ATTEMPTS = 5
 MAX_PASSWORD_ATTEMPTS = 5
 MAX_RESENDS = 4
+QR_RESULT_TTL = 2 * 60  # resultado do QR (vinculado ou erro) guardado até a tela consultar
 STARTS_PER_WINDOW, START_WINDOW = 5, 15 * 60  # códigos pedidos por usuário
 
 T = TypeVar("T")
@@ -113,8 +123,13 @@ def describe_next(next_type) -> str | None:
 class LinkFlow:
     user_id: str
     client: TelegramClient
-    phone: str
-    step: str = "code"  # "code" | "password"
+    phone: str  # vazio no fluxo por QR code
+    step: str = "code"  # "code" | "password" | "qr"
+    method: str = "phone"  # "phone" | "qr"
+    qr: object = None
+    qr_url: str = ""
+    qr_expires: float = 0.0  # time.time()
+    task: asyncio.Task | None = None
     phone_code_hash: str = ""
     delivery: dict = field(default_factory=dict)
     next_method: str | None = None
@@ -131,7 +146,10 @@ class LinkFlow:
         now = time.time()
         return {
             "step": self.step,
-            "phone": mask_phone(self.phone),
+            "method": self.method,
+            "phone": mask_phone(self.phone) if self.phone else None,
+            "qr_url": self.qr_url if self.step == "qr" else None,
+            "qr_expires_in": max(0, round(self.qr_expires - now)) if self.step == "qr" else 0,
             "delivery": self.delivery,
             "next_method": self.next_method,
             "can_resend": self.step == "code"
@@ -168,6 +186,8 @@ class TelegramLinker:
         self._clock = clock
         self._flows: dict[str, LinkFlow] = {}
         self._starting: set[str] = set()
+        # Fim de um fluxo por QR (feito em segundo plano), até a tela consultar.
+        self._qr_results: dict[str, tuple[float, dict | AppError]] = {}
 
     # --- estado ---------------------------------------------------------------
 
@@ -190,7 +210,7 @@ class TelegramLinker:
         if flow is None or (self._expired(flow) and not flow.lock.locked()):
             if flow is not None:
                 self._flows.pop(user_id, None)
-                asyncio.ensure_future(_disconnect(flow.client))
+                asyncio.ensure_future(_close(flow))
             raise _err(
                 410,
                 "link_expired",
@@ -203,15 +223,20 @@ class TelegramLinker:
         return flow
 
     async def cancel(self, user_id: str) -> None:
+        self._qr_results.pop(user_id, None)
         flow = self._flows.pop(user_id, None)
         if flow is not None:
-            await _disconnect(flow.client)
+            await _close(flow)
 
     async def sweep(self) -> None:
         for user_id, flow in list(self._flows.items()):
             if self._expired(flow) and not flow.lock.locked():
                 self._flows.pop(user_id, None)
-                await _disconnect(flow.client)
+                await _close(flow)
+        now = self._clock()
+        for user_id, (at, _) in list(self._qr_results.items()):
+            if now - at > QR_RESULT_TTL:
+                self._qr_results.pop(user_id, None)
 
     async def close(self) -> None:
         for user_id in list(self._flows):
@@ -255,6 +280,89 @@ class TelegramLinker:
             return flow.public()
         finally:
             self._starting.discard(user_id)
+
+    async def start_qr(self, user_id: str) -> dict:
+        """Vínculo por QR code: a pessoa aprova no celular, sem código nenhum."""
+        if not self.settings.telegram_configured:
+            raise TelegramNotConfigured()
+        if user_id in self._starting:
+            raise _err(409, "busy", "Já estamos preparando o vínculo. Aguarde um instante.")
+        self.limiter.hit(
+            f"tg-start:{user_id}",
+            STARTS_PER_WINDOW,
+            START_WINDOW,
+            "Você tentou vincular muitas vezes em pouco tempo. Aguarde alguns minutos e tente de novo.",
+        )
+        self._starting.add(user_id)
+        try:
+            await self.cancel(user_id)
+            client = self._factory(StringSession())
+            flow = LinkFlow(user_id=user_id, client=client, phone="", step="qr", method="qr", touched=self._clock())
+            try:
+                await self._call(client.connect())
+                flow.qr = await self._call(client.qr_login())
+            except BaseException:
+                await _disconnect(client)
+                raise
+            self._apply_qr(flow)
+            self._flows[user_id] = flow
+            flow.task = asyncio.create_task(self._wait_qr(flow))
+            return flow.public()
+        finally:
+            self._starting.discard(user_id)
+
+    def qr_state(self, user_id: str) -> dict:
+        """O que a tela mostra enquanto espera: QR atual, etapa da senha ou o resultado."""
+        flow = self.flow(user_id)
+        if flow is not None and flow.method == "qr":
+            flow.touched = self._clock()  # a tela aberta mantém o fluxo vivo
+            return flow.public()
+        result = self._qr_results.pop(user_id, None)
+        if result is not None:
+            if isinstance(result[1], AppError):
+                raise result[1]
+            return result[1]
+        raise _err(410, "link_expired", "O QR code expirou. Gere outro para continuar.")
+
+    async def _wait_qr(self, flow: LinkFlow) -> None:
+        """Espera a aprovação no celular, renovando o QR sempre que ele expira."""
+        try:
+            while self._flows.get(flow.user_id) is flow:
+                remaining = max(1.0, flow.qr_expires - time.time())
+                try:
+                    me = await flow.qr.wait(timeout=remaining)
+                except asyncio.TimeoutError:
+                    await self._call(flow.qr.recreate())
+                    self._apply_qr(flow)
+                    continue
+                except errors.SessionPasswordNeededError:
+                    flow.step = "password"
+                    flow.touched = self._clock()
+                    flow.password_hint = await self._password_hint(flow.client)
+                    return
+                result = await self._finish(flow, me)
+                self._qr_results[flow.user_id] = (self._clock(), result)
+                return
+        except asyncio.CancelledError:
+            raise
+        except AppError as exc:
+            self._qr_results[flow.user_id] = (self._clock(), exc)
+            await self._drop(flow)
+        except Exception:  # noqa: BLE001
+            log.exception("Falha no vínculo por QR code")
+            self._qr_results[flow.user_id] = (
+                self._clock(),
+                _err(502, "telegram_error", "O Telegram recusou o pedido. Gere outro QR code e tente de novo."),
+            )
+            await self._drop(flow)
+
+    def _apply_qr(self, flow: LinkFlow) -> None:
+        flow.qr_url = flow.qr.url
+        expires = flow.qr.expires
+        if isinstance(expires, datetime.datetime):
+            flow.qr_expires = expires.timestamp()
+        else:
+            flow.qr_expires = time.time() + 30
 
     async def resend(self, user_id: str) -> dict:
         flow = self._require(user_id, "code")
@@ -402,6 +510,20 @@ class TelegramLinker:
                 pass
             await self._drop(flow)
             raise _err(409, "telegram_in_use", "Esta conta do Telegram já está vinculada a outra conta do Teleaula.")
+        if flow.method == "qr":
+            # No QR o telefone só aparece agora; a regra de "um telefone, um usuário" vale igual.
+            flow.phone = _phone_of(me)
+            if not flow.phone:
+                await self._drop(flow)
+                raise _err(502, "telegram_error", "O Telegram não informou o telefone da conta. Tente vincular pelo número.")
+            phone_owner = self.accounts.owner_of_phone(flow.phone)
+            if phone_owner is not None and phone_owner != flow.user_id:
+                try:
+                    await self._call(flow.client.log_out())
+                except AppError:
+                    pass
+                await self._drop(flow)
+                raise _err(409, "phone_in_use", "Este telefone já está vinculado a outra conta do Teleaula.")
 
         # Substitui uma sessão anterior do mesmo usuário (revincular).
         await self.clients.discard(flow.user_id, delete_session=True)
@@ -427,7 +549,7 @@ class TelegramLinker:
     async def _drop(self, flow: LinkFlow) -> None:
         if self._flows.get(flow.user_id) is flow:
             self._flows.pop(flow.user_id, None)
-        await _disconnect(flow.client)
+        await _close(flow)
 
     async def _call(self, awaitable: Awaitable[T]) -> T:
         """Chama o Telegram com tempo limite e traduz os erros gerais."""
@@ -475,6 +597,25 @@ class TelegramLinker:
         except errors.RPCError as exc:
             log.warning("Erro do Telegram no vínculo: %s", type(exc).__name__)
             raise _err(502, "telegram_error", "O Telegram recusou o pedido. Tente de novo em instantes.") from exc
+
+
+def _phone_of(me) -> str:
+    """Telefone da conta que aprovou o QR (o Telegram manda sem o `+`)."""
+    raw = getattr(me, "phone", None)
+    if not raw:
+        return ""
+    try:
+        return normalize_phone(f"+{raw}")
+    except AppError:
+        return ""
+
+
+async def _close(flow: LinkFlow) -> None:
+    """Encerra um fluxo: para a espera do QR (se houver) e desconecta o cliente."""
+    task = flow.task
+    if task is not None and task is not asyncio.current_task() and not task.done():
+        task.cancel()
+    await _disconnect(flow.client)
 
 
 async def _disconnect(client: TelegramClient) -> None:

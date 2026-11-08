@@ -19,8 +19,13 @@ export interface CodeDelivery {
 }
 
 export interface LinkFlow {
-  step: "code" | "password";
-  phone: string;
+  step: "code" | "password" | "qr";
+  /** "qr": vínculo por QR code, aprovado no celular (sem telefone nem código). */
+  method?: "phone" | "qr";
+  phone: string | null;
+  /** Conteúdo do QR (tg://login?token=...), renovado pelo backend quando expira. */
+  qr_url?: string | null;
+  qr_expires_in?: number;
   delivery: CodeDelivery;
   next_method: string | null;
   can_resend: boolean;
@@ -80,6 +85,8 @@ export const telegramApi = {
   status: () => request<TelegramStatus>("/api/telegram/status"),
   sendPhone: (phone: string) => request<LinkResult>("/api/telegram/link/phone", json({ phone })),
   resend: () => request<LinkResult>("/api/telegram/link/resend", { method: "POST" }),
+  startQr: () => request<LinkResult>("/api/telegram/link/qr", { method: "POST" }),
+  qrState: () => request<LinkResult>("/api/telegram/link/qr"),
   sendCode: (code: string) => request<LinkResult>("/api/telegram/link/code", json({ code })),
   sendPassword: (password: string) => request<LinkResult>("/api/telegram/link/password", json({ password })),
   cancel: () => request<void>("/api/telegram/link", { method: "DELETE" }),

@@ -28,6 +28,7 @@ import stackRegular from "@phosphor-icons/core/regular/stack.svg?raw";
 import arrowCounterClockwiseRegular from "@phosphor-icons/core/regular/arrow-counter-clockwise.svg?raw";
 import booksRegular from "@phosphor-icons/core/regular/books.svg?raw";
 import eyeRegular from "@phosphor-icons/core/regular/eye.svg?raw";
+import qrCodeRegular from "@phosphor-icons/core/regular/qr-code.svg?raw";
 import eyeSlashRegular from "@phosphor-icons/core/regular/eye-slash.svg?raw";
 import userRegular from "@phosphor-icons/core/regular/user.svg?raw";
 import lockRegular from "@phosphor-icons/core/regular/lock.svg?raw";
@@ -111,6 +112,7 @@ import filesRegular from "@phosphor-icons/core/regular/files.svg?raw";
 type Weight = "regular" | "fill" | "bold";
 
 const ICONS = {
+  qr: { regular: qrCodeRegular },
   play: { regular: playRegular, fill: playFill },
   check: { regular: checkRegular, bold: checkBold },
   chevron: { regular: caretRightRegular },

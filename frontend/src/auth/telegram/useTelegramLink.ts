@@ -5,8 +5,8 @@ import { useCallback, useReducer, useRef } from "react";
 import { ApiError } from "../../api";
 import { LinkFlow, LinkResult, TelegramAccount, telegramApi } from "../api";
 
-export type LinkStep = "phone" | "code" | "password" | "done";
-export type Busy = null | "phone" | "code" | "password" | "resend" | "cancel";
+export type LinkStep = "phone" | "code" | "qr" | "password" | "done";
+export type Busy = null | "phone" | "qr" | "code" | "password" | "resend" | "cancel";
 
 export interface LinkError {
   message: string;
@@ -124,12 +124,26 @@ export function useTelegramLink(initialFlow: LinkFlow | null) {
     }
   }, []);
 
+  const pollQr = useCallback(async () => {
+    if (inFlight.current) return;
+    try {
+      dispatch({ type: "result", result: await telegramApi.qrState() });
+    } catch (e) {
+      const error = toError(e);
+      if (error.code !== "network_error") dispatch({ type: "restart", error });
+    }
+  }, []);
+
   return {
     state,
     sendPhone: (phone: string) => run("phone", () => telegramApi.sendPhone(phone)),
     resend: () =>
       run("resend", telegramApi.resend, (r) => (r.step === "code" ? DELIVERY_NOTICE[r.delivery.method] ?? "Código reenviado." : null)),
     sendCode: (code: string) => run("code", () => telegramApi.sendCode(code)),
+    /** QR code em vez do código (que às vezes não chega quando o servidor está na nuvem). */
+    startQr: () => run("qr", telegramApi.startQr),
+    /** Consulta o QR: imagem renovada, etapa da senha 2FA ou vínculo concluído. */
+    pollQr,
     sendPassword: (password: string) => run("password", () => telegramApi.sendPassword(password)),
     /** Trocar o número: descarta o fluxo no backend e volta à etapa do telefone. */
     changePhone: async () => {
