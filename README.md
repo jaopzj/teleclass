@@ -22,7 +22,28 @@ Arquitetura: [docs/indexacao.md](docs/indexacao.md),
 - Node 18+ (só para o frontend)
 - `TG_API_ID` e `TG_API_HASH` de https://my.telegram.org
 
-## Como rodar
+## Rodar com Docker (mais fácil)
+
+Só precisa do [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+
+```bash
+copy .env.example .env            # Windows (Linux/macOS: cp); preencha TG_API_ID e TG_API_HASH
+docker compose up -d --build      # compila frontend e backend numa imagem só
+```
+
+Abra http://127.0.0.1:8000. Os dados ficam na pasta `data/` do projeto (a
+mesma de quem já rodava sem Docker), então nada se perde ao recriar o
+contêiner. A porta só abre no próprio PC; para usar outra, defina
+`TELEAULA_PORT=8080` no `.env`.
+
+| Tarefa | Comando |
+| --- | --- |
+| Ver os logs | `docker compose logs -f` |
+| Parar | `docker compose down` |
+| Atualizar depois de um `git pull` | `docker compose up -d --build` |
+| Usar a CLI | `docker compose exec teleclass python -m app.cli collect https://t.me/canal --user seu_usuario` |
+
+## Como rodar sem Docker
 
 ```bash
 python -m venv .venv

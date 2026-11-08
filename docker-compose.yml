@@ -1,0 +1,21 @@
+# Uso: copie .env.example para .env, preencha TG_API_ID e TG_API_HASH e rode
+#   docker compose up -d --build
+# O app abre em http://127.0.0.1:8000
+services:
+  teleclass:
+    build: .
+    image: teleclass:latest
+    container_name: teleclass
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Dentro do contêiner os dados ficam sempre em /app/data (a pasta data/ do projeto).
+      TELEAULA_DATA_DIR: /app/data
+    ports:
+      # Só no próprio PC: a sessão do Telegram dá acesso total à conta.
+      - "127.0.0.1:${TELEAULA_PORT:-8000}:8000"
+    volumes:
+      # Banco, sessões do Telegram, cache de vídeo e anexos do Caderno.
+      # É a mesma pasta data/ de quem já rodava sem Docker.
+      - ./data:/app/data
+    stop_grace_period: 15s
