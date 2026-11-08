@@ -21,6 +21,8 @@ Sair do Teleaula **não** desconecta o Telegram. Desvincular o Telegram **não**
 
 Se o cadastro for interrompido, a pessoa volta ao telefone no próximo login (ou à etapa do código, se o fluxo ainda estiver ativo). Se o Telegram revogar a sessão, a API responde `telegram_reauth_required` e o app leva à reconexão.
 
+**Alternativa por QR code**: em vez do telefone, a tela mostra um QR (`auth.exportLoginToken`) que a pessoa aprova no celular (Configurações > Dispositivos > Conectar dispositivo). Não depende de o código chegar, o que falha com frequência quando o servidor está num datacenter. Uma tarefa em segundo plano espera a aprovação e renova o QR quando expira; a tela consulta `GET /api/telegram/link/qr` a cada 2 s. Com senha 2FA, segue para a etapa da senha. O telefone vem da própria conta, e a regra de um telefone por usuário vale igual.
+
 ## Erros
 
 Todas as rotas respondem erros como:
@@ -76,6 +78,8 @@ Todas as rotas respondem erros como:
 |---|---|---|---|
 | GET | `/api/telegram/status` | | `TelegramStatus` |
 | POST | `/api/telegram/link/phone` | `{phone}` | `LinkFlow` (etapa `code`) |
+| POST | `/api/telegram/link/qr` | | `LinkFlow` (etapa `qr`, com `qr_url`): vínculo por QR code, sem código |
+| GET | `/api/telegram/link/qr` | | QR atual (renovado sozinho), etapa `password` ou `{step: "done", account}`; 410 se expirou |
 | POST | `/api/telegram/link/resend` | | `LinkFlow` |
 | POST | `/api/telegram/link/code` | `{code}` | `LinkFlow` (etapa `password`) ou `{step: "done", account}` |
 | POST | `/api/telegram/link/password` | `{password}` | `{step: "done", account}` |

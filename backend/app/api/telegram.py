@@ -53,6 +53,18 @@ async def link_phone(body: PhoneBody, state: AppState = Depends(get_state), user
     return await state.linker.start(user.id, body.phone)
 
 
+@router.post("/link/qr")
+async def link_qr_start(state: AppState = Depends(get_state), user: User = Depends(get_current_user)) -> dict:
+    """Vincula por QR code, aprovado no celular (quando o código não chega)."""
+    return await state.linker.start_qr(user.id)
+
+
+@router.get("/link/qr")
+async def link_qr_state(state: AppState = Depends(get_state), user: User = Depends(get_current_user)) -> dict:
+    """QR atual (renovado sozinho), etapa da senha 2FA ou `{step: "done", account}`."""
+    return state.linker.qr_state(user.id)
+
+
 @router.post("/link/resend")
 async def link_resend(state: AppState = Depends(get_state), user: User = Depends(get_current_user)) -> dict:
     return await state.linker.resend(user.id)

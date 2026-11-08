@@ -63,7 +63,12 @@ class FakeTelethon:
         self.session.set_dc(2, "149.154.167.51", 443)
         self.session.auth_key = AuthKey(b"\x01" * 256)
         self.world.authorized = True
-        return SimpleNamespace(id=self.world.telegram_id, first_name="João", last_name="Silva", username="joaos")
+        return SimpleNamespace(
+            id=self.world.telegram_id, first_name="João", last_name="Silva", username="joaos", phone="5511912345678"
+        )
+
+    async def qr_login(self):
+        return FakeQR(self)
 
     async def __call__(self, request):
         return SimpleNamespace(hint="nome do gato")
@@ -72,6 +77,40 @@ class FakeTelethon:
         self.world.logged_out += 1
         self.connected = False
         return True
+
+
+class FakeQR:
+    """QR do Telegram: expira sozinho e "é aprovado" quando o teste liga `world.qr_approved`."""
+
+    def __init__(self, client):
+        self.client = client
+        self.generation = 0
+        self.recreate_sync()
+
+    def recreate_sync(self):
+        import datetime
+
+        self.generation += 1
+        self.url = f"tg://login?token=tok{self.generation}"
+        lifetime = self.client.world.qr_lifetime
+        self.expires = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=lifetime)
+
+    async def recreate(self):
+        self.recreate_sync()
+
+    async def wait(self, timeout=None):
+        import asyncio
+
+        world = self.client.world
+        loop = asyncio.get_running_loop()
+        end = loop.time() + timeout
+        while not world.qr_approved:
+            if loop.time() >= end:
+                raise asyncio.TimeoutError
+            await asyncio.sleep(0.01)
+        if world.password:
+            raise errors.SessionPasswordNeededError(request=None)
+        return self.client._login()
 
 
 class World:
@@ -86,6 +125,8 @@ class World:
         self.flood = False
         self.logged_out = 0
         self.sent_type = types.auth.SentCodeTypeApp(length=5)
+        self.qr_approved = False
+        self.qr_lifetime = 30
 
 
 @pytest.fixture
@@ -309,3 +350,80 @@ def test_streaming_uses_the_users_own_session(make, world):
     media_client = asyncio.run(clients.client(user_id))
     assert str(media_client.session.filename).endswith(f"{user_id}.session")
     assert media_client.session.auth_key.key == b"\x01" * 256
+
+
+def _poll_qr(client, until, tries=200):
+    import time
+
+    for _ in range(tries):
+        response = client.get("/api/telegram/link/qr")
+        body = response.json()
+        if until(response, body):
+            return response, body
+        time.sleep(0.02)
+    raise AssertionError(f"QR não chegou ao estado esperado: {body}")
+
+
+def test_qr_link_flow(make, world, tmp_path):
+    client = make()
+    flow = client.post("/api/telegram/link/qr").json()
+    assert flow["step"] == "qr" and flow["method"] == "qr"
+    assert flow["qr_url"].startswith("tg://login?token=") and flow["qr_expires_in"] > 0
+    assert flow["phone"] is None and world.sent == []  # nenhum código pedido
+
+    world.qr_approved = True
+    _, done = _poll_qr(client, lambda r, b: b.get("step") == "done")
+    assert done["account"]["name"] == "João Silva" and done["account"]["phone"] == "+55 ••• ••• 5678"
+    status = client.get("/api/telegram/status").json()
+    assert status["linked"] and status["flow"] is None
+    user_id = client.get("/api/auth/session").json()["user"]["id"]
+    assert (tmp_path / "sessions" / f"{user_id}.session").is_file()
+    # Resultado entregue uma vez só.
+    assert client.get("/api/telegram/link/qr").json()["code"] == "link_expired"
+
+
+def test_qr_renews_when_expired(make, world):
+    world.qr_lifetime = 0.05
+    client = make()
+    first = client.post("/api/telegram/link/qr").json()["qr_url"]
+    _, body = _poll_qr(client, lambda r, b: b.get("qr_url") not in (None, first))
+    assert body["step"] == "qr"
+
+
+def test_qr_with_two_step_password(make, world):
+    world.password = "segredo"
+    client = make()
+    client.post("/api/telegram/link/qr")
+    world.qr_approved = True
+    _, body = _poll_qr(client, lambda r, b: b.get("step") == "password")
+    assert body["password_hint"] == "nome do gato"
+    done = client.post("/api/telegram/link/password", json={"password": "segredo"}).json()
+    assert done["step"] == "done"
+    assert client.get("/api/telegram/status").json()["linked"]
+
+
+def test_qr_rejects_account_of_another_user(make, world):
+    first = make("joao")
+    first.post("/api/telegram/link/qr")
+    world.qr_approved = True
+    _poll_qr(first, lambda r, b: b.get("step") == "done")
+
+    world.qr_approved = False
+    second = make("maria")
+    second.post("/api/telegram/link/qr")
+    world.qr_approved = True
+    response, body = _poll_qr(second, lambda r, b: r.status_code == 409)
+    assert body["code"] == "telegram_in_use"
+    assert not second.get("/api/telegram/status").json()["linked"]
+
+
+def test_cancel_stops_qr_wait(make, world):
+    client = make()
+    client.post("/api/telegram/link/qr")
+    assert client.delete("/api/telegram/link").status_code == 204
+    world.qr_approved = True
+    import time
+
+    time.sleep(0.1)
+    assert not client.get("/api/telegram/status").json()["linked"]
+    assert client.get("/api/telegram/link/qr").status_code == 410

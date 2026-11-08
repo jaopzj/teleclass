@@ -7,6 +7,7 @@ import CodeStep from "./CodeStep";
 import LinkedStep from "./LinkedStep";
 import PasswordStep from "./PasswordStep";
 import PhoneStep from "./PhoneStep";
+import QrStep from "./QrStep";
 import { LinkStep, useTelegramLink } from "./useTelegramLink";
 
 interface Props {
@@ -49,6 +50,8 @@ export default function TelegramLink({ initialFlow, onStepChange, onDone }: Prop
         onChangePhone={link.changePhone}
       />
     );
+  } else if (state.step === "qr" && state.flow) {
+    content = <QrStep flow={state.flow} busy={state.busy} error={state.error} onPoll={link.pollQr} onCancel={link.changePhone} />;
   } else if (state.step === "code" && state.flow) {
     content = (
       <CodeStep
@@ -60,6 +63,7 @@ export default function TelegramLink({ initialFlow, onStepChange, onDone }: Prop
         onSubmit={link.sendCode}
         onResend={link.resend}
         onChangePhone={link.changePhone}
+        onUseQr={link.startQr}
       />
     );
   } else {
@@ -68,6 +72,8 @@ export default function TelegramLink({ initialFlow, onStepChange, onDone }: Prop
         busy={state.busy === "phone" || state.busy === "cancel"}
         error={state.error}
         onSubmit={link.sendPhone}
+        onUseQr={link.startQr}
+        qrBusy={state.busy === "qr"}
         draft={draft}
         onDraft={setDraft}
       />

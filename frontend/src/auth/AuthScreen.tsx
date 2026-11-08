@@ -39,7 +39,8 @@ export default function AuthScreen({ mode }: { mode: AuthMode }) {
   if (state.status === "authenticated") {
     const { user, telegram } = state;
     const list = steps(linkStep.needsPassword);
-    const current = list.findIndex((s) => s.key === linkStep.step);
+    // O QR code ocupa o lugar da etapa do código.
+    const current = list.findIndex((s) => s.key === (linkStep.step === "qr" ? "code" : linkStep.step));
     const reauth = telegram.needs_reauth;
     return (
       <AuthShell

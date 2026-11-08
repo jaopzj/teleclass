@@ -27,11 +27,13 @@
     "@tiptap/suggestion": "^3.32.2",
     "katex": "^0.19.1",
     "lowlight": "^3.3.0",
+    "qrcode": "1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/katex": "^0.16.8",
+    "@types/qrcode": "1.5.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

@@ -17,6 +17,7 @@ interface Props {
   onSubmit: (code: string) => void;
   onResend: () => void;
   onChangePhone: () => void;
+  onUseQr: () => void;
 }
 
 function useCountdown(seconds: number, key: unknown) {
@@ -35,9 +36,9 @@ function useCountdown(seconds: number, key: unknown) {
   return left;
 }
 
-export default function CodeStep({ flow, busy, error, notice, rejection, onSubmit, onResend, onChangePhone }: Props) {
+export default function CodeStep({ flow, busy, error, notice, rejection, onSubmit, onResend, onChangePhone, onUseQr }: Props) {
   const { delivery } = flow;
-  const info = describeDelivery(delivery, flow.phone);
+  const info = describeDelivery(delivery, flow.phone ?? "");
   const boxes = (delivery.input === "digits" || delivery.input === "phone_tail") && delivery.length ? delivery.length : null;
   const [code, setCode] = useState("");
   const wait = useCountdown(flow.resend_in, flow);
@@ -76,7 +77,7 @@ export default function CodeStep({ flow, busy, error, notice, rejection, onSubmi
       </div>
 
       <div className="phone-chip">
-        <span>{flow.phone}</span>
+        <span>{flow.phone ?? ""}</span>
         <button type="button" className="link-button" onClick={onChangePhone} disabled={working}>
           Trocar número
         </button>
@@ -141,6 +142,13 @@ export default function CodeStep({ flow, busy, error, notice, rejection, onSubmi
         ) : (
           <span className="muted">Não recebeu? Confira o número ou troque-o acima.</span>
         )}
+      </div>
+      <div className="resend-row">
+        <span className="muted">O código não chega?</span>
+        <button type="button" className="link-button" onClick={onUseQr} disabled={working}>
+          {busy === "qr" ? <span className="mini-spinner" /> : null}
+          Entrar com QR code
+        </button>
       </div>
     </form>
   );

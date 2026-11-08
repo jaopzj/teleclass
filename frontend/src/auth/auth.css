@@ -231,3 +231,18 @@
   .stepper-label { font-size: 0.68rem; }
 }
 .auth-submit-label { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Vínculo por QR code */
+.auth-or { display: flex; align-items: center; gap: 12px; margin: 14px 0 10px; color: var(--ink-3); font-size: 0.82rem; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.qr-button { width: 100%; justify-content: center; gap: 8px; }
+.qr-box { display: flex; gap: 20px; align-items: center; margin-bottom: 14px; }
+.qr-image { flex: none; display: grid; place-items: center; width: 184px; height: 184px; padding: 8px; border-radius: 14px; background: #fff; border: 1px solid var(--line); }
+.qr-image svg { width: 100%; height: 100%; display: block; }
+.qr-steps { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 0.9rem; color: var(--ink-2); }
+.qr-wait { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; margin: 0 0 6px; }
+@media (max-width: 520px) {
+  .qr-box { flex-direction: column; align-items: stretch; }
+  .qr-image { align-self: center; width: 220px; height: 220px; }
+}
+.qr-mobile { font-size: 0.86rem; margin: 0 0 10px; }
