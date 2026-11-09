@@ -70,6 +70,18 @@
   --float-hover: rgb(255 255 255 / 0.08);
   --shadow-float: 0 16px 40px -14px rgb(5 16 24 / 0.55), 0 2px 6px rgb(5 16 24 / 0.18);
 
+  /* ---- Minha Rotina: paleta de identificação das rotinas e atividades ---------- */
+  /* Tons suaves e controlados. Cada cor tem o tom do marcador (-500), o fundo
+   * claro (-soft) e o texto legível sobre o fundo claro (-ink, contraste AA). */
+  --tone-sky-500: #3aa0d8;    --tone-sky-soft: #e3f2fb;    --tone-sky-ink: #0f6a98;
+  --tone-teal-500: #2a9d8f;   --tone-teal-soft: #ddf2ef;   --tone-teal-ink: #1d7268;
+  --tone-green-500: #4caf6e;  --tone-green-soft: #e4f5e9;  --tone-green-ink: #2b7546;
+  --tone-amber-500: #e0a526;  --tone-amber-soft: #fcf2da;  --tone-amber-ink: #835a06;
+  --tone-coral-500: #ec7a5c;  --tone-coral-soft: #fde8e2;  --tone-coral-ink: #a3432a;
+  --tone-rose-500: #d9658f;   --tone-rose-soft: #fbe6ee;   --tone-rose-ink: #973460;
+  --tone-violet-500: #8b74d6; --tone-violet-soft: #eeeafa; --tone-violet-ink: #5a44a6;
+  --tone-slate-500: #6f8796;  --tone-slate-soft: #e8eef2;  --tone-slate-ink: #42586a;
+
   /* ---- tipografia -------------------------------------------------------------- */
   --font-sans: "Host Grotesk Variable", "Host Grotesk", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-brand: "Poppins", var(--font-sans);

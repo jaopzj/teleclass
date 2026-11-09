@@ -135,6 +135,7 @@ class StartBody(BaseModel):
     course_id: str | None = Field(default=None, max_length=200)
     lesson_key: str | None = Field(default=None, max_length=200)
     timezone: str | None = Field(default=None, max_length=64)
+    activity_id: str | None = Field(default=None, max_length=64)  # atividade da Minha Rotina (docs/minha-rotina.md)
 
 
 @router.post("/sessions")
@@ -158,8 +159,11 @@ def start_session(body: StartBody, state: AppState = Depends(get_state), user: s
         name = PRESETS[technique].name
     target = _target(state, user, body.course_id, body.lesson_key)
     _set_timezone_if_missing(state, user, body.timezone)
+    if body.activity_id:
+        # Só atividades de hoje, ainda por fazer. O tempo de foco passa a contar para ela.
+        state.routine.prepare_focus(user, body.activity_id)
     return state.focus.start(user, body.request_id, plan, method_id=method_id, method_name=name,
-                             intention=body.intention, target=target)
+                             intention=body.intention, target=target, activity_id=body.activity_id)
 
 
 class ActionBody(BaseModel):

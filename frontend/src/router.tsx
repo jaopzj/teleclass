@@ -72,6 +72,13 @@ export const paths = {
   module: (id: string, sectionId: string) => `/cursos/${encodeURIComponent(id)}#modulo-${sectionId}`,
   /** Tela "Adicionar curso"; com `snapshot`, abre a inspeção daquele canal. */
   indexing: (snapshot?: string) => (snapshot ? `/indexacao?curso=${encodeURIComponent(snapshot)}` : "/indexacao"),
+  /** Minha Rotina. `section`: "agenda", "rotinas", "rotinas/<id>", "evolucao"; `params`: data e modo da agenda. */
+  routine: (section?: string, params?: Record<string, string | undefined>) => {
+    const search = new URLSearchParams();
+    for (const [k, v] of Object.entries(params ?? {})) if (v) search.set(k, v);
+    const s = search.toString();
+    return `/rotina${section ? `/${section}` : ""}${s ? `?${s}` : ""}`;
+  },
   focus: (tab?: string) => (tab ? `/foco/${tab}` : "/foco"),
   settings: () => "/configuracoes",
   progress: () => "/conquistas",

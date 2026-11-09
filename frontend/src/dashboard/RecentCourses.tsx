@@ -19,7 +19,7 @@ export default function RecentCourses({ courses, error }: { courses: Course[] | 
     <section className="recent" aria-labelledby="recent-title">
       <div className="title-row">
         <h2 id="recent-title" className="section-title">
-          Cursos recentes
+          Continuar de onde parou
         </h2>
         {courses && courses.length > SHOWN && (
           <Link to={paths.library()} className="section-link">

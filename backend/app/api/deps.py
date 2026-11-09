@@ -12,6 +12,7 @@ from ..errors import AppError
 from ..focus import FocusService, FocusStats, GoalStore, MethodStore, NoticeStore
 from ..learning import ProgressStore
 from ..notebook import FileStore, NotebookStore
+from ..routine import RoutineStore
 from ..libraries import Libraries
 from ..study import PreferencesStore, StudyLedger, StudyMetrics
 from ..telegram.accounts import TelegramAccountStore
@@ -42,6 +43,7 @@ class AppState:
     focus_goals: GoalStore
     focus_stats: FocusStats
     focus_notices: NoticeStore
+    routine: RoutineStore  # Minha Rotina (docs/minha-rotina.md)
     # A coleta é sequencial para respeitar os limites do Telegram (PLANO.md, 9).
     collect_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     # Poucas miniaturas por vez, para não disparar muitas requisições ao Telegram.

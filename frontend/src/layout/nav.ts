@@ -17,6 +17,7 @@ const under = (base: string) => (path: string) => path === base || path.startsWi
 export const PRIMARY_NAV: NavItem[] = [
   { key: "home", label: "Início", icon: "home", to: paths.home(), match: (p) => p === "/" },
   { key: "courses", label: "Meus cursos", icon: "courses", to: paths.library(), match: under("/cursos") },
+  { key: "routine", label: "Minha Rotina", icon: "routine", to: paths.routine(), match: under("/rotina") },
   { key: "focus", label: "Foco", icon: "hourglass", to: paths.focus(), match: under("/foco") },
   { key: "notebook", label: "Anotações", icon: "note", to: paths.notebook(), match: under("/caderno") },
   { key: "add", label: "Adicionar curso", icon: "folderPlus", to: paths.indexing(), match: under("/indexacao") },

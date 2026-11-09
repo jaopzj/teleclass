@@ -343,6 +343,129 @@ MIGRATIONS: list[str] = [
     );
     CREATE INDEX note_file_links_file ON note_file_links (file_id);
     """,
+    # 6: Minha Rotina (docs/minha-rotina.md). Rotina = modelo; ocorrência = o que
+    # foi planejado para uma data; sessão = o que foi executado; log = o que mudou.
+    """
+    CREATE TABLE routines (
+        id                    TEXT PRIMARY KEY,
+        user_id               TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        name                  TEXT NOT NULL,
+        description           TEXT NOT NULL DEFAULT '',
+        icon_key              TEXT,
+        color                 TEXT,
+        mode                  TEXT NOT NULL,
+        preferred_start_time  TEXT,
+        status                TEXT NOT NULL,
+        created_at            TEXT NOT NULL,
+        updated_at            TEXT NOT NULL,
+        archived_at           TEXT,
+        deleted_at            TEXT
+    );
+    CREATE INDEX routines_user ON routines (user_id, deleted_at, status);
+    CREATE TABLE routine_schedules (
+        id          TEXT PRIMARY KEY,
+        routine_id  TEXT NOT NULL UNIQUE REFERENCES routines (id) ON DELETE CASCADE,
+        frequency   TEXT NOT NULL DEFAULT 'weekly',
+        weekdays    TEXT NOT NULL DEFAULT '',
+        starts_on   TEXT NOT NULL,
+        ends_on     TEXT,
+        timezone    TEXT NOT NULL,
+        is_enabled  INTEGER NOT NULL DEFAULT 1,
+        created_at  TEXT NOT NULL,
+        updated_at  TEXT NOT NULL
+    );
+    CREATE TABLE routine_activities (
+        id                TEXT PRIMARY KEY,
+        routine_id        TEXT NOT NULL REFERENCES routines (id) ON DELETE CASCADE,
+        user_id           TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        title             TEXT NOT NULL,
+        description       TEXT NOT NULL DEFAULT '',
+        icon_key          TEXT,
+        color             TEXT,
+        duration_minutes  INTEGER,
+        preferred_time    TEXT,
+        period            TEXT,
+        priority          TEXT NOT NULL DEFAULT 'normal',
+        is_optional       INTEGER NOT NULL DEFAULT 0,
+        notes             TEXT NOT NULL DEFAULT '',
+        link_type         TEXT,
+        course_id         TEXT,
+        section_id        TEXT,
+        lesson_key        TEXT,
+        position          REAL NOT NULL,
+        created_at        TEXT NOT NULL,
+        updated_at        TEXT NOT NULL,
+        deleted_at        TEXT
+    );
+    CREATE INDEX routine_activities_routine ON routine_activities (routine_id, deleted_at, position);
+    -- Uma linha por rotina e data em que ela foi aplicada (pela programação ou à mão).
+    -- É a chave de idempotência da geração: com a linha, a data nunca é gerada de novo.
+    CREATE TABLE routine_days (
+        user_id     TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        routine_id  TEXT NOT NULL REFERENCES routines (id) ON DELETE CASCADE,
+        day         TEXT NOT NULL,
+        origin      TEXT NOT NULL,
+        status      TEXT NOT NULL,
+        created_at  TEXT NOT NULL,
+        updated_at  TEXT NOT NULL,
+        PRIMARY KEY (user_id, routine_id, day)
+    );
+    CREATE INDEX routine_days_day ON routine_days (user_id, day);
+    CREATE TABLE activity_occurrences (
+        id                   TEXT PRIMARY KEY,
+        user_id              TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        routine_id           TEXT REFERENCES routines (id) ON DELETE SET NULL,
+        routine_activity_id  TEXT REFERENCES routine_activities (id) ON DELETE SET NULL,
+        origin_date          TEXT,
+        scheduled_date       TEXT NOT NULL,
+        start_time           TEXT,
+        duration_minutes     INTEGER,
+        period               TEXT,
+        position             REAL NOT NULL,
+        title                TEXT NOT NULL,
+        description          TEXT NOT NULL DEFAULT '',
+        icon_key             TEXT,
+        color                TEXT,
+        priority             TEXT NOT NULL DEFAULT 'normal',
+        is_optional          INTEGER NOT NULL DEFAULT 0,
+        notes                TEXT NOT NULL DEFAULT '',
+        link_type            TEXT,
+        course_id            TEXT,
+        section_id           TEXT,
+        lesson_key           TEXT,
+        status               TEXT NOT NULL,
+        source               TEXT NOT NULL,
+        customized           INTEGER NOT NULL DEFAULT 0,
+        rescheduled_from     TEXT,
+        skip_reason          TEXT,
+        manual_seconds       INTEGER,
+        completed_at         TEXT,
+        created_at           TEXT NOT NULL,
+        updated_at           TEXT NOT NULL,
+        deleted_at           TEXT
+    );
+    CREATE INDEX activity_occurrences_day ON activity_occurrences (user_id, scheduled_date, deleted_at);
+    CREATE INDEX activity_occurrences_routine ON activity_occurrences (routine_id, scheduled_date);
+    CREATE UNIQUE INDEX activity_occurrences_generated
+        ON activity_occurrences (user_id, routine_activity_id, origin_date) WHERE routine_activity_id IS NOT NULL;
+    CREATE TABLE activity_logs (
+        id             INTEGER PRIMARY KEY,
+        user_id        TEXT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+        occurrence_id  TEXT NOT NULL REFERENCES activity_occurrences (id) ON DELETE CASCADE,
+        event_type     TEXT NOT NULL,
+        event_data     TEXT,
+        created_at     TEXT NOT NULL
+    );
+    CREATE INDEX activity_logs_occurrence ON activity_logs (occurrence_id, id);
+    """,
+    # 7: o tempo das atividades da rotina passa a vir do cronômetro do Foco. A sessão
+    # do Foco guarda qual atividade estava sendo feita; a tabela própria sai.
+    """
+    DROP TABLE IF EXISTS activity_sessions;
+    UPDATE activity_occurrences SET status = 'pending' WHERE status = 'in_progress';
+    ALTER TABLE focus_sessions ADD COLUMN activity_id TEXT;
+    CREATE INDEX focus_sessions_activity ON focus_sessions (activity_id) WHERE activity_id IS NOT NULL;
+    """,
 ]
 
 

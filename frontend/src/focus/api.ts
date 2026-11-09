@@ -87,6 +87,8 @@ export interface FocusSession {
   plan: Plan;
   timeline: TimelineStep[];
   intention: string | null;
+  /** Atividade da Minha Rotina que recebe este tempo de foco. */
+  activity_id?: string | null;
   course: { id: string; title: string | null } | null;
   lesson: { key: string; title: string | null } | null;
   status: "active";
@@ -165,6 +167,7 @@ export interface StartInput {
   intention?: string | null;
   course_id?: string | null;
   lesson_key?: string | null;
+  activity_id?: string | null;
 }
 
 export interface Achievement {

@@ -210,7 +210,14 @@ const ICONS = {
   files: { regular: filesRegular },
 } satisfies Record<string, Partial<Record<Weight, string>> & { regular: string }>;
 
-export type IconName = keyof typeof ICONS;
+// Exceções de outra biblioteca, pedidas pelo produto: Lucide (https://lucide.dev, ISC),
+// desenhada em traço 24 × 24. Traço de 1.5 para casar com o peso regular do Phosphor.
+const LUCIDE = {
+  // calendar-1: "Minha Rotina" na navegação.
+  routine: '<path d="M11 14h1v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/>',
+} satisfies Record<string, string>;
+
+export type IconName = keyof typeof ICONS | keyof typeof LUCIDE;
 
 /** Conteúdo interno do SVG (os arquivos vêm do pacote, prontos e confiáveis). */
 const inner = (svg: string) => svg.replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
@@ -225,7 +232,25 @@ interface IconProps {
 
 /** Ícone decorativo: herda a cor do texto; o rótulo acessível fica no elemento que o contém. */
 export default function Icon({ name, size = 18, weight, className }: IconProps) {
-  const set: Partial<Record<Weight, string>> = ICONS[name];
+  if (name in LUCIDE) {
+    return (
+      <svg
+        className={className}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={weight === "bold" ? 2 : 1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        focusable="false"
+        dangerouslySetInnerHTML={{ __html: LUCIDE[name as keyof typeof LUCIDE] }}
+      />
+    );
+  }
+  const set: Partial<Record<Weight, string>> = ICONS[name as keyof typeof ICONS];
   const svg = set[weight ?? (name === "play" ? "fill" : "regular")] ?? set.regular!;
   return (
     <svg

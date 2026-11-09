@@ -25,6 +25,8 @@ import { stopAmbient } from "./focus/ambient";
 const IndexingPage = lazy(() => import("./indexing/IndexingPage"));
 // O Caderno traz o editor completo (fórmulas, código...); carrega quando aberto.
 const NotebookPage = lazy(() => import("./notebook/NotebookPage"));
+// Minha Rotina (agenda, rotinas, biblioteca de ícones): carrega quando aberta.
+const RoutinePage = lazy(() => import("./routine/RoutinePage"));
 
 function Page({ path }: { path: string }) {
   let params;
@@ -33,6 +35,8 @@ function Page({ path }: { path: string }) {
   if (matchPath("/indexacao", path)) return <IndexingPage />;
   if (path === "/caderno") return <NotebookPage />;
   if ((params = matchPath("/caderno/nota/:id", path))) return <NotebookPage noteId={params.id} />;
+  if (path === "/rotina") return <RoutinePage />;
+  if (path.startsWith("/rotina/")) return <RoutinePage section={path.slice("/rotina/".length).replace(/\/+$/, "")} />;
   if (path === "/foco") return <FocusPage />;
   if ((params = matchPath("/foco/:tab", path))) return <FocusPage tab={params.tab} />;
   if (path === "/configuracoes") return <SettingsPage />;
@@ -114,6 +118,7 @@ function Shell({ path, userId }: { path: string; userId: string }) {
       stopAmbient();
     };
   }, [userId]);
+  // Cronômetro da Minha Rotina: estado no servidor, visível em qualquer página.
   // Gaveta do celular: fecha ao trocar de página e com Esc.
   useEffect(() => setMenuOpen(false), [path]);
   useEffect(() => {

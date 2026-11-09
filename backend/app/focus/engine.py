@@ -164,6 +164,7 @@ class FocusService:
         method_name: str,
         intention: str | None,
         target: Target,
+        activity_id: str | None = None,
     ) -> dict:
         with self.db.transaction() as conn:
             ctx = self._ctx(conn, user_id)
@@ -180,13 +181,13 @@ class FocusService:
                 INSERT INTO focus_sessions (
                     id, user_id, technique, method_id, method_name, plan, intention, course_id, lesson_key,
                     course_title, lesson_title, status, stage, phase_index, cycle, phase_started_at, phase_ends_at,
-                    run_started_at, timezone, started_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'focus', 0, 1, ?, ?, ?, ?, ?)
+                    run_started_at, timezone, started_at, activity_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 'focus', 0, 1, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     session_id, user_id, plan.technique.value, method_id, method_name, json.dumps(plan.to_dict()),
                     (intention or "").strip()[:INTENTION_MAX] or None, target.course_id, target.lesson_key,
-                    target.course_title, target.lesson_title, now, ends, now, ctx.tz_name, now,
+                    target.course_title, target.lesson_title, now, ends, now, ctx.tz_name, now, activity_id,
                 ),
             )
             self._event(ctx, session_id, "start", request_id, {"technique": plan.technique.value})
@@ -545,6 +546,7 @@ def _session_view(s: dict) -> dict:
         "plan": plan.to_dict(),
         "timeline": plan.timeline(),
         "intention": s["intention"],
+        "activity_id": s.get("activity_id"),  # atividade da Minha Rotina que este tempo alimenta
         "course": {"id": s["course_id"], "title": s["course_title"]} if s["course_id"] else None,
         "lesson": {"key": s["lesson_key"], "title": s["lesson_title"]} if s["lesson_key"] else None,
         "status": s["status"],

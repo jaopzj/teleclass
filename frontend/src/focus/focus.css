@@ -28,7 +28,7 @@
 /* Posição: top/left/right/bottom vêm do JS (canto mais próximo). O transform é
  * só do arrastar e da acomodação; a entrada anima o cartão por dentro. */
 .fx-float {
-  position: fixed; z-index: 60; width: 236px;
+  position: fixed; z-index: 60; width: 264px;
   touch-action: none; user-select: none; -webkit-user-select: none;
   transition: width var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
 }
@@ -91,6 +91,8 @@
 .fx-float.is-expanded .fx-float-time { font-size: 1.75rem; font-weight: var(--weight-medium); letter-spacing: -0.02em; }
 .tone-paused .fx-float-time { color: var(--float-ink-2); }
 .fx-float-stage { font-size: var(--text-xs); color: var(--float-ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A etapa troca com animação (inline-block), mas precisa cortar com reticências, não no meio da letra. */
+.fx-float-stage .fx-swap { display: block; overflow: hidden; text-overflow: ellipsis; }
 .tone-rest .fx-float-stage { color: color-mix(in srgb, var(--rest-500) 70%, var(--float-ink)); }
 
 .fx-float-btn {
