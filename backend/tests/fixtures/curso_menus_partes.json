@@ -1,0 +1,944 @@
+{
+ "format": "teleaula.channel-snapshot/v1",
+ "channel_id": 3853134650,
+ "title": "Redação (partes)",
+ "username": null,
+ "messages": [
+  {
+   "id": 21,
+   "date": "2025-08-12T15:10:21+00:00",
+   "text": "❇️ #M01\n⚠️ Clique aqui para ir ao início do módulo.\n\n➥ REDACAO - CONTEUDO INEDITO\n\n▸ Dica: toque na tag para ir direto ao módulo\n#C01 - MODULO 00 - COMECE POR AQUI\n#C02 - MODULO 01 - AULAS DE ESTRUTURA\n#C03 - MODULO 02 - AULAS DE REPERTORIO\n#C04 - MODULO 03 - AULAS MISTAS\n#C05 - MODULO 04 - OUTROS GENEROS TEXTUAIS",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 22,
+   "date": "2025-08-12T15:10:22+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 23,
+   "date": "2025-08-12T15:10:23+00:00",
+   "text": "✳️ #C01\n\n➥ MODULO 00 - COMECE POR AQUI\n\n▸ Conteúdo:\n#A01 - AULA 00 - ESTRUTURA DO CURSO\n\n#A02 - AULA 00 - DUVIDAS MAIS COMUNS",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 24,
+   "date": "2025-08-12T15:10:24+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 25,
+   "date": "2025-08-12T15:10:25+00:00",
+   "text": "#A01\nAULA 00 - ESTRUTURA DO CURSO\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 26,
+   "date": "2025-08-12T15:10:26+00:00",
+   "text": "Videoaula - Estrutura do curso",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Estrutura_do_curso.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 27,
+   "date": "2025-08-12T15:10:27+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 28,
+   "date": "2025-08-12T15:10:28+00:00",
+   "text": "#A02\nAULA 00 - DUVIDAS MAIS COMUNS\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 29,
+   "date": "2025-08-12T15:10:29+00:00",
+   "text": "Videoaula - Duvidas mais comuns",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Duvidas_mais_comuns.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 30,
+   "date": "2025-08-12T15:10:30+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 31,
+   "date": "2025-08-12T15:10:31+00:00",
+   "text": "✳️ #C01\n\n➥ MODULO 01 - AULAS DE ESTRUTURA\n\n▸ Conteúdo:\n#B01 - AULA 01 - REDACAO COMO PROJETO DE PENSAMENTO\n\n#B02 - AULA 02 - COMPETENCIAS DO ENEM",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 32,
+   "date": "2025-08-12T15:10:32+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 33,
+   "date": "2025-08-12T15:10:33+00:00",
+   "text": "#B01\nAULA 01 - REDACAO COMO PROJETO DE PENSAMENTO\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 34,
+   "date": "2025-08-12T15:10:34+00:00",
+   "text": "Videoaula - Redacao como projeto de pensamento",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Redacao_como_projeto_de_pensamento.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 35,
+   "date": "2025-08-12T15:10:35+00:00",
+   "text": "#A01\nAULA 01 - REDACAO COMO PROJETO DE PENSAMENTO\n\n♻️ Materiais de apoio abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 36,
+   "date": "2025-08-12T15:10:36+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "02_Ficha_de_Apoio_Redacao_como_projeto.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 37,
+   "date": "2025-08-12T15:10:37+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 38,
+   "date": "2025-08-12T15:10:38+00:00",
+   "text": "#B02\nAULA 02 - COMPETENCIAS DO ENEM\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 39,
+   "date": "2025-08-12T15:10:39+00:00",
+   "text": "Videoaula - Competencias do ENEM",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Competencias_do_ENEM.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 40,
+   "date": "2025-08-12T15:10:40+00:00",
+   "text": "#B02\nAULA 02 - COMPETENCIAS DO ENEM\n\n♻️ Materiais de apoio abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 41,
+   "date": "2025-08-12T15:10:41+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": 777,
+   "media": {
+    "kind": "document",
+    "file_name": "02_Ficha_Competencias.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 42,
+   "date": "2025-08-12T15:10:42+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": 777,
+   "media": {
+    "kind": "document",
+    "file_name": "03_Ficha_Coesao.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 43,
+   "date": "2025-08-12T15:10:43+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 92,
+   "date": "2025-08-12T15:11:32+00:00",
+   "text": "✳️ #C02\n\n➥ MODULO 02 - AULAS DE REPERTORIO\n\n▸ Conteúdo:\n#D01 - AULA 01 - O QUE E REPERTORIO\n\n#D07 - AULA 08 - NOVA EXPOSICAO DE SAMUEL DE SABOIA\n\n#D08 - AULA 09 - JESSE SOUZA\n\n#D09 - AULA 10 - BRASIL E OS CONFLITOS GLOBAIS\n\n#D10 - AULA 11 - SUELI CARNEIRO",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 93,
+   "date": "2025-08-12T15:11:33+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 94,
+   "date": "2025-08-12T15:11:34+00:00",
+   "text": "#D01\nAULA 01 - O QUE E REPERTORIO\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 95,
+   "date": "2025-08-12T15:11:35+00:00",
+   "text": "Videoaula - O que e repertorio",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "O_que_e_repertorio.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 96,
+   "date": "2025-08-12T15:11:36+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 253,
+   "date": "2025-08-12T15:14:13+00:00",
+   "text": "❇️ #M02\n⚠️ Clique aqui para ir ao início do módulo.\n\n➥ REDACAO - CONTEUDO COMPLETO\n\n▸ Dica: toque na tag para ir direto ao módulo\n#I01 - MODULO 00 - AULAS ESSENCIAIS\n#I04 - MODULO 03 - O QUE FALTA PARA O 1000\n#I05 - MODULO 04 - OUTROS GENEROS TEXTUAIS",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 254,
+   "date": "2025-08-12T15:14:14+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 255,
+   "date": "2025-08-12T15:14:15+00:00",
+   "text": "✳️ #I01\n\n➥ MODULO 00 - AULAS ESSENCIAIS\n\n▸ Conteúdo:\n#J01 - AULAS ESSENCIAIS PARA ENTENDER A ESTRUTURA",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 257,
+   "date": "2025-08-12T15:14:17+00:00",
+   "text": "#J01\n1 AULAS ESSENCIAIS PARA ENTENDER A ESTRUTURA\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 258,
+   "date": "2025-08-12T15:14:18+00:00",
+   "text": "Videoaula - Estrutura textual",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Estrutura_textual.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 259,
+   "date": "2025-08-12T15:14:19+00:00",
+   "text": "Videoaula - Elementos estruturais",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Elementos_estruturais.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 260,
+   "date": "2025-08-12T15:14:20+00:00",
+   "text": "#J01\n1 AULAS ESSENCIAIS PARA ENTENDER A ESTRUTURA\n\n♻️ Materiais de apoio abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 261,
+   "date": "2025-08-12T15:14:21+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "02_Ficha_Estrutura.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 262,
+   "date": "2025-08-12T15:14:22+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 460,
+   "date": "2025-08-12T15:17:40+00:00",
+   "text": "✳️ #I04\n\n➥ MODULO 03 - O QUE FALTA PARA O 1000\n\n▸ Conteúdo:\n#M01 - AULA 01 - O QUE FALTA (COMPETENCIA 1)\n\n#M02 - AULA 02 - O QUE FALTA (COMPETENCIA 2)",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 461,
+   "date": "2025-08-12T15:17:41+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 462,
+   "date": "2025-08-12T15:17:42+00:00",
+   "text": "#M01\nAULA 01 - O QUE FALTA (COMPETENCIA 1)\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 463,
+   "date": "2025-08-12T15:17:43+00:00",
+   "text": "Videoaula - O que falta - Parte 1",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "O_que_falta_-_Parte_1.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 464,
+   "date": "2025-08-12T15:17:44+00:00",
+   "text": "Videoaula - O que falta - Parte 2",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "O_que_falta_-_Parte_2.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 465,
+   "date": "2025-08-12T15:17:45+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 466,
+   "date": "2025-08-12T15:17:46+00:00",
+   "text": "#M02\nAULA 02 - O QUE FALTA (COMPETENCIA 2)\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 467,
+   "date": "2025-08-12T15:17:47+00:00",
+   "text": "Videoaula - O que falta - Competencia 2",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "O_que_falta_-_Competencia_2.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 468,
+   "date": "2025-08-12T15:17:48+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 488,
+   "date": "2025-08-12T15:18:08+00:00",
+   "text": "✳️ #I05\n\n➥ MODULO 04 - OUTROS GENEROS TEXTUAIS\n\n▸ Conteúdo:\n#N01 - AULA 01 - CARTA",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 490,
+   "date": "2025-08-12T15:18:10+00:00",
+   "text": "#N01\nAULA 01 - CARTA\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 491,
+   "date": "2025-08-12T15:18:11+00:00",
+   "text": "Videoaula - Carta",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Carta.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 492,
+   "date": "2025-08-12T15:18:12+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 508,
+   "date": "2025-08-12T15:18:28+00:00",
+   "text": "#D07\nAULA 07 - PARA ENTENDER A CRISE URBANA ERMINIA MARICATO\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 509,
+   "date": "2025-08-12T15:18:29+00:00",
+   "text": "Videoaula - Para entender a crise urbana",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Para_entender_a_crise_urbana.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 510,
+   "date": "2025-08-12T15:18:30+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 511,
+   "date": "2025-08-12T15:18:31+00:00",
+   "text": "#D08\nAULA 08 - NOVA EXPOSICAO DE SAMUEL DE SABOIA\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 512,
+   "date": "2025-08-12T15:18:32+00:00",
+   "text": "Videoaula - Nova exposicao de Samuel de Saboia",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Nova_exposicao_de_Samuel_de_Saboia.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 513,
+   "date": "2025-08-12T15:18:33+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 516,
+   "date": "2025-08-12T15:18:36+00:00",
+   "text": "#D09\nAULA 09 - JESSE SOUZA\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 517,
+   "date": "2025-08-12T15:18:37+00:00",
+   "text": "Videoaula - Jesse Souza",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Jesse_Souza.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 518,
+   "date": "2025-08-12T15:18:38+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 522,
+   "date": "2025-08-12T15:18:42+00:00",
+   "text": "#D010\nAULA 10 - BRASIL E OS CONFLITOS GLOBAIS\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 523,
+   "date": "2025-08-12T15:18:43+00:00",
+   "text": "Videoaula - Brasil e os conflitos globais",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Brasil_e_os_conflitos_globais.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 524,
+   "date": "2025-08-12T15:18:44+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 527,
+   "date": "2025-08-12T15:18:47+00:00",
+   "text": "#D11\nAULA 11 - SUELI CARNEIRO\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 528,
+   "date": "2025-08-12T15:18:48+00:00",
+   "text": "Videoaula - Sueli Carneiro",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Sueli_Carneiro.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 529,
+   "date": "2025-08-12T15:18:49+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 538,
+   "date": "2025-08-12T15:18:58+00:00",
+   "text": "✳️ #C04\n\n➥ MODULO 03 - AULAS MISTAS\n\n▸ Conteúdo:\n#E01 - AULA 01 - CORRECOES DO ENEM",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 540,
+   "date": "2025-08-12T15:19:00+00:00",
+   "text": "#E01\nAULA 01 - CORRECOES DO ENEM\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 541,
+   "date": "2025-08-12T15:19:01+00:00",
+   "text": "Videoaula - Correcoes do ENEM",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Correcoes_do_ENEM.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 542,
+   "date": "2025-08-12T15:19:02+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 575,
+   "date": "2025-08-12T15:19:35+00:00",
+   "text": "✳️ #C05\n\n➥ MODULO 04 - OUTROS GENEROS TEXTUAIS\n\n▸ Conteúdo:\n#F01 - AULA 01 - CARTA",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 577,
+   "date": "2025-08-12T15:19:37+00:00",
+   "text": "#F01\nAULA 01 - CARTA\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 578,
+   "date": "2025-08-12T15:19:38+00:00",
+   "text": "Videoaula - Carta",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "Carta.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 600,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 579,
+   "date": "2025-08-12T15:19:39+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "sticker.webp",
+    "mime_type": "image/webp",
+    "size": 170,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  }
+ ]
+}

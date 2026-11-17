@@ -16,7 +16,8 @@ import sys
 from pathlib import Path
 
 from .config import get_settings
-from .indexing.pipeline import index_snapshot
+from .indexing.layouts import layout_names
+from .indexing.pipeline import IndexingOptions, index_snapshot
 from .indexing.render import render_text
 from .indexing.storage import load_snapshot
 from .libraries import Libraries
@@ -56,7 +57,7 @@ async def _collect(link: str, name: str | None, username: str) -> None:
     print(f"{len(snapshot.messages)} mensagens salvas no snapshot '{saved}'")
 
 
-def _index(target: str, json_out: str | None, username: str | None) -> None:
+def _index(target: str, json_out: str | None, username: str | None, layout: str | None = None) -> None:
     path = Path(target)
     if path.suffix == ".json":
         snapshot = load_snapshot(path)
@@ -64,7 +65,7 @@ def _index(target: str, json_out: str | None, username: str | None) -> None:
         if not username:
             sys.exit("Informe de quem é a biblioteca: --user seu_usuario")
         snapshot = Libraries(get_settings().snapshots_dir).store(_user_id(username)).load(target)
-    result = index_snapshot(snapshot)
+    result = index_snapshot(snapshot, IndexingOptions(layout=layout))
     print(render_text(result))
     if json_out:
         Path(json_out).write_text(
@@ -85,6 +86,7 @@ def main(argv: list[str] | None = None) -> None:
     index.add_argument("snapshot", help="nome do snapshot ou caminho de um .json")
     index.add_argument("--json", dest="json_out", help="grava o resultado completo em JSON")
     index.add_argument("--user", help="dono da biblioteca (obrigatório ao usar o nome do snapshot)")
+    index.add_argument("--layout", choices=layout_names(), help="força um layout de canal (padrão: detecta)")
     args = parser.parse_args(argv)
 
     if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -98,7 +100,7 @@ def main(argv: list[str] | None = None) -> None:
     elif args.command == "collect":
         asyncio.run(_collect(args.link, args.name, args.user))
     else:
-        _index(args.snapshot, args.json_out, args.user)
+        _index(args.snapshot, args.json_out, args.user, args.layout)
 
 
 if __name__ == "__main__":

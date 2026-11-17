@@ -59,7 +59,7 @@ export interface Report {
 
 export interface IndexResult {
   name: string;
-  course: { title: string; strategy: "summary" | "fallback"; sections: Section[] };
+  course: { title: string; strategy: "summary" | "fallback" | "module_menu"; sections: Section[] };
   report: Report;
 }
 

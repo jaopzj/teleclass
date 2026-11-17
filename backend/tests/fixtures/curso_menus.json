@@ -1,0 +1,320 @@
+{
+ "format": "teleaula.channel-snapshot/v1",
+ "channel_id": 3853134650,
+ "title": "02 - REDACAO - COMPLETO",
+ "username": null,
+ "messages": [
+  {
+   "id": 2,
+   "date": "2025-08-12T15:10:02+00:00",
+   "text": "Bem-vindos ao curso de Redação! Siga os módulos abaixo.",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 3,
+   "date": "2025-08-12T15:10:03+00:00",
+   "text": "Apresentação do curso",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 120,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 10,
+   "date": "2025-08-12T15:10:10+00:00",
+   "text": "✳️ #I01\n\n➡ MODULO 00 - AULAS ESSENCIAIS PARA ENTENDER REDACAO\n\n► Conteúdo:\n#J01 - AULAS ESSENCIAIS PARA ENTENDER A ESTRUTURA\n\n#J02 - AULAS ESSENCIAIS PARA ENTENDER OS REPERTORIOS\n\n#J03 - AULA BONUS SEM CONTEUDO",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 11,
+   "date": "2025-08-12T15:10:11+00:00",
+   "text": "#J01\n1 AULAS ESSENCIAIS PARA ENTENDER A ESTRUTURA\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 12,
+   "date": "2025-08-12T15:10:12+00:00",
+   "text": "Videoaula - Estrutura textual - Estrutura basica do texto dissertativo-argumentativo (introducao desenvolvimento e conclusao MACRO)",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 4764,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 13,
+   "date": "2025-08-12T15:10:13+00:00",
+   "text": "Videoaula - Estrategias para organizar os argumentos",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 3000,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 14,
+   "date": "2025-08-12T15:10:14+00:00",
+   "text": "Videoaula - Rumo a estrategia perfeita como escolher os topicos frasais o teorico e o dado",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 5000,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 15,
+   "date": "2025-08-12T15:10:15+00:00",
+   "text": "#J01\n1 AULAS ESSENCIAIS PARA ENTENDER A ESTRUTURA\n\n♻️ Materiais de apoio abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 16,
+   "date": "2025-08-12T15:10:16+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": 900,
+   "media": {
+    "kind": "document",
+    "file_name": "02_Ficha_de_Apoio_Estrutura.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 17,
+   "date": "2025-08-12T15:10:17+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": 900,
+   "media": {
+    "kind": "document",
+    "file_name": "04_Ficha_de_Apoio_Elementos.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 18,
+   "date": "2025-08-12T15:10:18+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": 900,
+   "media": {
+    "kind": "document",
+    "file_name": "07_Ficha_de_Apoio_Elementos_2.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 19,
+   "date": "2025-08-12T15:10:19+00:00",
+   "text": "#J02\n2 AULAS ESSENCIAIS PARA ENTENDER OS REPERTORIOS\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 20,
+   "date": "2025-08-12T15:10:20+00:00",
+   "text": "Videoaula - Repertorios legitimados",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 2400,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 21,
+   "date": "2025-08-12T15:10:21+00:00",
+   "text": "Pessoal, lembrem de fazer os exercícios!",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 22,
+   "date": "2025-08-12T15:10:22+00:00",
+   "text": "Videoaula - Como usar o repertorio",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 1800,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 30,
+   "date": "2025-08-12T15:10:30+00:00",
+   "text": "✳️ #I02\n\n➡ MODULO 01 - PROPOSTA DE INTERVENCAO\n\n► Conteúdo:\n#K01 - AULA 01 - OS CINCO ELEMENTOS\n\n#K02 - AULA 02 - EXERCICIOS",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 31,
+   "date": "2025-08-12T15:10:31+00:00",
+   "text": "#K03 - AULA 03 - MODELOS PRONTOS\n\n#K04 - AULA 04 - REVISAO",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 32,
+   "date": "2025-08-12T15:10:32+00:00",
+   "text": "#K01\nAULA 01 - OS CINCO ELEMENTOS\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 33,
+   "date": "2025-08-12T15:10:33+00:00",
+   "text": "Videoaula - Agente, ação, meio, finalidade e detalhamento",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 2000,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 34,
+   "date": "2025-08-12T15:10:34+00:00",
+   "text": "#K02\nAULA 02 - EXERCICIOS\n\n♻️ Materiais de apoio abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 35,
+   "date": "2025-08-12T15:10:35+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "document",
+    "file_name": "Lista_de_exercicios.pdf",
+    "mime_type": "application/pdf",
+    "size": 1000,
+    "duration": null,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 36,
+   "date": "2025-08-12T15:10:36+00:00",
+   "text": "#K03\nAULA 03 - MODELOS PRONTOS\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 37,
+   "date": "2025-08-12T15:10:37+00:00",
+   "text": "",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": "modelos_prontos.mp4",
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 900,
+    "width": null,
+    "height": null
+   }
+  },
+  {
+   "id": 38,
+   "date": "2025-08-12T15:10:38+00:00",
+   "text": "#K04\nAULA 04 - REVISAO\nLeia o resumo em https://example.com/resumo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 39,
+   "date": "2025-08-12T15:10:39+00:00",
+   "text": "#K05\nAULA EXTRA - PLANTAO DE DUVIDAS\n\n▶️ Vídeo aulas abaixo",
+   "markdown": null,
+   "grouped_id": null,
+   "media": null
+  },
+  {
+   "id": 40,
+   "date": "2025-08-12T15:10:40+00:00",
+   "text": "Videoaula - Plantão de dúvidas",
+   "markdown": null,
+   "grouped_id": null,
+   "media": {
+    "kind": "video",
+    "file_name": null,
+    "mime_type": "video/mp4",
+    "size": 1000,
+    "duration": 3600,
+    "width": null,
+    "height": null
+   }
+  }
+ ]
+}

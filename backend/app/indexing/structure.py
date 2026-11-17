@@ -18,12 +18,14 @@ from .resolver import MatchReason
 class Strategy(StrEnum):
     SUMMARY = "summary"
     FALLBACK = "fallback"
+    MODULE_MENU = "module_menu"  # menus por módulo (#I01) e cabeçalhos de aula (#J01)
 
 
 class TitleSource(StrEnum):
     CAPTION = "caption"
     FILE_NAME = "file_name"
     SUMMARY_LABEL = "summary_label"
+    HEADER = "header"  # mensagem de cabeçalho da aula (layout de menus por módulo)
     GENERATED = "generated"
 
 

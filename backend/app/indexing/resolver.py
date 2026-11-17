@@ -22,6 +22,7 @@ class MatchReason(StrEnum):
     TAG = "tag"  # a mensagem contém o identificador
     ALBUM = "album"  # a mensagem está no mesmo álbum de uma mensagem com o identificador
     CHRONOLOGICAL = "chronological"  # fallback: mensagem de mídia em ordem cronológica
+    SEQUENCE = "sequence"  # veio depois do cabeçalho da aula (layout de menus por módulo)
 
 
 @dataclass(frozen=True, slots=True)

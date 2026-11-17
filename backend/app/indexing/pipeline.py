@@ -1,4 +1,9 @@
-"""Orquestra as etapas da indexação e monta o relatório de inspeção."""
+"""Orquestra as etapas da indexação e monta o relatório de inspeção.
+
+`index_snapshot` escolhe o layout do canal (ver `layouts/`) e delega a ele.
+`index_tagged_summary` é o pipeline original (sumário + identificadores nas
+mensagens), usado como padrão sempre que nenhum outro layout é reconhecido.
+"""
 
 from __future__ import annotations
 
@@ -28,6 +33,8 @@ class IndexingOptions:
     max_summary_gap: int = 2
     parsers: Sequence[OutlineParser] = field(default_factory=lambda: DEFAULT_PARSERS)
     refs: RefExtractor = field(default_factory=RefExtractor)
+    # Força um layout pelo nome (ex.: "tagged_summary"); `None` detecta sozinho.
+    layout: str | None = None
 
 
 @dataclass(slots=True)
@@ -35,18 +42,37 @@ class IndexingResult:
     course: CourseStructure
     report: IndexingReport
     outline: Outline | None
+    layout: str = "tagged_summary"
+    layout_candidates: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "course": self.course.to_dict(),
             "report": self.report.to_dict(),
             "outline": self.outline.to_dict() if self.outline else None,
+            "layout": self.layout,
+            "layout_candidates": list(self.layout_candidates),
         }
 
 
 def index_snapshot(
     snapshot: ChannelSnapshot, options: IndexingOptions | None = None
 ) -> IndexingResult:
+    """Indexa o canal com o layout reconhecido (ou o forçado em `options.layout`)."""
+    from .layouts import select_layout  # import tardio: os layouts usam este módulo
+
+    options = options or IndexingOptions()
+    layout, candidates = select_layout(snapshot, options)
+    result = layout.index(snapshot, options)
+    result.layout = layout.name
+    result.layout_candidates = candidates
+    return result
+
+
+def index_tagged_summary(
+    snapshot: ChannelSnapshot, options: IndexingOptions | None = None
+) -> IndexingResult:
+    """Layout original: um sumário com identificadores e mídias marcadas com eles."""
     options = options or IndexingOptions()
     messages = snapshot.messages
     title = snapshot.title or "Curso sem título"

@@ -1,0 +1,451 @@
+{
+  "course": {
+    "sections": [
+      {
+        "children": [],
+        "implicit": false,
+        "lessons": [
+          {
+            "description": "Conheça o curso e veja o [site oficial](https://example.com).",
+            "materials": [
+              {
+                "caption": "#A001\nAula 01 - Boas-vindas\nConheça o curso e veja o site oficial.",
+                "grouped_id": null,
+                "media": {
+                  "duration": 600,
+                  "file_name": "aula01.mp4",
+                  "height": 720,
+                  "kind": "video",
+                  "mime_type": "video/mp4",
+                  "size": 50000000,
+                  "width": 1280
+                },
+                "message_id": 10,
+                "reason": "tag",
+                "via": null
+              }
+            ],
+            "position": 1,
+            "ref": "A001",
+            "ref_raw": "A001",
+            "resolved": true,
+            "summary_location": "2:4",
+            "title": "Aula 01 - Boas-vindas",
+            "title_source": "caption"
+          }
+        ],
+        "level": 1,
+        "location": "2:3",
+        "title": "01. Introdução"
+      },
+      {
+        "children": [
+          {
+            "children": [],
+            "implicit": false,
+            "lessons": [
+              {
+                "description": "",
+                "materials": [
+                  {
+                    "caption": "#A002",
+                    "grouped_id": null,
+                    "media": {
+                      "duration": 600,
+                      "file_name": "02 - Variaveis e tipos.mp4",
+                      "height": 720,
+                      "kind": "video",
+                      "mime_type": "video/mp4",
+                      "size": 50000000,
+                      "width": 1280
+                    },
+                    "message_id": 11,
+                    "reason": "tag",
+                    "via": null
+                  }
+                ],
+                "position": 2,
+                "ref": "A002",
+                "ref_raw": "A002",
+                "resolved": true,
+                "summary_location": "2:7",
+                "title": "02 - Variaveis e tipos",
+                "title_source": "file_name"
+              },
+              {
+                "description": "",
+                "materials": [
+                  {
+                    "caption": "#A003 Exemplos de código",
+                    "grouped_id": 777,
+                    "media": {
+                      "duration": null,
+                      "file_name": null,
+                      "height": 960,
+                      "kind": "photo",
+                      "mime_type": "image/jpeg",
+                      "size": 90000,
+                      "width": 1280
+                    },
+                    "message_id": 12,
+                    "reason": "tag",
+                    "via": null
+                  },
+                  {
+                    "caption": "",
+                    "grouped_id": 777,
+                    "media": {
+                      "duration": null,
+                      "file_name": null,
+                      "height": 960,
+                      "kind": "photo",
+                      "mime_type": "image/jpeg",
+                      "size": 90000,
+                      "width": 1280
+                    },
+                    "message_id": 13,
+                    "reason": "album",
+                    "via": 12
+                  },
+                  {
+                    "caption": "",
+                    "grouped_id": 777,
+                    "media": {
+                      "duration": null,
+                      "file_name": null,
+                      "height": 960,
+                      "kind": "photo",
+                      "mime_type": "image/jpeg",
+                      "size": 90000,
+                      "width": 1280
+                    },
+                    "message_id": 14,
+                    "reason": "album",
+                    "via": 12
+                  }
+                ],
+                "position": 3,
+                "ref": "A003",
+                "ref_raw": "A003",
+                "resolved": true,
+                "summary_location": "2:7",
+                "title": "Exemplos de código",
+                "title_source": "caption"
+              }
+            ],
+            "level": 2,
+            "location": "2:6",
+            "title": "02.1. Variáveis"
+          },
+          {
+            "children": [],
+            "implicit": false,
+            "lessons": [
+              {
+                "description": "",
+                "materials": [
+                  {
+                    "caption": "#A004\nFunções na prática",
+                    "grouped_id": null,
+                    "media": {
+                      "duration": 600,
+                      "file_name": "funcoes.mp4",
+                      "height": 720,
+                      "kind": "video",
+                      "mime_type": "video/mp4",
+                      "size": 50000000,
+                      "width": 1280
+                    },
+                    "message_id": 15,
+                    "reason": "tag",
+                    "via": null
+                  },
+                  {
+                    "caption": "#A004 slides da aula",
+                    "grouped_id": null,
+                    "media": {
+                      "duration": null,
+                      "file_name": "funcoes-slides.pdf",
+                      "height": null,
+                      "kind": "document",
+                      "mime_type": "application/pdf",
+                      "size": 200000,
+                      "width": null
+                    },
+                    "message_id": 16,
+                    "reason": "tag",
+                    "via": null
+                  }
+                ],
+                "position": 4,
+                "ref": "A004",
+                "ref_raw": "A004",
+                "resolved": true,
+                "summary_location": "3:1",
+                "title": "Funções na prática",
+                "title_source": "caption"
+              }
+            ],
+            "level": 2,
+            "location": "2:8",
+            "title": "02.2. Funções"
+          }
+        ],
+        "implicit": false,
+        "lessons": [],
+        "level": 1,
+        "location": "2:5",
+        "title": "02. Conceitos de programação"
+      },
+      {
+        "children": [],
+        "implicit": false,
+        "lessons": [
+          {
+            "description": "",
+            "materials": [
+              {
+                "caption": "#F001",
+                "grouped_id": null,
+                "media": {
+                  "duration": null,
+                  "file_name": "apostila-java.pdf",
+                  "height": null,
+                  "kind": "document",
+                  "mime_type": "application/pdf",
+                  "size": 3500000,
+                  "width": null
+                },
+                "message_id": 17,
+                "reason": "tag",
+                "via": null
+              }
+            ],
+            "position": 5,
+            "ref": "F001",
+            "ref_raw": "F001",
+            "resolved": true,
+            "summary_location": "3:3",
+            "title": "apostila-java",
+            "title_source": "file_name"
+          },
+          {
+            "description": "",
+            "materials": [
+              {
+                "caption": "#D001\nExercícios resolvidos",
+                "grouped_id": null,
+                "media": {
+                  "duration": null,
+                  "file_name": "exercicios.zip",
+                  "height": null,
+                  "kind": "document",
+                  "mime_type": "application/zip",
+                  "size": 200000,
+                  "width": null
+                },
+                "message_id": 18,
+                "reason": "tag",
+                "via": null
+              }
+            ],
+            "position": 6,
+            "ref": "D001",
+            "ref_raw": "D001",
+            "resolved": true,
+            "summary_location": "3:4",
+            "title": "Exercícios resolvidos",
+            "title_source": "caption"
+          },
+          {
+            "description": "",
+            "materials": [],
+            "position": 7,
+            "ref": "A099",
+            "ref_raw": "A099",
+            "resolved": false,
+            "summary_location": "3:6",
+            "title": "#A099",
+            "title_source": "generated"
+          }
+        ],
+        "level": 1,
+        "location": "3:2",
+        "title": "03. Materiais extras"
+      }
+    ],
+    "strategy": "summary",
+    "title": "Curso de Java (exemplo)"
+  },
+  "outline": {
+    "format": "markers",
+    "sections": [
+      {
+        "children": [],
+        "implicit": false,
+        "level": 1,
+        "location": "2:3",
+        "refs": [
+          {
+            "key": "A001",
+            "label": null,
+            "location": "2:4",
+            "raw": "A001"
+          }
+        ],
+        "title": "01. Introdução"
+      },
+      {
+        "children": [
+          {
+            "children": [],
+            "implicit": false,
+            "level": 2,
+            "location": "2:6",
+            "refs": [
+              {
+                "key": "A002",
+                "label": null,
+                "location": "2:7",
+                "raw": "A002"
+              },
+              {
+                "key": "A003",
+                "label": null,
+                "location": "2:7",
+                "raw": "A003"
+              }
+            ],
+            "title": "02.1. Variáveis"
+          },
+          {
+            "children": [],
+            "implicit": false,
+            "level": 2,
+            "location": "2:8",
+            "refs": [
+              {
+                "key": "A004",
+                "label": null,
+                "location": "3:1",
+                "raw": "A004"
+              }
+            ],
+            "title": "02.2. Funções"
+          }
+        ],
+        "implicit": false,
+        "level": 1,
+        "location": "2:5",
+        "refs": [],
+        "title": "02. Conceitos de programação"
+      },
+      {
+        "children": [],
+        "implicit": false,
+        "level": 1,
+        "location": "3:2",
+        "refs": [
+          {
+            "key": "F001",
+            "label": "Apostila completa",
+            "location": "3:3",
+            "raw": "F001"
+          },
+          {
+            "key": "D001",
+            "label": null,
+            "location": "3:4",
+            "raw": "D001"
+          },
+          {
+            "key": "A002",
+            "label": null,
+            "location": "3:5",
+            "raw": "A002"
+          },
+          {
+            "key": "A099",
+            "label": null,
+            "location": "3:6",
+            "raw": "A099"
+          }
+        ],
+        "title": "03. Materiais extras"
+      }
+    ],
+    "warnings": []
+  },
+  "report": {
+    "duplicates_in_summary": [
+      {
+        "ignored_at": [
+          "3:5"
+        ],
+        "kept_at": "2:7",
+        "ref": "A002"
+      }
+    ],
+    "multi_message_refs": [
+      {
+        "message_ids": [
+          15,
+          16
+        ],
+        "ref": "A004"
+      }
+    ],
+    "orphans": [
+      {
+        "caption": "Aula bônus",
+        "grouped_id": null,
+        "message_ids": [
+          19
+        ],
+        "refs": [
+          "A050"
+        ]
+      },
+      {
+        "caption": "",
+        "grouped_id": null,
+        "message_ids": [
+          20
+        ],
+        "refs": []
+      }
+    ],
+    "refs_not_in_summary": {
+      "A050": [
+        19
+      ]
+    },
+    "shared_messages": [],
+    "stats": {
+      "lessons": 7,
+      "materials": 9,
+      "media_messages": 11,
+      "messages": 16,
+      "orphan_media_messages": 2,
+      "resolved_lessons": 6,
+      "unresolved_lessons": 1
+    },
+    "summary": {
+      "discarded_candidates": [],
+      "fallback_reason": null,
+      "message_ids": [
+        2,
+        3
+      ],
+      "parser": "markers",
+      "warnings": []
+    },
+    "unresolved": [
+      {
+        "location": "3:6",
+        "ref": "A099",
+        "section": "03. Materiais extras"
+      }
+    ]
+  }
+}

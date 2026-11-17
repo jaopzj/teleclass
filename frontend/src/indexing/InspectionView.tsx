@@ -177,7 +177,11 @@ function Inspection({ result, snapshot, onBack }: { result: IndexResult; snapsho
                 {capitalize(collectedAt(snapshot.modified_at))}
               </span>
             )}
-            {course.strategy === "summary" ? (
+            {course.strategy === "module_menu" ? (
+              <span className="badge badge-brand" data-tip="Módulos e aulas seguem os menus de cada módulo no canal">
+                Pelos menus dos módulos
+              </span>
+            ) : course.strategy === "summary" ? (
               <span className="badge badge-brand" data-tip="Módulos e aulas seguem o sumário publicado no canal">
                 Pelo sumário do canal
               </span>

@@ -9,5 +9,7 @@ Etapas (cada uma em seu módulo, sem depender do Telegram):
 5. `builder`   monta a hierarquia final (ou o fallback cronológico);
 6. `report`    gera o relatório de inspeção.
 
-`pipeline.index_snapshot` encadeia tudo.
+`pipeline.index_snapshot` escolhe o layout do canal (`layouts/`) e encadeia
+tudo. As etapas acima são as do layout original (`tagged_summary`); o layout de
+menus por módulo (`layouts/module_menu`) tem a própria varredura.
 """

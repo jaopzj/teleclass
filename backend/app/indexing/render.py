@@ -47,7 +47,7 @@ def _section_lines(section: CourseSection, depth: int) -> list[str]:
 
 def render_text(result: IndexingResult) -> str:
     course, report = result.course, result.report
-    out = [f"Curso: {course.title}", f"Estratégia: {course.strategy.value}"]
+    out = [f"Curso: {course.title}", f"Estratégia: {course.strategy.value}", f"Layout: {result.layout}"]
     if report.summary.message_ids:
         out.append(f"Sumário: mensagens {report.summary.message_ids} ({report.summary.parser})")
     if report.summary.fallback_reason:
